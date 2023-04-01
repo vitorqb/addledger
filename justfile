@@ -11,3 +11,6 @@ lint:
 
 format:
     {{GO}} fmt ./...
+
+tidy:
+    {{GO}} mod tidy
