@@ -5,11 +5,14 @@ import (
 	"github.com/rivo/tview"
 )
 
+const DateInputWith = 20
+const DescriptionInputWidth = 80
+
 func newDateInputField(SetDate func(time.Time)) *tview.InputField {
 	return tview.
 		NewInputField().
 		SetLabel("Date: ").
-		SetFieldWidth(20).
+		SetFieldWidth(DateInputWith).
 		SetChangedFunc(func(text string) {
 			date, err := time.Parse("2006-01-02", text)
 			if err != nil {
@@ -23,7 +26,7 @@ func newDescriptionInputField(SetDescription func(string)) *tview.InputField {
 	return tview.
 		NewInputField().
 		SetLabel("Description: ").
-		SetFieldWidth(100).
+		SetFieldWidth(DescriptionInputWidth).
 		SetChangedFunc(func(x string) {
 			SetDescription(x)
 		})
