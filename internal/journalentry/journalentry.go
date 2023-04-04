@@ -1,11 +1,12 @@
 package journalentry
 
 import (
-	time
+	"time"
 )
 
 type (
 	JournalEntry struct {
-		date time.Date
-	}		
+		Date        time.Time
+		Description string
+	}
 )

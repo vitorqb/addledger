@@ -2,42 +2,48 @@ package inputbox
 
 import (
 	"time"
+
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-const DateInputWith = 20
-const DescriptionInputWidth = 80
+type (
+	InputBox struct {
+		dateInput        *tview.InputField
+		descriptionInput *tview.InputField
+	}
+)
 
 func newDateInputField(SetDate func(time.Time)) *tview.InputField {
-	return tview.
-		NewInputField().
-		SetLabel("Date: ").
-		SetFieldWidth(DateInputWith).
-		SetChangedFunc(func(text string) {
-			date, err := time.Parse("2006-01-02", text)
-			if err != nil {
-				return
-			}
-			SetDate(date)			
-		})
+	inputField := tview.NewInputField()
+	inputField.SetLabel("Date: ")
+	inputField.SetDoneFunc(func(_ tcell.Key) {
+		text := inputField.GetText()
+		date, err := time.Parse("2006-01-02", text)
+		if err != nil {
+			return
+		}
+		SetDate(date)
+	})
+	return inputField
 }
 
 func newDescriptionInputField(SetDescription func(string)) *tview.InputField {
 	return tview.
 		NewInputField().
 		SetLabel("Description: ").
-		SetFieldWidth(DescriptionInputWidth).
 		SetChangedFunc(func(x string) {
 			SetDescription(x)
 		})
 }
 
-func NewInputBox(SetDate func(time.Time), SetDescription func(string)) tview.Primitive {
+func NewInputBox(SetDate func(time.Time), SetDescription func(string)) InputBox {
 	dateInputField := newDateInputField(SetDate)
 	descriptionInputField := newDescriptionInputField(SetDescription)
-	form := tview.NewForm()
-	form.SetBorder(true)
-	form.AddFormItem(dateInputField)
-	form.AddFormItem(descriptionInputField)
-	return form
+	return InputBox{dateInputField, descriptionInputField}
+}
+
+func (i InputBox) GetInputField() *tview.InputField {
+	i.dateInput.SetBorder(true)
+	return i.dateInput
 }

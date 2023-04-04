@@ -5,26 +5,30 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/vitorqb/addledger/internal/utils"
 )
 
 type (
 	DisplayBox struct {
-		textView *tview.TextView
-		date      time.Time
+		textView    *tview.TextView
+		date        time.Time
 		description string
 	}
 )
 
+const (
+	BackgroundColor = tcell.ColorBlueViolet
+)
+
 func NewDisplayBox() *DisplayBox {
 	textView := tview.NewTextView()
-	textView.SetBackgroundColor(tcell.ColorBlueViolet)
+	textView.SetBackgroundColor(BackgroundColor)
 	textView.SetBorderPadding(1, 1, 1, 1)
+	textView.SetBorder(true)
 	return &DisplayBox{textView: textView}
 }
 
 func (d *DisplayBox) GetTextView() tview.Primitive {
-	return utils.Center(100, 15, d.textView)
+	return d.textView
 }
 
 func (d *DisplayBox) SetDate(x time.Time) {
