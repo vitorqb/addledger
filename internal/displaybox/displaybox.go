@@ -1,17 +1,15 @@
 package displaybox
 
 import (
-	"time"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/vitorqb/addledger/internal/state"
 )
 
 type (
 	DisplayBox struct {
-		textView    *tview.TextView
-		date        time.Time
-		description string
+		textView *tview.TextView
+		state    *state.State
 	}
 )
 
@@ -19,30 +17,27 @@ const (
 	BackgroundColor = tcell.ColorBlueViolet
 )
 
-func NewDisplayBox() *DisplayBox {
+func NewDisplayBox(state *state.State) *DisplayBox {
 	textView := tview.NewTextView()
 	textView.SetBackgroundColor(BackgroundColor)
 	textView.SetBorderPadding(1, 1, 1, 1)
 	textView.SetBorder(true)
-	return &DisplayBox{textView: textView}
+	displayBox := &DisplayBox{textView: textView, state: state}
+	state.AddOnChangeHook(displayBox.Refresh)
+	return displayBox
 }
 
 func (d *DisplayBox) GetTextView() tview.Primitive {
 	return d.textView
 }
 
-func (d *DisplayBox) SetDate(x time.Time) {
-	d.date = x
-	d.refresh()
-}
-
-func (d *DisplayBox) SetDescription(x string) {
-	d.description = x
-	d.refresh()
-}
-
-func (d *DisplayBox) refresh() {
-	date := d.date.Format("2006-01-02")
-	description := d.description
-	d.textView.SetText(date + " " + description)
+func (d *DisplayBox) Refresh() {
+	var text string
+	if date, found := d.state.JournalEntryInput.GetDate(); found {
+		text = text + date.Format("2006-01-02")
+	}
+	if description, found := d.state.JournalEntryInput.GetDescription(); found {
+		text = text + " " + description
+	}
+	d.textView.SetText(text)
 }

@@ -9,6 +9,9 @@ setup:
 run:
     {{GO}} run cmd/addledger/main.go
 
+test:
+    {{GO}} test ./...
+
 lint:
     {{GOLANGCILINT}} run ./...
 

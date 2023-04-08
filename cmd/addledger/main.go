@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/displaybox"
 	"github.com/vitorqb/addledger/internal/inputbox"
@@ -13,18 +11,8 @@ import (
 func main() {
 	state := state.InitialState()
 	app := tview.NewApplication()
-	displayBox := displaybox.NewDisplayBox()
-	inputBox := inputbox.NewInputBox(
-		func(t time.Time) {
-			displayBox.SetDate(t)
-			state.NextPhase()
-		},
-		func(x string) {
-			displayBox.SetDescription(x)
-			state.NextPhase()
-		},
-		state,
-	)
+	displayBox := displaybox.NewDisplayBox(state)
+	inputBox := inputbox.NewInputBox(state)
 	inputContextBox := inputcontextbox.NewInputContextBox()
 	flex := tview.
 		NewFlex().

@@ -11,44 +11,43 @@ import (
 type (
 	PageName string
 	InputBox struct {
-		setDate          func(time.Time)
-		setDescription   func(string)
-		state            *state.State
-		pages            *tview.Pages
+		state *state.State
+		pages *tview.Pages
 	}
 )
 
 const (
-	INPUT_DATE PageName ="INPUT_DATE"
+	INPUT_DATE        PageName = "INPUT_DATE"
 	INPUT_DESCRIPTION PageName = "INPUT_DESCRIPTION"
 )
 
-func NewInputBox(SetDate func(time.Time), SetDescription func(string), state *state.State) *InputBox {
+func NewInputBox(state *state.State) *InputBox {
 	pages := tview.NewPages()
-	inputBox := &InputBox{SetDate, SetDescription, state, pages}
+	inputBox := &InputBox{state, pages}
 	pages.SetBorder(true)
 	pages.AddPage(string(INPUT_DATE), inputBox.getDateInputField(), true, false)
 	pages.AddPage(string(INPUT_DESCRIPTION), inputBox.getDescriptionInputField(), true, false)
-	inputBox.Refresh()
+	inputBox.refresh()
+	state.AddOnChangeHook(inputBox.refresh)
 	return inputBox
 }
 
-func (i *InputBox) Refresh() {
+func (i *InputBox) refresh() {
 	switch i.state.CurrentPhase {
-	case state.Date:
+	case state.InputDate:
 		i.pages.SwitchToPage(string(INPUT_DATE))
-	case state.Description:
+	case state.InputDescription:
 		i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
 	default:
-	}	
+	}
 }
 
 func (i *InputBox) getDescriptionInputField() *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Description: ")
-	inputField.SetChangedFunc(func(x string) {
-		i.setDescription(x)
-		i.Refresh()
+	inputField.SetDoneFunc(func(_ tcell.Key) {
+		i.state.JournalEntryInput.SetDescription(inputField.GetText())
+		i.state.NextPhase()
 	})
 	return inputField
 }
@@ -62,8 +61,8 @@ func (i *InputBox) getDateInputField() *tview.InputField {
 		if err != nil {
 			return
 		}
-		i.setDate(date)
-		i.Refresh()
+		i.state.JournalEntryInput.SetDate(date)
+		i.state.NextPhase()
 	})
 	return inputField
 }
