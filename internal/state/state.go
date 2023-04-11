@@ -17,6 +17,7 @@ type (
 const (
 	InputDate        Phase = "INPUT_DATE"
 	InputDescription Phase = "INPUT_DESCRIPTION"
+	InputPostings    Phase = "INPUT_POSTINGS"
 )
 
 func InitialState() *State {
@@ -41,6 +42,7 @@ func (s *State) NextPhase() {
 	case InputDate:
 		s.CurrentPhase = InputDescription
 	case InputDescription:
+		s.CurrentPhase = InputPostings
 	default:
 	}
 	s.notifyChange()

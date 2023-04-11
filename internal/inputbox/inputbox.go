@@ -16,9 +16,11 @@ type (
 	}
 )
 
+// !!! TODO Unify with state.Phase
 const (
 	INPUT_DATE        PageName = "INPUT_DATE"
 	INPUT_DESCRIPTION PageName = "INPUT_DESCRIPTION"
+	INPUT_POSTINGS    PageName = "INPUT_POSTINGS"
 )
 
 func NewInputBox(state *state.State) *InputBox {
@@ -27,6 +29,7 @@ func NewInputBox(state *state.State) *InputBox {
 	pages.SetBorder(true)
 	pages.AddPage(string(INPUT_DATE), inputBox.getDateInputField(), true, false)
 	pages.AddPage(string(INPUT_DESCRIPTION), inputBox.getDescriptionInputField(), true, false)
+	pages.AddPage(string(INPUT_POSTINGS), inputBox.getPostingInputPages(), true, false)
 	inputBox.refresh()
 	state.AddOnChangeHook(inputBox.refresh)
 	return inputBox
@@ -38,6 +41,8 @@ func (i *InputBox) refresh() {
 		i.pages.SwitchToPage(string(INPUT_DATE))
 	case state.InputDescription:
 		i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
+	case state.InputPostings:
+		i.pages.SwitchToPage(string(INPUT_POSTINGS))
 	default:
 	}
 }
@@ -65,6 +70,24 @@ func (i *InputBox) getDateInputField() *tview.InputField {
 		i.state.NextPhase()
 	})
 	return inputField
+}
+
+func (i *InputBox) getPostingInputPages() *tview.Pages {
+	pages := tview.NewPages()
+
+	accountInputField := tview.NewInputField()
+	accountInputField.SetLabel("Account: ")
+	accountInputField.SetDoneFunc(func(key tcell.Key) {
+		text := accountInputField.GetText()
+		if _, found := i.state.JournalEntryInput.GetPosting(0); ! found {
+			i.state.JournalEntryInput.AddPosting()
+		}
+		posting, _ := i.state.JournalEntryInput.GetPosting(0)
+		posting.SetAccount(text)
+	})
+	pages.AddAndSwitchToPage("1", accountInputField, true)
+
+	return pages
 }
 
 func (i *InputBox) GetContent() tview.Primitive {

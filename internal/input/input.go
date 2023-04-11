@@ -10,6 +10,12 @@ type (
 	}
 )
 
+func NewJournalEntryInput() *JournalEntryInput {
+	m := make(map[string]interface{})
+	ws := []OnChangeHook{}
+	return &JournalEntryInput{ws, m}
+}
+
 func (i *JournalEntryInput) AddOnChangeHook(hook OnChangeHook) {
 	i.onChangeHooks = append(i.onChangeHooks, hook)
 }
@@ -46,8 +52,27 @@ func (i *JournalEntryInput) GetDescription() (string, bool) {
 	return "", false
 }
 
-func NewJournalEntryInput() *JournalEntryInput {
-	m := make(map[string]interface{})
-	ws := []OnChangeHook{}
-	return &JournalEntryInput{ws, m}
+func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
+	if postingsInputs, found := i.inputs["postings"]; found {
+		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
+			if index <= len(postingsInputs)-1 {
+				return postingsInputs[index], true
+			}
+		}
+	}
+	return NewPostingInput(), false
+}
+
+func (i *JournalEntryInput) AddPosting() {
+	postInput := NewPostingInput()
+	postInput.AddOnChangeHook(i.notifyChange)
+	if rawPostings, found := i.inputs["postings"]; found {
+		if postings, ok := rawPostings.([]*PostingInput); ok {
+			i.inputs["postings"] = append(postings, postInput)
+			i.notifyChange()
+			return
+		}
+	}
+	i.inputs["postings"] = []*PostingInput{postInput}
+	i.notifyChange()
 }

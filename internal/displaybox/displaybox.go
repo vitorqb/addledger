@@ -34,10 +34,22 @@ func (d *DisplayBox) GetTextView() tview.Primitive {
 func (d *DisplayBox) Refresh() {
 	var text string
 	if date, found := d.state.JournalEntryInput.GetDate(); found {
-		text = text + date.Format("2006-01-02")
+		text += date.Format("2006-01-02")
 	}
 	if description, found := d.state.JournalEntryInput.GetDescription(); found {
-		text = text + " " + description
+		text += " " + description
+	}
+	i := -1
+	for {
+		i++
+		if posting, found := d.state.JournalEntryInput.GetPosting(i); found {
+			text += "\n" + "    "
+			if account, found := posting.GetAccount(); found {
+				text += account
+			}
+		} else {
+			break
+		}
 	}
 	d.textView.SetText(text)
 }

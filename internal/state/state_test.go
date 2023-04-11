@@ -18,13 +18,17 @@ func TestState(t *testing.T) {
 	})
 
 	t.Run("NextPhase", func(t *testing.T) {
-		hookCalled := false
-		hook := func() { hookCalled = true }
+		hookCallCounter := 0
+		hook := func() { hookCallCounter = hookCallCounter + 1 }
 		s := InitialState()
 		s.AddOnChangeHook(hook)
 		assert.Equal(t, s.CurrentPhase, InputDate)
 		s.NextPhase()
 		assert.Equal(t, s.CurrentPhase, InputDescription)
-		assert.True(t, hookCalled)
+		assert.Equal(t, 1, hookCallCounter)
+		s.NextPhase()
+		assert.Equal(t, s.CurrentPhase, InputPostings)
+		assert.Equal(t, 2, hookCallCounter)
 	})
+
 }
