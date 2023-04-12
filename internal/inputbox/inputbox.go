@@ -74,18 +74,35 @@ func (i *InputBox) getDateInputField() *tview.InputField {
 
 func (i *InputBox) getPostingInputPages() *tview.Pages {
 	pages := tview.NewPages()
+	currentIndex := 0
 
 	accountInputField := tview.NewInputField()
 	accountInputField.SetLabel("Account: ")
 	accountInputField.SetDoneFunc(func(key tcell.Key) {
 		text := accountInputField.GetText()
-		if _, found := i.state.JournalEntryInput.GetPosting(0); ! found {
-			i.state.JournalEntryInput.AddPosting()
+		posting, found := i.state.JournalEntryInput.GetPosting(currentIndex)
+		if !found {
+			posting = i.state.JournalEntryInput.AddPosting()
 		}
-		posting, _ := i.state.JournalEntryInput.GetPosting(0)
 		posting.SetAccount(text)
+		pages.SwitchToPage("value")
 	})
-	pages.AddAndSwitchToPage("1", accountInputField, true)
+
+	valueInputField := tview.NewInputField()
+	valueInputField.SetLabel("Value: ")
+	valueInputField.SetDoneFunc(func(key tcell.Key) {
+		text := valueInputField.GetText()
+		posting, found := i.state.JournalEntryInput.GetPosting(currentIndex)
+		if !found {
+			posting = i.state.JournalEntryInput.AddPosting()
+		}
+		posting.SetValue(text)
+		currentIndex++
+		pages.SwitchToPage("account")
+	})
+
+	pages.AddAndSwitchToPage("account", accountInputField, true)
+	pages.AddPage("value", valueInputField, true, false)
 
 	return pages
 }

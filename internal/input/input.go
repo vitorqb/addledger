@@ -63,8 +63,8 @@ func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
 	return NewPostingInput(), false
 }
 
-func (i *JournalEntryInput) AddPosting() {
-	postInput := NewPostingInput()
+func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
+	postInput = NewPostingInput()
 	postInput.AddOnChangeHook(i.notifyChange)
 	if rawPostings, found := i.inputs["postings"]; found {
 		if postings, ok := rawPostings.([]*PostingInput); ok {
@@ -75,4 +75,5 @@ func (i *JournalEntryInput) AddPosting() {
 	}
 	i.inputs["postings"] = []*PostingInput{postInput}
 	i.notifyChange()
+	return
 }

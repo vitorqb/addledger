@@ -12,14 +12,14 @@ var aDate, _ = time.Parse("2006-01-02", "1993-11-23")
 func TestJournalEntryInput(t *testing.T) {
 
 	type context struct {
-		onChangeCalled bool
+		onChangeCalled    bool
 		onChangeCallCount int
-		input *JournalEntryInput
+		input             *JournalEntryInput
 	}
 
 	type test struct {
 		name string
-		run func(*testing.T, *context)
+		run  func(*testing.T, *context)
 	}
 
 	tests := []test{
@@ -52,13 +52,17 @@ func TestJournalEntryInput(t *testing.T) {
 			run: func(t *testing.T, c *context) {
 				_, found := c.input.GetPosting(0)
 				assert.False(t, found)
-				c.input.AddPosting()
-				posting, found := c.input.GetPosting(0)
+
+				addedPosting := c.input.AddPosting()
+				foundPosting, found := c.input.GetPosting(0)
 				assert.True(t, found)
-				_, found = posting.GetAccount()
+				assert.Equal(t, foundPosting, addedPosting)
+
+				_, found = addedPosting.GetAccount()
 				assert.False(t, found)
-				posting.SetAccount("FOO")
-				account, found := posting.GetAccount()
+
+				addedPosting.SetAccount("FOO")
+				account, found := addedPosting.GetAccount()
 				assert.True(t, found)
 				assert.Equal(t, account, "FOO")
 				assert.Equal(t, 2, c.onChangeCallCount)

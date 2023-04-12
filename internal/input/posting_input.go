@@ -36,3 +36,17 @@ func (i *PostingInput) GetAccount() (string, bool) {
 	}
 	return "", false
 }
+
+func (i *PostingInput) SetValue(value string) {
+	i.inputs["value"] = value
+	i.notifyChange()
+}
+
+func (i *PostingInput) GetValue() (string, bool) {
+	if rawValue, found := i.inputs["value"]; found {
+		if value, ok := rawValue.(string); ok {
+			return value, true
+		}
+	}
+	return "", false
+}

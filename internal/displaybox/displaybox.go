@@ -47,6 +47,10 @@ func (d *DisplayBox) Refresh() {
 			if account, found := posting.GetAccount(); found {
 				text += account
 			}
+			text += "    "
+			if value, found := posting.GetValue(); found {
+				text += value
+			}
 		} else {
 			break
 		}
