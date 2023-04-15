@@ -68,6 +68,25 @@ func TestJournalEntryInput(t *testing.T) {
 				assert.Equal(t, 2, c.onChangeCallCount)
 			},
 		},
+		{
+			"Count postings",
+			func(t *testing.T, c *context) {
+				assert.Equal(t, 0, c.input.CountPostings())
+				c.input.AddPosting()
+				assert.Equal(t, 1, c.input.CountPostings())
+				c.input.AddPosting()
+				assert.Equal(t, 2, c.input.CountPostings())
+			},
+		},
+		{
+			"Current Posting",
+			func(t *testing.T, c *context) {
+				addedPosting := c.input.CurrentPosting()
+				assert.Equal(t, 2, c.onChangeCallCount)
+				currentPosting := c.input.CurrentPosting()
+				assert.Same(t, addedPosting, currentPosting)
+			},
+		},
 	}
 
 	for _, tc := range tests {

@@ -5,32 +5,32 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/vitorqb/addledger/internal/state"
+	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
 type (
 	PageName string
 	Input    struct {
-		state *state.State
+		state *statemod.State
 		pages *tview.Pages
 	}
 )
 
 // !!! TODO Unify with state.Phase
 const (
-	INPUT_DATE        PageName = "INPUT_DATE"
-	INPUT_DESCRIPTION PageName = "INPUT_DESCRIPTION"
-	// !!!! TODO Change to `INPUT_POSTING_ACCOUNT` AND `INPUT_POSTING_VALUE`
-	// !!!! we don't need to have a separated pages for posting
-	INPUT_POSTINGS PageName = "INPUT_POSTINGS"
+	INPUT_DATE            PageName = "INPUT_DATE"
+	INPUT_DESCRIPTION     PageName = "INPUT_DESCRIPTION"
+	INPUT_POSTING_ACCOUNT PageName = "INPUT_POSTING_ACCOUNT"
+	INPUT_POSTING_VALUE   PageName = "INPUT_POSTING_VALUE"
 )
 
-func NewInput(state *state.State) *Input {
+func NewInput(state *statemod.State) *Input {
 	pages := tview.NewPages()
 	pages.SetBorder(true)
 	pages.AddPage(string(INPUT_DATE), dateField(state), true, false)
 	pages.AddPage(string(INPUT_DESCRIPTION), descriptionField(state), true, false)
-	pages.AddPage(string(INPUT_POSTINGS), postingPages(state), true, false)
+	pages.AddPage(string(INPUT_POSTING_ACCOUNT), postingAccountField(state), true, false)
+	pages.AddPage(string(INPUT_POSTING_VALUE), postingValueField(state), true, false)
 
 	inputBox := &Input{state, pages}
 	inputBox.refresh()
@@ -41,18 +41,20 @@ func NewInput(state *state.State) *Input {
 }
 
 func (i *Input) refresh() {
-	switch i.state.CurrentPhase {
-	case state.InputDate:
+	switch i.state.CurrentPhase() {
+	case statemod.InputDate:
 		i.pages.SwitchToPage(string(INPUT_DATE))
-	case state.InputDescription:
+	case statemod.InputDescription:
 		i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
-	case state.InputPostings:
-		i.pages.SwitchToPage(string(INPUT_POSTINGS))
+	case statemod.InputPostingAccount:
+		i.pages.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
+	case statemod.InputPostingValue:
+		i.pages.SwitchToPage(string(INPUT_POSTING_VALUE))
 	default:
 	}
 }
 
-func descriptionField(state *state.State) *tview.InputField {
+func descriptionField(state *statemod.State) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Description: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
@@ -62,7 +64,7 @@ func descriptionField(state *state.State) *tview.InputField {
 	return inputField
 }
 
-func dateField(state *state.State) *tview.InputField {
+func dateField(state *statemod.State) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Date: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
@@ -77,39 +79,29 @@ func dateField(state *state.State) *tview.InputField {
 	return inputField
 }
 
-func postingPages(state *state.State) *tview.Pages {
-	pages := tview.NewPages()
-	currentIndex := 0
-
+func postingAccountField(state *statemod.State) *tview.InputField {
 	accountInputField := tview.NewInputField()
 	accountInputField.SetLabel("Account: ")
 	accountInputField.SetDoneFunc(func(key tcell.Key) {
 		text := accountInputField.GetText()
-		posting, found := state.JournalEntryInput.GetPosting(currentIndex)
-		if !found {
-			posting = state.JournalEntryInput.AddPosting()
-		}
+		posting := state.JournalEntryInput.CurrentPosting()
 		posting.SetAccount(text)
-		pages.SwitchToPage("value")
+		state.NextPhase()
 	})
+	return accountInputField
+}
 
+func postingValueField(state *statemod.State) *tview.InputField {
 	valueInputField := tview.NewInputField()
 	valueInputField.SetLabel("Value: ")
 	valueInputField.SetDoneFunc(func(key tcell.Key) {
 		text := valueInputField.GetText()
-		posting, found := state.JournalEntryInput.GetPosting(currentIndex)
-		if !found {
-			posting = state.JournalEntryInput.AddPosting()
-		}
+		posting := state.JournalEntryInput.CurrentPosting()
 		posting.SetValue(text)
-		currentIndex++
-		pages.SwitchToPage("account")
+		state.JournalEntryInput.AdvancePosting()
+		state.SetPhase(statemod.InputPostingAccount)
 	})
-
-	pages.AddAndSwitchToPage("account", accountInputField, true)
-	pages.AddPage("value", valueInputField, true, false)
-
-	return pages
+	return valueInputField
 }
 
 func (i *Input) GetContent() tview.Primitive {

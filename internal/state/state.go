@@ -9,15 +9,16 @@ type (
 	OnChangeHook func()
 	State        struct {
 		onChangeHooks     []OnChangeHook
-		CurrentPhase      Phase
+		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
 	}
 )
 
 const (
-	InputDate        Phase = "INPUT_DATE"
-	InputDescription Phase = "INPUT_DESCRIPTION"
-	InputPostings    Phase = "INPUT_POSTINGS"
+	InputDate           Phase = "INPUT_DATE"
+	InputDescription    Phase = "INPUT_DESCRIPTION"
+	InputPostingAccount Phase = "INPUT_POSTING_ACCOUNT"
+	InputPostingValue   Phase = "INPUT_POSTING_VALUE"
 )
 
 func InitialState() *State {
@@ -25,6 +26,15 @@ func InitialState() *State {
 	state := &State{[]OnChangeHook{}, InputDate, journalEntryInput}
 	journalEntryInput.AddOnChangeHook(state.notifyChange)
 	return state
+}
+
+func (s *State) CurrentPhase() Phase {
+	return s.currentPhase
+}
+
+func (s *State) SetPhase(p Phase) {
+	s.currentPhase = p
+	s.notifyChange()
 }
 
 func (s *State) AddOnChangeHook(h OnChangeHook) {
@@ -38,11 +48,13 @@ func (s *State) notifyChange() {
 }
 
 func (s *State) NextPhase() {
-	switch s.CurrentPhase {
+	switch s.currentPhase {
 	case InputDate:
-		s.CurrentPhase = InputDescription
+		s.currentPhase = InputDescription
 	case InputDescription:
-		s.CurrentPhase = InputPostings
+		s.currentPhase = InputPostingAccount
+	case InputPostingAccount:
+		s.currentPhase = InputPostingValue
 	default:
 	}
 	s.notifyChange()

@@ -5,15 +5,16 @@ import "time"
 type (
 	OnChangeHook      func()
 	JournalEntryInput struct {
-		onChangeHooks []OnChangeHook
-		inputs        map[string]interface{}
+		onChangeHooks       []OnChangeHook
+		inputs              map[string]interface{}
+		currentPostingIndex int
 	}
 )
 
 func NewJournalEntryInput() *JournalEntryInput {
 	m := make(map[string]interface{})
 	ws := []OnChangeHook{}
-	return &JournalEntryInput{ws, m}
+	return &JournalEntryInput{ws, m, 0}
 }
 
 func (i *JournalEntryInput) AddOnChangeHook(hook OnChangeHook) {
@@ -50,6 +51,36 @@ func (i *JournalEntryInput) GetDescription() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// CurrentPosting returns the current posting being edited.
+func (i *JournalEntryInput) CurrentPosting() *PostingInput {
+	// currentPostingIndex is on range -> get and return.
+	if posting, found := i.GetPosting(i.currentPostingIndex); found {
+		return posting
+	}
+
+	// currentPostingIndex out of range -> add one and return.
+	posting := i.AddPosting()
+	i.currentPostingIndex = i.CountPostings() - 1
+	i.notifyChange()
+	return posting
+}
+
+// AdvancePosting is called when a posting has finished to be inputed,
+// and we should advance the current posting.
+func (i *JournalEntryInput) AdvancePosting() {
+	i.currentPostingIndex++
+	i.notifyChange()
+}
+
+func (i *JournalEntryInput) CountPostings() int {
+	if postingsInputs, found := i.inputs["postings"]; found {
+		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
+			return len(postingsInputs)
+		}
+	}
+	return 0
 }
 
 func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
