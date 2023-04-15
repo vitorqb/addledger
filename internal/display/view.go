@@ -1,4 +1,4 @@
-package displaybox
+package display
 
 import (
 	"github.com/gdamore/tcell/v2"
@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	DisplayBox struct {
+	View struct {
 		textView *tview.TextView
 		state    *state.State
 	}
@@ -17,32 +17,37 @@ const (
 	BackgroundColor = tcell.ColorBlueViolet
 )
 
-func NewDisplayBox(state *state.State) *DisplayBox {
+func NewView(state *state.State) *View {
 	textView := tview.NewTextView()
 	textView.SetBackgroundColor(BackgroundColor)
 	textView.SetBorderPadding(1, 1, 1, 1)
 	textView.SetBorder(true)
-	displayBox := &DisplayBox{textView: textView, state: state}
-	state.AddOnChangeHook(displayBox.Refresh)
-	return displayBox
+
+	view := &View{textView: textView, state: state}
+
+	state.AddOnChangeHook(view.refresh)
+
+	return view
 }
 
-func (d *DisplayBox) GetTextView() tview.Primitive {
-	return d.textView
+// !!!! TODO Rename to GetContent
+func (v *View) GetPrimitive() tview.Primitive {
+	return v.textView
 }
 
-func (d *DisplayBox) Refresh() {
+func (v *View) refresh() {
+	// !!! TODO Make a Repr() method on JournalEntryInput
 	var text string
-	if date, found := d.state.JournalEntryInput.GetDate(); found {
+	if date, found := v.state.JournalEntryInput.GetDate(); found {
 		text += date.Format("2006-01-02")
 	}
-	if description, found := d.state.JournalEntryInput.GetDescription(); found {
+	if description, found := v.state.JournalEntryInput.GetDescription(); found {
 		text += " " + description
 	}
 	i := -1
 	for {
 		i++
-		if posting, found := d.state.JournalEntryInput.GetPosting(i); found {
+		if posting, found := v.state.JournalEntryInput.GetPosting(i); found {
 			text += "\n" + "    "
 			if account, found := posting.GetAccount(); found {
 				text += account
@@ -55,5 +60,5 @@ func (d *DisplayBox) Refresh() {
 			break
 		}
 	}
-	d.textView.SetText(text)
+	v.textView.SetText(text)
 }

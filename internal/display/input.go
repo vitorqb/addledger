@@ -1,4 +1,4 @@
-package inputbox
+package display
 
 import (
 	"time"
@@ -10,7 +10,7 @@ import (
 
 type (
 	PageName string
-	InputBox struct {
+	Input    struct {
 		state *state.State
 		pages *tview.Pages
 	}
@@ -20,22 +20,27 @@ type (
 const (
 	INPUT_DATE        PageName = "INPUT_DATE"
 	INPUT_DESCRIPTION PageName = "INPUT_DESCRIPTION"
-	INPUT_POSTINGS    PageName = "INPUT_POSTINGS"
+	// !!!! TODO Change to `INPUT_POSTING_ACCOUNT` AND `INPUT_POSTING_VALUE`
+	// !!!! we don't need to have a separated pages for posting
+	INPUT_POSTINGS PageName = "INPUT_POSTINGS"
 )
 
-func NewInputBox(state *state.State) *InputBox {
+func NewInput(state *state.State) *Input {
 	pages := tview.NewPages()
-	inputBox := &InputBox{state, pages}
 	pages.SetBorder(true)
-	pages.AddPage(string(INPUT_DATE), inputBox.getDateInputField(), true, false)
-	pages.AddPage(string(INPUT_DESCRIPTION), inputBox.getDescriptionInputField(), true, false)
-	pages.AddPage(string(INPUT_POSTINGS), inputBox.getPostingInputPages(), true, false)
+	pages.AddPage(string(INPUT_DATE), dateField(state), true, false)
+	pages.AddPage(string(INPUT_DESCRIPTION), descriptionField(state), true, false)
+	pages.AddPage(string(INPUT_POSTINGS), postingPages(state), true, false)
+
+	inputBox := &Input{state, pages}
 	inputBox.refresh()
+
 	state.AddOnChangeHook(inputBox.refresh)
+
 	return inputBox
 }
 
-func (i *InputBox) refresh() {
+func (i *Input) refresh() {
 	switch i.state.CurrentPhase {
 	case state.InputDate:
 		i.pages.SwitchToPage(string(INPUT_DATE))
@@ -47,17 +52,17 @@ func (i *InputBox) refresh() {
 	}
 }
 
-func (i *InputBox) getDescriptionInputField() *tview.InputField {
+func descriptionField(state *state.State) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Description: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
-		i.state.JournalEntryInput.SetDescription(inputField.GetText())
-		i.state.NextPhase()
+		state.JournalEntryInput.SetDescription(inputField.GetText())
+		state.NextPhase()
 	})
 	return inputField
 }
 
-func (i *InputBox) getDateInputField() *tview.InputField {
+func dateField(state *state.State) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Date: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
@@ -66,13 +71,13 @@ func (i *InputBox) getDateInputField() *tview.InputField {
 		if err != nil {
 			return
 		}
-		i.state.JournalEntryInput.SetDate(date)
-		i.state.NextPhase()
+		state.JournalEntryInput.SetDate(date)
+		state.NextPhase()
 	})
 	return inputField
 }
 
-func (i *InputBox) getPostingInputPages() *tview.Pages {
+func postingPages(state *state.State) *tview.Pages {
 	pages := tview.NewPages()
 	currentIndex := 0
 
@@ -80,9 +85,9 @@ func (i *InputBox) getPostingInputPages() *tview.Pages {
 	accountInputField.SetLabel("Account: ")
 	accountInputField.SetDoneFunc(func(key tcell.Key) {
 		text := accountInputField.GetText()
-		posting, found := i.state.JournalEntryInput.GetPosting(currentIndex)
+		posting, found := state.JournalEntryInput.GetPosting(currentIndex)
 		if !found {
-			posting = i.state.JournalEntryInput.AddPosting()
+			posting = state.JournalEntryInput.AddPosting()
 		}
 		posting.SetAccount(text)
 		pages.SwitchToPage("value")
@@ -92,9 +97,9 @@ func (i *InputBox) getPostingInputPages() *tview.Pages {
 	valueInputField.SetLabel("Value: ")
 	valueInputField.SetDoneFunc(func(key tcell.Key) {
 		text := valueInputField.GetText()
-		posting, found := i.state.JournalEntryInput.GetPosting(currentIndex)
+		posting, found := state.JournalEntryInput.GetPosting(currentIndex)
 		if !found {
-			posting = i.state.JournalEntryInput.AddPosting()
+			posting = state.JournalEntryInput.AddPosting()
 		}
 		posting.SetValue(text)
 		currentIndex++
@@ -107,6 +112,6 @@ func (i *InputBox) getPostingInputPages() *tview.Pages {
 	return pages
 }
 
-func (i *InputBox) GetContent() tview.Primitive {
+func (i *Input) GetContent() tview.Primitive {
 	return i.pages
 }
