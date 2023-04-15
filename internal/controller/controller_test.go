@@ -11,7 +11,7 @@ func TestInputController(t *testing.T) {
 	t.Run("OnAccountInput and empty account", func(t *testing.T) {
 		state := statemod.InitialState()
 		controller := NewController(state)
-		controller.OnAccountInput("")
+		controller.OnPostingAccountInput("")
 		assert.Equal(t, statemod.Confirmation, state.CurrentPhase())
 	})
 
@@ -19,7 +19,7 @@ func TestInputController(t *testing.T) {
 		state := statemod.InitialState()
 		state.SetPhase(statemod.InputPostingAccount)
 		controller := NewController(state)
-		controller.OnAccountInput("FOO")
+		controller.OnPostingAccountInput("FOO")
 		assert.Equal(t, statemod.InputPostingValue, state.CurrentPhase())
 		account, _ := state.JournalEntryInput.CurrentPosting().GetAccount()
 		assert.Equal(t, "FOO", account)

@@ -30,8 +30,7 @@ func NewView(state *state.State) *View {
 	return view
 }
 
-// !!!! TODO Rename to GetContent
-func (v *View) GetPrimitive() tview.Primitive {
+func (v *View) GetContent() tview.Primitive {
 	return v.textView
 }
 

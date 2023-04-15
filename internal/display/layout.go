@@ -23,9 +23,9 @@ func NewLayout(controller *controller.InputController, state *state.State) *Layo
 	flex := tview.
 		NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(view.GetPrimitive(), 0, 5, false).
+		AddItem(view.GetContent(), 0, 5, false).
 		AddItem(input.GetContent(), 0, 1, false).
-		AddItem(context.GetTextView(), 0, 10, false)
+		AddItem(context.GetContent(), 0, 10, false)
 	return &Layout{
 		state:   state,
 		View:    view,

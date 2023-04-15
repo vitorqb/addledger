@@ -12,8 +12,7 @@ func NewController(state *statemod.State) *InputController {
 	return &InputController{state}
 }
 
-// !!! TODO Rename to OnPostingAccountInput
-func (ic *InputController) OnAccountInput(account string) {
+func (ic *InputController) OnPostingAccountInput(account string) {
 	// Empty string -> user is done entering postings.
 	if account == "" {
 		ic.state.SetPhase(statemod.Confirmation)
