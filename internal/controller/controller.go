@@ -45,3 +45,11 @@ func (ic *InputController) OnPostingValueInput(value string) {
 	ic.state.JournalEntryInput.AdvancePosting()
 	ic.state.SetPhase(statemod.InputPostingAccount)
 }
+
+func (ic *InputController) OnInputConfirmation() {
+
+}
+
+func (ic *InputController) OnInputRejection() {
+	ic.state.SetPhase(statemod.InputPostingAccount)
+}

@@ -127,6 +127,23 @@ func postingValueField(controller *controller.InputController) *tview.InputField
 func inputConfirmationField(controller *controller.InputController) *tview.TextView {
 	field := tview.NewTextView()
 	field.SetText("Do you want to commit the transaction? [Y/n]")
+	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEnter:
+			controller.OnInputConfirmation()
+		}
+		switch event.Rune() {
+		case 'y':
+			controller.OnInputConfirmation()
+		case 'Y':
+			controller.OnInputConfirmation()
+		case 'n':
+			controller.OnInputRejection()
+		case 'N':
+			controller.OnInputRejection()
+		}
+		return event
+	})
 	return field
 }
 
