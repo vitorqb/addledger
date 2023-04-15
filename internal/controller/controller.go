@@ -1,6 +1,10 @@
 package controller
 
-import statemod "github.com/vitorqb/addledger/internal/state"
+import (
+	"time"
+
+	statemod "github.com/vitorqb/addledger/internal/state"
+)
 
 type (
 	InputController struct {
@@ -10,6 +14,16 @@ type (
 
 func NewController(state *statemod.State) *InputController {
 	return &InputController{state}
+}
+
+func (ic *InputController) OnDateInput(date time.Time) {
+	ic.state.JournalEntryInput.SetDate(date)
+	ic.state.NextPhase()
+}
+
+func (ic *InputController) OnDescriptionInput(description string) {
+	ic.state.JournalEntryInput.SetDescription(description)
+	ic.state.NextPhase()
 }
 
 func (ic *InputController) OnPostingAccountInput(account string) {

@@ -31,13 +31,12 @@ const (
 	INPUT_CONFIRMATION    PageName = "INPUT_CONFIRMATION"
 )
 
-// !!! TODO Remove state from here. All interaction to be done w/ controller.
 func NewInput(controller *controller.InputController, state *statemod.State) *Input {
-	dateField := dateField(state)
-	descriptionField := descriptionField(state)
+	dateField := dateField(controller)
+	descriptionField := descriptionField(controller)
 	postingAccountField := postingAccountField(controller)
 	postingValueField := postingValueField(controller)
-	inputConfirmationField := inputConfirmationField(state)
+	inputConfirmationField := inputConfirmationField(controller)
 
 	pages := tview.NewPages()
 	pages.SetBorder(true)
@@ -81,17 +80,17 @@ func (i *Input) refresh() {
 	}
 }
 
-func descriptionField(state *statemod.State) *tview.InputField {
+func descriptionField(controller *controller.InputController) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Description: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
-		state.JournalEntryInput.SetDescription(inputField.GetText())
-		state.NextPhase()
+		text := inputField.GetText()
+		controller.OnDescriptionInput(text)
 	})
 	return inputField
 }
 
-func dateField(state *statemod.State) *tview.InputField {
+func dateField(controller *controller.InputController) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Date: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
@@ -100,8 +99,7 @@ func dateField(state *statemod.State) *tview.InputField {
 		if err != nil {
 			return
 		}
-		state.JournalEntryInput.SetDate(date)
-		state.NextPhase()
+		controller.OnDateInput(date)
 	})
 	return inputField
 }
@@ -126,7 +124,7 @@ func postingValueField(controller *controller.InputController) *tview.InputField
 	return valueInputField
 }
 
-func inputConfirmationField(state *statemod.State) *tview.TextView {
+func inputConfirmationField(controller *controller.InputController) *tview.TextView {
 	field := tview.NewTextView()
 	field.SetText("Do you want to commit the transaction? [Y/n]")
 	return field
