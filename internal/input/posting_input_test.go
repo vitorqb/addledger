@@ -7,37 +7,56 @@ import (
 )
 
 func TestPostingInput(t *testing.T) {
-	t.Run("Set Account", func(t *testing.T) {
-		// !!!! TODO Make it DRY
-		onChangeCallCount := 0
-		onChange := func() { onChangeCallCount++ }
-		postingInput := NewPostingInput()
-		postingInput.AddOnChangeHook(onChange)
-		_, found := postingInput.GetAccount()
-		assert.False(t, found)
-		postingInput.SetAccount("FOO")
-		account, found := postingInput.GetAccount()
-		assert.True(t, found)
-		assert.Equal(t, "FOO", account)
-		assert.Equal(t, 1, onChangeCallCount)
-	})
 
-	t.Run("Set Value", func(t *testing.T) {
-		// !!!! TODO Make it DRY
-		onChangeCallCount := 0
-		onChange := func() { onChangeCallCount++ }
-		postingInput := NewPostingInput()
-		postingInput.AddOnChangeHook(onChange)
+	type context struct {
+		onChangeCallCount int
+		postingInput      *PostingInput
+	}
 
-		_, found := postingInput.GetValue()
-		assert.False(t, found)
+	type test struct {
+		name string
+		run  func(t *testing.T, c *context)
+	}
 
-		postingInput.SetValue("EUR 12.20")
+	testcases := []test{
+		{
+			"Set Account",
+			func(t *testing.T, c *context) {
+				_, found := c.postingInput.GetAccount()
+				assert.False(t, found)
+				c.postingInput.SetAccount("FOO")
+				account, found := c.postingInput.GetAccount()
+				assert.True(t, found)
+				assert.Equal(t, "FOO", account)
+				assert.Equal(t, 1, c.onChangeCallCount)
+			},
+		},
+		{
+			"Set Value",
+			func(t *testing.T, c *context) {
+				_, found := c.postingInput.GetValue()
+				assert.False(t, found)
 
-		value, found := postingInput.GetValue()
+				c.postingInput.SetValue("EUR 12.20")
 
-		assert.True(t, found)
-		assert.Equal(t, "EUR 12.20", value)
-		assert.Equal(t, 1, onChangeCallCount)
-	})
+				value, found := c.postingInput.GetValue()
+
+				assert.True(t, found)
+				assert.Equal(t, "EUR 12.20", value)
+				assert.Equal(t, 1, c.onChangeCallCount)
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			postingInput := NewPostingInput()
+			c := &context{
+				onChangeCallCount: 0,
+				postingInput:      postingInput,
+			}
+			postingInput.AddOnChangeHook(func() { c.onChangeCallCount++ })
+			tc.run(t, c)
+		})
+	}
 }
