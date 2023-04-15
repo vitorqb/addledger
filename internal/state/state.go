@@ -19,6 +19,7 @@ const (
 	InputDescription    Phase = "INPUT_DESCRIPTION"
 	InputPostingAccount Phase = "INPUT_POSTING_ACCOUNT"
 	InputPostingValue   Phase = "INPUT_POSTING_VALUE"
+	Confirmation        Phase = "CONFIRMATION"
 )
 
 func InitialState() *State {
@@ -55,6 +56,8 @@ func (s *State) NextPhase() {
 		s.currentPhase = InputPostingAccount
 	case InputPostingAccount:
 		s.currentPhase = InputPostingValue
+	case InputPostingValue:
+		s.currentPhase = Confirmation
 	default:
 	}
 	s.notifyChange()

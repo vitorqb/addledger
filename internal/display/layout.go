@@ -2,6 +2,7 @@ package display
 
 import (
 	"github.com/rivo/tview"
+	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/state"
 )
 
@@ -15,9 +16,9 @@ type (
 	}
 )
 
-func NewLayout(state *state.State) *Layout {
+func NewLayout(controller *controller.InputController, state *state.State) *Layout {
 	view := NewView(state)
-	input := NewInput(state)
+	input := NewInput(controller, state)
 	context := NewContext()
 	flex := tview.
 		NewFlex().

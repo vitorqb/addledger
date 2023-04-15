@@ -5,14 +5,20 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/vitorqb/addledger/internal/controller"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
 type (
 	PageName string
 	Input    struct {
-		state *statemod.State
-		pages *tview.Pages
+		controller          *controller.InputController
+		state               *statemod.State
+		pages               *tview.Pages
+		dateField           *tview.InputField
+		descriptionField    *tview.InputField
+		postingAccountField *tview.InputField
+		postingValueField   *tview.InputField
 	}
 )
 
@@ -22,17 +28,34 @@ const (
 	INPUT_DESCRIPTION     PageName = "INPUT_DESCRIPTION"
 	INPUT_POSTING_ACCOUNT PageName = "INPUT_POSTING_ACCOUNT"
 	INPUT_POSTING_VALUE   PageName = "INPUT_POSTING_VALUE"
+	INPUT_CONFIRMATION    PageName = "INPUT_CONFIRMATION"
 )
 
-func NewInput(state *statemod.State) *Input {
+// !!! TODO Remove state from here. All interaction to be done w/ controller.
+func NewInput(controller *controller.InputController, state *statemod.State) *Input {
+	dateField := dateField(state)
+	descriptionField := descriptionField(state)
+	postingAccountField := postingAccountField(controller)
+	postingValueField := postingValueField(controller)
+	inputConfirmationField := inputConfirmationField(state)
+
 	pages := tview.NewPages()
 	pages.SetBorder(true)
-	pages.AddPage(string(INPUT_DATE), dateField(state), true, false)
-	pages.AddPage(string(INPUT_DESCRIPTION), descriptionField(state), true, false)
-	pages.AddPage(string(INPUT_POSTING_ACCOUNT), postingAccountField(state), true, false)
-	pages.AddPage(string(INPUT_POSTING_VALUE), postingValueField(state), true, false)
+	pages.AddPage(string(INPUT_DATE), dateField, true, false)
+	pages.AddPage(string(INPUT_DESCRIPTION), descriptionField, true, false)
+	pages.AddPage(string(INPUT_POSTING_ACCOUNT), postingAccountField, true, false)
+	pages.AddPage(string(INPUT_POSTING_VALUE), postingValueField, true, false)
+	pages.AddPage(string(INPUT_CONFIRMATION), inputConfirmationField, true, false)
 
-	inputBox := &Input{state, pages}
+	inputBox := &Input{
+		controller:          controller,
+		state:               state,
+		pages:               pages,
+		dateField:           dateField,
+		postingValueField:   postingValueField,
+		descriptionField:    descriptionField,
+		postingAccountField: postingAccountField,
+	}
 	inputBox.refresh()
 
 	state.AddOnChangeHook(inputBox.refresh)
@@ -47,9 +70,13 @@ func (i *Input) refresh() {
 	case statemod.InputDescription:
 		i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
 	case statemod.InputPostingAccount:
+		i.postingAccountField.SetText("")
 		i.pages.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
 	case statemod.InputPostingValue:
+		i.postingValueField.SetText("")
 		i.pages.SwitchToPage(string(INPUT_POSTING_VALUE))
+	case statemod.Confirmation:
+		i.pages.SwitchToPage(string(INPUT_CONFIRMATION))
 	default:
 	}
 }
@@ -79,29 +106,30 @@ func dateField(state *statemod.State) *tview.InputField {
 	return inputField
 }
 
-func postingAccountField(state *statemod.State) *tview.InputField {
+func postingAccountField(controller *controller.InputController) *tview.InputField {
 	accountInputField := tview.NewInputField()
 	accountInputField.SetLabel("Account: ")
-	accountInputField.SetDoneFunc(func(key tcell.Key) {
+	accountInputField.SetDoneFunc(func(_ tcell.Key) {
 		text := accountInputField.GetText()
-		posting := state.JournalEntryInput.CurrentPosting()
-		posting.SetAccount(text)
-		state.NextPhase()
+		controller.OnAccountInput(text)
 	})
 	return accountInputField
 }
 
-func postingValueField(state *statemod.State) *tview.InputField {
+func postingValueField(controller *controller.InputController) *tview.InputField {
 	valueInputField := tview.NewInputField()
 	valueInputField.SetLabel("Value: ")
-	valueInputField.SetDoneFunc(func(key tcell.Key) {
+	valueInputField.SetDoneFunc(func(_ tcell.Key) {
 		text := valueInputField.GetText()
-		posting := state.JournalEntryInput.CurrentPosting()
-		posting.SetValue(text)
-		state.JournalEntryInput.AdvancePosting()
-		state.SetPhase(statemod.InputPostingAccount)
+		controller.OnPostingValueInput(text)
 	})
 	return valueInputField
+}
+
+func inputConfirmationField(state *statemod.State) *tview.TextView {
+	field := tview.NewTextView()
+	field.SetText("Do you want to commit the transaction? [Y/n]")
+	return field
 }
 
 func (i *Input) GetContent() tview.Primitive {
