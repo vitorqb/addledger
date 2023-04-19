@@ -108,3 +108,31 @@ func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	i.notifyChange()
 	return
 }
+
+// Repr transforms the JournalEntryInput into a string.
+func (jei *JournalEntryInput) Repr() string {
+	var text string
+	if date, found := jei.GetDate(); found {
+		text += date.Format("2006-01-02")
+	}
+	if description, found := jei.GetDescription(); found {
+		text += " " + description
+	}
+	i := -1
+	for {
+		i++
+		if posting, found := jei.GetPosting(i); found {
+			text += "\n" + "    "
+			if account, found := posting.GetAccount(); found {
+				text += account
+			}
+			text += "    "
+			if value, found := posting.GetValue(); found {
+				text += value
+			}
+		} else {
+			break
+		}
+	}
+	return text
+}

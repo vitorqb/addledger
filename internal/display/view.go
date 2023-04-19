@@ -35,29 +35,6 @@ func (v *View) GetContent() tview.Primitive {
 }
 
 func (v *View) refresh() {
-	// !!! TODO Make a Repr() method on JournalEntryInput
-	var text string
-	if date, found := v.state.JournalEntryInput.GetDate(); found {
-		text += date.Format("2006-01-02")
-	}
-	if description, found := v.state.JournalEntryInput.GetDescription(); found {
-		text += " " + description
-	}
-	i := -1
-	for {
-		i++
-		if posting, found := v.state.JournalEntryInput.GetPosting(i); found {
-			text += "\n" + "    "
-			if account, found := posting.GetAccount(); found {
-				text += account
-			}
-			text += "    "
-			if value, found := posting.GetValue(); found {
-				text += value
-			}
-		} else {
-			break
-		}
-	}
+	text := v.state.JournalEntryInput.Repr()
 	v.textView.SetText(text)
 }
