@@ -1,10 +1,11 @@
-package input
+package input_test
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	. "github.com/vitorqb/addledger/internal/input"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
 

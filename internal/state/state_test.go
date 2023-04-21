@@ -1,9 +1,10 @@
-package state
+package state_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	. "github.com/vitorqb/addledger/internal/state"
 )
 
 func TestState(t *testing.T) {
@@ -22,12 +23,12 @@ func TestState(t *testing.T) {
 		hook := func() { hookCallCounter = hookCallCounter + 1 }
 		s := InitialState()
 		s.AddOnChangeHook(hook)
-		assert.Equal(t, s.currentPhase, InputDate)
+		assert.Equal(t, s.CurrentPhase(), InputDate)
 		s.NextPhase()
-		assert.Equal(t, s.currentPhase, InputDescription)
+		assert.Equal(t, s.CurrentPhase(), InputDescription)
 		assert.Equal(t, 1, hookCallCounter)
 		s.NextPhase()
-		assert.Equal(t, s.currentPhase, InputPostingAccount)
+		assert.Equal(t, s.CurrentPhase(), InputPostingAccount)
 		assert.Equal(t, 2, hookCallCounter)
 	})
 

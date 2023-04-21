@@ -1,9 +1,10 @@
-package input
+package input_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	. "github.com/vitorqb/addledger/internal/input"
 )
 
 func TestPostingInput(t *testing.T) {
