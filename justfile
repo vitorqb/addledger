@@ -4,7 +4,10 @@ GO := env_var_or_default("GO", "go")
 
 # Set's up developer workspace
 setup:
+    mkdir -p out
+    touch out/destfile
     ./scripts/setup-asdf.sh
+    ./scripts/setup-envfile.sh
 
 run:
     {{GO}} run cmd/addledger/main.go

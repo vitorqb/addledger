@@ -12,6 +12,13 @@ Then for setting up development:
 just setup
 ```
 
+**REMEMBER** that you need to source the `.env` file for configuring
+the app during development:
+
+```
+source .env
+```
+
 For running linting and formatting:
 
 ```
