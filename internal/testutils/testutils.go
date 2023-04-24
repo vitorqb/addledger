@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -69,4 +70,13 @@ func Unsetenv(t *testing.T, key string) (cleanup func()) {
 			t.Fatal(err)
 		}
 	}
+}
+
+// TestDataPath returns the absolute path to a testdata file.
+func TestDataPath(t *testing.T, path string) string {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	return filepath.Join(wd, "testdata", path)
 }
