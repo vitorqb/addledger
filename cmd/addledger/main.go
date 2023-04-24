@@ -8,17 +8,28 @@ import (
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/display"
+	"github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/state"
 )
 
 func main() {
 
+	// Loads config
 	config, err := config.LoadFromCommandLine()
 	if err != nil {
 		logrus.WithError(err).Fatal("Error loading config.")
 	}
 
+	// Creates a hledger client
+	hledgerClient := injector.HledgerClient(config)
+
+	// Loads state w/ metadata
 	state := state.InitialState()
+	err = state.LoadMetadata(hledgerClient)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load metadata")
+	}
+
 	app := tview.NewApplication()
 
 	destFile, err := os.OpenFile(config.DestFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)

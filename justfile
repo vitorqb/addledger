@@ -12,8 +12,11 @@ setup:
 run:
     {{GO}} run cmd/addledger/main.go
 
-test:
+test: mocks
     {{GO}} test ./...
+
+mocks:
+    {{GO}} generate --run=mockgen -x ./...
 
 lint:
     {{GOLANGCILINT}} run ./...

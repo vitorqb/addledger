@@ -10,30 +10,72 @@ import (
 )
 
 func TestLoad(t *testing.T) {
-	t.Run("Missing destfile", func(t *testing.T) {
-		cleanup := testutils.Unsetenv(t, "ADDLEDGER_DESTFILE")
-		defer cleanup()
-		flagSet := pflag.NewFlagSet("foo", pflag.ContinueOnError)
-		Setup(flagSet)
-		_, err := Load(flagSet, []string{})
-		assert.ErrorContains(t, err, "missing destination file")
-	})
-	t.Run("Working example", func(t *testing.T) {
-		cleanup := testutils.Unsetenv(t, "ADDLEDGER_DESTFILE")
-		defer cleanup()
-		flagSet := pflag.NewFlagSet("foo", pflag.ContinueOnError)
-		Setup(flagSet)
-		config, err := Load(flagSet, []string{"-dfoo"})
-		assert.Nil(t, err)
-		assert.Equal(t, config.DestFile, "foo")
-	})
-	t.Run("Working example from env", func(t *testing.T) {
-		cleanup := testutils.Setenv(t, "ADDLEDGER_DESTFILE", "foo")
-		defer cleanup()
-		flagSet := pflag.NewFlagSet("foo", pflag.ContinueOnError)
-		Setup(flagSet)
-		config, err := Load(flagSet, []string{})
-		assert.Nil(t, err)
-		assert.Equal(t, config.DestFile, "foo")
-	})
+
+	type testcontext struct {
+		flagSet *pflag.FlagSet
+	}
+
+	type testcase struct {
+		name string
+		run  func(t *testing.T, c *testcontext)
+	}
+
+	testcases := []testcase{
+		{
+			name: "Missing destfile",
+			run: func(t *testing.T, c *testcontext) {
+				_, err := Load(c.flagSet, []string{})
+				assert.ErrorContains(t, err, "missing destination file")
+			},
+		},
+		{
+			name: "Minimal working example",
+			run: func(t *testing.T, c *testcontext) {
+				config, err := Load(c.flagSet, []string{"-dfoo"})
+				assert.Nil(t, err)
+				assert.Equal(t, config.DestFile, "foo")
+				assert.Equal(t, config.HLedgerExecutable, "hledger")
+				assert.Equal(t, config.LedgerFile, "")
+			},
+		},
+		{
+			name: "Working example from env",
+			run: func(t *testing.T, c *testcontext) {
+				cleanup := testutils.Setenv(t, "ADDLEDGER_DESTFILE", "foo")
+				defer cleanup()
+				config, err := Load(c.flagSet, []string{})
+				assert.Nil(t, err)
+				assert.Equal(t, config.DestFile, "foo")
+			},
+		},
+		{
+			name: "Full working example",
+			run: func(t *testing.T, c *testcontext) {
+				config, err := Load(c.flagSet, []string{
+					"-dfoo",
+					"--ledger-file=bar",
+					"--hledger-executable=baz",
+				})
+				assert.Nil(t, err)
+				assert.Equal(t, config.DestFile, "foo")
+				assert.Equal(t, config.HLedgerExecutable, "baz")
+				assert.Equal(t, config.LedgerFile, "bar")
+			},
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			c := new(testcontext)
+			cleanup := testutils.Unsetenvs(t,
+				"ADDLEDGER_DESTFILE",
+				"ADDLEDGER_HLEDGER_EXECUTABLE",
+				"ADDLEDGER_LEDGER_FILE",
+			)
+			defer cleanup()
+			c.flagSet = pflag.NewFlagSet("foo", pflag.ContinueOnError)
+			Setup(c.flagSet)
+			testcase.run(t, c)
+		})
+	}
 }

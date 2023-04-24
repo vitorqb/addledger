@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+//go:generate mockgen --source=hledger.go --destination=../../mocks/hledger/hledger_mock.go
+
 // IClient represents an HLedger client.
 type IClient interface {
 	// Accounts returns a list of all known accounts.

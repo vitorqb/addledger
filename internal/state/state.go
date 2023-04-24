@@ -2,6 +2,7 @@ package state
 
 import (
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/pkg/hledger"
 )
 
 type (
@@ -11,6 +12,8 @@ type (
 		onChangeHooks     []OnChangeHook
 		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
+		// accounts is an array w/ all known accounts.
+		accounts []string
 	}
 )
 
@@ -24,7 +27,7 @@ const (
 
 func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
-	state := &State{[]OnChangeHook{}, InputDate, journalEntryInput}
+	state := &State{[]OnChangeHook{}, InputDate, journalEntryInput, []string{}}
 	journalEntryInput.AddOnChangeHook(state.notifyChange)
 	return state
 }
@@ -48,6 +51,15 @@ func (s *State) notifyChange() {
 	}
 }
 
+func (s *State) SetAccounts(x []string) {
+	s.accounts = x
+	s.notifyChange()
+}
+
+func (s *State) GetAccounts() []string {
+	return s.accounts
+}
+
 func (s *State) NextPhase() {
 	switch s.currentPhase {
 	case InputDate:
@@ -61,4 +73,14 @@ func (s *State) NextPhase() {
 	default:
 	}
 	s.notifyChange()
+}
+
+// LoadMetadata loads metadata to state from Hledger
+func (s *State) LoadMetadata(hledgerClient hledger.IClient) error {
+	accounts, err := hledgerClient.Accounts()
+	if err != nil {
+		return err
+	}
+	s.SetAccounts(accounts)
+	return nil
 }

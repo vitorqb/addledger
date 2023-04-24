@@ -55,6 +55,8 @@ func Setenv(t *testing.T, key, newValue string) (cleanup func()) {
 	}
 }
 
+// Unsetenv unsets an environmental variable (if set), while returning
+// a function to restore it's previous value (if any).
 func Unsetenv(t *testing.T, key string) (cleanup func()) {
 	oldValue, existed := os.LookupEnv(key)
 	if !existed {
@@ -68,6 +70,19 @@ func Unsetenv(t *testing.T, key string) (cleanup func()) {
 		err := os.Setenv(key, oldValue)
 		if err != nil {
 			t.Fatal(err)
+		}
+	}
+}
+
+// Unsetenvs does the same as Unsetenv for multiple variables.
+func Unsetenvs(t *testing.T, keys ...string) (cleanup func()) {
+	var cleanups []func()
+	for _, key := range keys {
+		cleanups = append(cleanups, Unsetenv(t, key))
+	}
+	return func() {
+		for _, cleanup := range cleanups {
+			cleanup()
 		}
 	}
 }
