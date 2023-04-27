@@ -1,12 +1,14 @@
 package testutils
 
 import (
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/utils"
 )
 
 //
@@ -74,7 +76,40 @@ func Unsetenv(t *testing.T, key string) (cleanup func()) {
 	}
 }
 
-// Unsetenvs does the same as Unsetenv for multiple variables.
+// Setenvs sets a batch of environmental variables and returns a
+// cleanup function to restore their previous value.
+// Usage: Setenvs(t, "VAR1", "VALUE1", "VAR2", "VALUE2")
+func Setenvs(t *testing.T, keyValuePairs ...string) (cleanup func()) {
+	if math.Mod(float64(len(keyValuePairs)), 2) != 0 {
+		t.Fatal("Expected pair number of arguments")
+	}
+	it, err := utils.SplitArray[string](2, keyValuePairs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cleanups []func()
+	for {
+		varSpec, err := it()
+		if _, ok := err.(*utils.StopSplitArray); ok {
+			break
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		varName := varSpec[0]
+		varValue := varSpec[1]
+		cleanups = append(cleanups, Setenv(t, varName, varValue))
+	}
+	return func() {
+		for _, cleanup := range cleanups {
+			cleanup()
+		}
+	}
+}
+
+// Setenvs unsets a batch of environmental variables and returns a
+// cleanup function to restore their previous value.
+// Usage: Setenvs(t, "VAR1", "VALUE1", "VAR2", "VALUE2")
 func Unsetenvs(t *testing.T, keys ...string) (cleanup func()) {
 	var cleanups []func()
 	for _, key := range keys {

@@ -3,10 +3,19 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
+
+// ConfigValue represents a value for the configuration
+type ConfigValue struct {
+	flagName     string
+	shorthand    string
+	defaultValue string
+	usage        string
+}
 
 type Config struct {
 	// File to where we will write Journal Entries.
@@ -17,10 +26,21 @@ type Config struct {
 	HLedgerExecutable string
 }
 
+// ConfigValues has all known config values
+var ConfigValues = []ConfigValue{
+	{"destfile", "d", "", "Destination file (where we will write)"},
+	{"hledger-executable", "", "hledger", "Executable to use for HLedger"},
+	{"ledger-file", "", "", "Ledger File to pass to HLedger commands"},
+}
+
 func Setup(flagSet *pflag.FlagSet) {
-	flagSet.StringP("destfile", "d", "", "Destination file (where we will write)")
-	flagSet.String("hledger-executable", "hledger", "Hledger executable")
-	flagSet.String("ledger-file", "", "Ledger File to pass to HLedger commands")
+	for _, configValue := range ConfigValues {
+		if configValue.shorthand == "" {
+			flagSet.String(configValue.flagName, configValue.defaultValue, configValue.usage)
+		} else {
+			flagSet.StringP(configValue.flagName, configValue.shorthand, configValue.defaultValue, configValue.usage)
+		}
+	}
 }
 
 func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
@@ -37,9 +57,10 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 	}
 
 	// Set reading from env
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.SetEnvPrefix("ADDLEDGER")
-	for _, x := range []string{"destfile", "hledger-executable", "ledger-file"} {
-		err := viper.BindEnv(x)
+	for _, x := range ConfigValues {
+		err := viper.BindEnv(x.flagName)
 		if err != nil {
 			return &Config{}, fmt.Errorf("failed to bind env: %w", err)
 		}
