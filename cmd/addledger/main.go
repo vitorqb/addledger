@@ -30,8 +30,7 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load metadata")
 	}
 
-	app := tview.NewApplication()
-
+	// Opens the destination file
 	destFile, err := os.OpenFile(config.DestFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		logrus.WithError(err).
@@ -39,11 +38,19 @@ func main() {
 			Fatal("Failed to open file")
 	}
 
+	// Starts a new controller
 	controller, err := controller.NewController(state, controller.WithOutput(destFile))
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
 	}
+
+	// Starts a new layout
 	layout := display.NewLayout(controller, state)
+
+	// Starts a new tview App
+	app := tview.NewApplication()
+
+	// Run!
 	err = app.
 		SetRoot(layout.GetContent(), true).
 		SetFocus(layout.Input.GetContent()).

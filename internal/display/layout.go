@@ -19,7 +19,7 @@ type (
 func NewLayout(controller *controller.InputController, state *state.State) *Layout {
 	view := NewView(state)
 	input := NewInput(controller, state)
-	context := NewContext()
+	context := NewContext(state)
 	flex := tview.
 		NewFlex().
 		SetDirection(tview.FlexRow).
