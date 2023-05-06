@@ -69,7 +69,7 @@ func TestInputController(t *testing.T) {
 				return []Opt{WithOutput(c.bytesBuffer)}
 			},
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnPostingAccountInput("")
+				c.controller.OnPostingAccountDone("")
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
 			},
 		},
@@ -80,7 +80,7 @@ func TestInputController(t *testing.T) {
 			},
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingAccount)
-				c.controller.OnPostingAccountInput("FOO")
+				c.controller.OnPostingAccountDone("FOO")
 				assert.Equal(t, statemod.InputPostingValue, c.state.CurrentPhase())
 				account, _ := c.state.JournalEntryInput.CurrentPosting().GetAccount()
 				assert.Equal(t, "FOO", account)

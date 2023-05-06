@@ -41,7 +41,7 @@ func (ic *InputController) OnDescriptionInput(description string) {
 	ic.state.NextPhase()
 }
 
-func (ic *InputController) OnPostingAccountInput(account string) {
+func (ic *InputController) OnPostingAccountDone(account string) {
 	// Empty string -> user is done entering postings.
 	if account == "" {
 		ic.state.SetPhase(statemod.Confirmation)

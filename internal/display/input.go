@@ -109,7 +109,7 @@ func postingAccountField(controller *controller.InputController) *tview.InputFie
 	accountInputField.SetLabel("Account: ")
 	accountInputField.SetDoneFunc(func(_ tcell.Key) {
 		text := accountInputField.GetText()
-		controller.OnPostingAccountInput(text)
+		controller.OnPostingAccountDone(text)
 	})
 	return accountInputField
 }
