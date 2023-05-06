@@ -1,11 +1,17 @@
 package controller
 
-import "io"
+import (
+	"io"
+
+	"github.com/vitorqb/addledger/internal/eventbus"
+)
 
 // Opts represents all options for an InputController
 type Opts struct {
 	// Where to write journal entries to.
 	output io.Writer
+	// The instance of IEventBus to use
+	eventBus eventbus.IEventBus
 }
 
 // Opt configures options for an InputController
@@ -25,6 +31,14 @@ func (opt OptFn) configure(opts *Opts) error {
 func WithOutput(output io.Writer) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.output = output
+		return nil
+	})
+}
+
+// WithEventBus configures which IEventBus to use.
+func WithEventBus(eventBus eventbus.IEventBus) Opt {
+	return OptFn(func(opts *Opts) error {
+		opts.eventBus = eventBus
 		return nil
 	})
 }

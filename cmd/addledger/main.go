@@ -8,6 +8,7 @@ import (
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/display"
+	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/state"
 )
@@ -52,8 +53,14 @@ func main() {
 			Fatal("Failed to open file")
 	}
 
+	// Starts the EventBus
+	eventBus := eventbus.New()
+
 	// Starts a new controller
-	controller, err := controller.NewController(state, controller.WithOutput(destFile))
+	controller, err := controller.NewController(state,
+		controller.WithOutput(destFile),
+		controller.WithEventBus(eventBus),
+	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
 	}

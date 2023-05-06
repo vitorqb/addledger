@@ -111,6 +111,10 @@ func postingAccountField(controller *controller.InputController) *tview.InputFie
 		text := accountInputField.GetText()
 		controller.OnPostingAccountDone(text)
 	})
+	accountInputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		controller.OnPostingAccountInputCapture(event)
+		return event
+	})
 	return accountInputField
 }
 
