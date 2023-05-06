@@ -66,7 +66,10 @@ func main() {
 	}
 
 	// Starts a new layout
-	layout := display.NewLayout(controller, state)
+	layout, err := display.NewLayout(controller, state, eventBus)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to instatiate layout")
+	}
 
 	// Starts a new tview App
 	app := tview.NewApplication()

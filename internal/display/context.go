@@ -1,10 +1,11 @@
 package display
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/vitorqb/addledger/internal/eventbus"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -13,17 +14,31 @@ type Context struct {
 	pages *tview.Pages
 }
 
-func NewContext(state *statemod.State) *Context {
+func NewContext(
+	state *statemod.State,
+	eventBus eventbus.IEventBus,
+) (*Context, error) {
 	context := new(Context)
+	accountList := accountList(state)
 	context.state = state
 	context.pages = tview.NewPages()
 	context.pages.SetBorder(true)
-	context.pages.AddPage("accountList", accountList(state), true, false)
+	context.pages.AddPage("accountList", accountList, true, false)
 	context.pages.AddPage("empty", tview.NewBox(), true, false)
 	context.pages.SwitchToPage("accountList")
 	context.Refresh()
 	state.AddOnChangeHook(context.Refresh)
-	return context
+	err := eventBus.Subscribe(eventbus.Subscription{
+		Topic: "input.postingaccount.eventkey",
+		Handler: func(e eventbus.Event) {
+			eventKey := e.Data.(*tcell.EventKey)
+			accountList.List.InputHandler()(eventKey, func(p tview.Primitive) {})
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to eventBus: %w", err)
+	}
+	return context, nil
 }
 
 func (c Context) GetContent() *tview.Pages { return c.pages }
@@ -40,15 +55,6 @@ func (c Context) Refresh() {
 // AccountList represents a list of accounts
 type AccountList struct {
 	*tview.List
-}
-
-// HandleRequest handles an AccountListRequest
-func (al *AccountList) HandleRequest(req string) {
-	switch strings.ToLower(req) {
-	case "next":
-		event := tcell.NewEventKey(tcell.KeyDown, tcell.RuneDArrow, tcell.ModNone)
-		al.InputHandler()(event, func(p tview.Primitive) {})
-	}
 }
 
 func accountList(state *statemod.State) *AccountList {
