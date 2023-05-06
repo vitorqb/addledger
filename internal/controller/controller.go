@@ -5,18 +5,34 @@ import (
 	"io"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
+//go:generate mockgen --source=controller.go --destination=../../mocks/controller/controller_mock.go
+
+// IInputController reacts to the user inputs and interactions.
+type IInputController interface {
+	OnDateInput(date time.Time)
+	OnDescriptionInput(description string)
+	OnPostingAccountDone(account string)
+	OnPostingAccountListAcction(action listaction.ListAction)
+	OnPostingValueInput(value string)
+	OnInputConfirmation()
+	OnInputRejection()
+}
+
+// InputController implements IInputController.
 type InputController struct {
 	state    *statemod.State
 	output   io.Writer
 	eventBus eventbus.IEventBus
 }
+
+var _ IInputController = &InputController{}
 
 func NewController(state *statemod.State, options ...Opt) (*InputController, error) {
 	opts := &Opts{}
@@ -62,16 +78,14 @@ func (ic *InputController) OnPostingAccountDone(account string) {
 	ic.state.NextPhase()
 }
 
-func (ic *InputController) OnPostingAccountInputCapture(keyEvent *tcell.EventKey) {
-	busEvent := eventbus.Event{
-		Topic: "input.postingaccount.eventkey",
-		Data:  keyEvent,
-	}
-	err := ic.eventBus.Send(busEvent)
+func (ic *InputController) OnPostingAccountListAcction(action listaction.ListAction) {
+	err := ic.eventBus.Send(eventbus.Event{
+		Topic: "input.postingaccount.listaction",
+		Data:  action,
+	})
 	if err != nil {
 		logrus.WithError(err).Warn("Failed to send event")
 	}
-
 }
 
 func (ic *InputController) OnPostingValueInput(value string) {

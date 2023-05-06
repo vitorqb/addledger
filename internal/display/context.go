@@ -5,7 +5,9 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -29,10 +31,13 @@ func NewContext(
 	context.Refresh()
 	state.AddOnChangeHook(context.Refresh)
 	err := eventBus.Subscribe(eventbus.Subscription{
-		Topic: "input.postingaccount.eventkey",
+		Topic: "input.postingaccount.listaction",
 		Handler: func(e eventbus.Event) {
-			eventKey := e.Data.(*tcell.EventKey)
-			accountList.List.InputHandler()(eventKey, func(p tview.Primitive) {})
+			listAction, ok := e.Data.(listaction.ListAction)
+			if !ok {
+				logrus.Errorf("received event w/ unexpected data %+v", e)
+			}
+			accountList.handleAction(listAction)
 		},
 	})
 	if err != nil {
@@ -64,4 +69,17 @@ func accountList(state *statemod.State) *AccountList {
 	}
 	list.ShowSecondaryText(false)
 	return list
+}
+
+func (al *AccountList) handleAction(action listaction.ListAction) {
+	switch action {
+	case listaction.NEXT:
+		eventKey := tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone)
+		al.InputHandler()(eventKey, func(p tview.Primitive) {})
+	case listaction.PREV:
+		eventKey := tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone)
+		al.InputHandler()(eventKey, func(p tview.Primitive) {})
+	case listaction.NONE:
+	default:
+	}
 }

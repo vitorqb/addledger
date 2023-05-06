@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/controller"
+	"github.com/vitorqb/addledger/internal/display/input"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -17,7 +18,7 @@ type (
 		pages               *tview.Pages
 		dateField           *tview.InputField
 		descriptionField    *tview.InputField
-		postingAccountField *tview.InputField
+		postingAccountField *input.PostingAccountField
 		postingValueField   *tview.InputField
 	}
 )
@@ -34,7 +35,7 @@ const (
 func NewInput(controller *controller.InputController, state *statemod.State) *Input {
 	dateField := dateField(controller)
 	descriptionField := descriptionField(controller)
-	postingAccountField := postingAccountField(controller)
+	postingAccountField := input.NewPostingAccount(controller)
 	postingValueField := postingValueField(controller)
 	inputConfirmationField := inputConfirmationField(controller)
 
@@ -102,20 +103,6 @@ func dateField(controller *controller.InputController) *tview.InputField {
 		controller.OnDateInput(date)
 	})
 	return inputField
-}
-
-func postingAccountField(controller *controller.InputController) *tview.InputField {
-	accountInputField := tview.NewInputField()
-	accountInputField.SetLabel("Account: ")
-	accountInputField.SetDoneFunc(func(_ tcell.Key) {
-		text := accountInputField.GetText()
-		controller.OnPostingAccountDone(text)
-	})
-	accountInputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		controller.OnPostingAccountInputCapture(event)
-		return event
-	})
-	return accountInputField
 }
 
 func postingValueField(controller *controller.InputController) *tview.InputField {

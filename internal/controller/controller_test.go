@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
@@ -145,7 +145,7 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "OnPostingAccountInputCapture",
+			name: "OnPostingAccountListAcction",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{
 					WithOutput(c.bytesBuffer),
@@ -153,13 +153,12 @@ func TestInputController(t *testing.T) {
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
-				keyEvent := tcell.EventKey{}
 				expectedEvent := eventbus.Event{
-					Topic: "input.postingaccount.eventkey",
-					Data:  &keyEvent,
+					Topic: "input.postingaccount.listaction",
+					Data:  listaction.NEXT,
 				}
 				c.eventBus.EXPECT().Send(expectedEvent)
-				c.controller.OnPostingAccountInputCapture(&keyEvent)
+				c.controller.OnPostingAccountListAcction(listaction.NEXT)
 			},
 		},
 	}
