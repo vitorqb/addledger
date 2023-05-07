@@ -3,13 +3,13 @@ package state
 import (
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/pkg/hledger"
+	"github.com/vitorqb/addledger/pkg/react"
 )
 
 type (
-	Phase        string
-	OnChangeHook func()
-	State        struct {
-		onChangeHooks     []OnChangeHook
+	Phase string
+	State struct {
+		react.IReact
 		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
 		// accounts is an array w/ all known accounts.
@@ -27,8 +27,8 @@ const (
 
 func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
-	state := &State{[]OnChangeHook{}, InputDate, journalEntryInput, []string{}}
-	journalEntryInput.AddOnChangeHook(state.notifyChange)
+	state := &State{react.New(), InputDate, journalEntryInput, []string{}}
+	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	return state
 }
 
@@ -38,22 +38,12 @@ func (s *State) CurrentPhase() Phase {
 
 func (s *State) SetPhase(p Phase) {
 	s.currentPhase = p
-	s.notifyChange()
-}
-
-func (s *State) AddOnChangeHook(h OnChangeHook) {
-	s.onChangeHooks = append(s.onChangeHooks, h)
-}
-
-func (s *State) notifyChange() {
-	for _, h := range s.onChangeHooks {
-		h()
-	}
+	s.NotifyChange()
 }
 
 func (s *State) SetAccounts(x []string) {
 	s.accounts = x
-	s.notifyChange()
+	s.NotifyChange()
 }
 
 func (s *State) GetAccounts() []string {
@@ -72,7 +62,7 @@ func (s *State) NextPhase() {
 		s.currentPhase = Confirmation
 	default:
 	}
-	s.notifyChange()
+	s.NotifyChange()
 }
 
 // LoadMetadata loads metadata to state from Hledger
