@@ -8,12 +8,21 @@ import (
 
 type (
 	Phase string
+
+	// InputMetadata is the state relative to inputs.
+	InputMetadata struct {
+		react.IReact
+		postingAccountText string
+	}
+
+	// State is the top-level app state
 	State struct {
 		react.IReact
 		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
 		// accounts is an array w/ all known accounts.
-		accounts []string
+		accounts      []string
+		InputMetadata *InputMetadata
 	}
 )
 
@@ -27,8 +36,16 @@ const (
 
 func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
-	state := &State{react.New(), InputDate, journalEntryInput, []string{}}
+	inputMetadata := &InputMetadata{react.New(), ""}
+	state := &State{
+		react.New(),
+		InputDate,
+		journalEntryInput,
+		[]string{},
+		inputMetadata,
+	}
 	journalEntryInput.AddOnChangeHook(state.NotifyChange)
+	inputMetadata.AddOnChangeHook(state.NotifyChange)
 	return state
 }
 
@@ -73,4 +90,17 @@ func (s *State) LoadMetadata(hledgerClient hledger.IClient) error {
 	}
 	s.SetAccounts(accounts)
 	return nil
+}
+
+// PostingAccountText returns the current text for the PostingAccount input.
+func (im *InputMetadata) PostingAccountText() string {
+	return im.postingAccountText
+}
+
+// PostingAccountText sets the current text for the PostingAccount input.
+func (im *InputMetadata) SetPostingAccountText(x string) {
+	if im.postingAccountText != x {
+		im.postingAccountText = x
+		im.NotifyChange()
+	}
 }

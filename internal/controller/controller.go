@@ -20,6 +20,7 @@ type IInputController interface {
 	OnDescriptionInput(description string)
 	OnPostingAccountDone(account string)
 	OnPostingAccountListAcction(action listaction.ListAction)
+	OnPostingAccountChanged(newText string)
 	OnPostingValueInput(value string)
 	OnInputConfirmation()
 	OnInputRejection()
@@ -86,6 +87,10 @@ func (ic *InputController) OnPostingAccountListAcction(action listaction.ListAct
 	if err != nil {
 		logrus.WithError(err).Warn("Failed to send event")
 	}
+}
+
+func (ic *InputController) OnPostingAccountChanged(newText string) {
+	ic.state.InputMetadata.SetPostingAccountText(newText)
 }
 
 func (ic *InputController) OnPostingValueInput(value string) {

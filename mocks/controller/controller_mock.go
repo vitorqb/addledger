@@ -83,6 +83,18 @@ func (mr *MockIInputControllerMockRecorder) OnInputRejection() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInputRejection", reflect.TypeOf((*MockIInputController)(nil).OnInputRejection))
 }
 
+// OnPostingAccountChanged mocks base method.
+func (m *MockIInputController) OnPostingAccountChanged(newText string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnPostingAccountChanged", newText)
+}
+
+// OnPostingAccountChanged indicates an expected call of OnPostingAccountChanged.
+func (mr *MockIInputControllerMockRecorder) OnPostingAccountChanged(newText interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountChanged", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountChanged), newText)
+}
+
 // OnPostingAccountDone mocks base method.
 func (m *MockIInputController) OnPostingAccountDone(account string) {
 	m.ctrl.T.Helper()

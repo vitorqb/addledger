@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/eventbus"
@@ -30,6 +31,7 @@ func NewContext(
 	context.pages.SwitchToPage("accountList")
 	context.Refresh()
 	state.AddOnChangeHook(context.Refresh)
+	state.AddOnChangeHook(func() { accountList.Refresh(state) })
 	err := eventBus.Subscribe(eventbus.Subscription{
 		Topic: "input.postingaccount.listaction",
 		Handler: func(e eventbus.Event) {
@@ -60,14 +62,13 @@ func (c Context) Refresh() {
 // AccountList represents a list of accounts
 type AccountList struct {
 	*tview.List
+	inputCache string
 }
 
 func accountList(state *statemod.State) *AccountList {
-	list := &AccountList{tview.NewList()}
-	for _, acc := range state.GetAccounts() {
-		list.AddItem(acc, "", 0, nil)
-	}
+	list := &AccountList{tview.NewList(), ""}
 	list.ShowSecondaryText(false)
+	list.Refresh(state)
 	return list
 }
 
@@ -81,5 +82,18 @@ func (al *AccountList) handleAction(action listaction.ListAction) {
 		al.InputHandler()(eventKey, func(p tview.Primitive) {})
 	case listaction.NONE:
 	default:
+	}
+}
+
+func (al *AccountList) Refresh(state *statemod.State) {
+	input := state.InputMetadata.PostingAccountText()
+	if al.inputCache != "" && al.inputCache == input {
+		return
+	}
+	al.Clear()
+	for _, acc := range state.GetAccounts() {
+		if fuzzy.Match(input, acc) {
+			al.AddItem(acc, "", 0, nil)
+		}
 	}
 }

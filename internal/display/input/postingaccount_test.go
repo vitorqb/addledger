@@ -29,10 +29,18 @@ func TestPostingAccountField(t *testing.T) {
 				c.postingAccount.InputHandler()(event, func(p tview.Primitive) {})
 			},
 		},
+		{
+			name: "Sends msg with current text to controller",
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.EXPECT().OnPostingAccountChanged("FOO")
+				c.postingAccount.SetText("FOO")
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			c := new(testcontext)
 			c.controller = NewMockIInputController(ctrl)
 			c.postingAccount = NewPostingAccount(c.controller)

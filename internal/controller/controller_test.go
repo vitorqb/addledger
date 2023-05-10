@@ -161,11 +161,25 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAccountListAcction(listaction.NEXT)
 			},
 		},
+		{
+			name: "OnPostingAccountChanged",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnPostingAccountChanged("FOO")
+				assert.Equal(t, "FOO", c.state.InputMetadata.PostingAccountText())
+			},
+		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			c := new(testcontext)
 			var bytesBuffer bytes.Buffer
 			c.bytesBuffer = &bytesBuffer

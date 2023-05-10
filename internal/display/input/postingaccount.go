@@ -15,10 +15,15 @@ type PostingAccountField struct {
 func NewPostingAccount(controller controller.IInputController) *PostingAccountField {
 	field := &PostingAccountField{tview.NewInputField(), controller}
 	field.SetLabel("Account: ")
+
+	// When done, send info to controller
 	field.SetDoneFunc(func(_ tcell.Key) {
 		text := field.GetText()
 		field.controller.OnPostingAccountDone(text)
 	})
+
+	// When receive a key, maybe dispatch an action to the context for
+	// autocompletion.
 	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		listAction := eventKeyToListAction(event)
 		if listAction != listaction.NONE {
@@ -26,6 +31,11 @@ func NewPostingAccount(controller controller.IInputController) *PostingAccountFi
 			return nil
 		}
 		return event
+	})
+
+	// When current text changes make sure controller is aware.
+	field.SetChangedFunc(func(text string) {
+		field.controller.OnPostingAccountChanged(text)
 	})
 	return field
 }
