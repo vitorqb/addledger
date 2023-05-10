@@ -68,11 +68,18 @@ type AccountList struct {
 func accountList(state *statemod.State) *AccountList {
 	list := &AccountList{tview.NewList(), ""}
 	list.ShowSecondaryText(false)
-	list.Refresh(state)
+	for _, acc := range state.GetAccounts() {
+		list.AddItem(acc, "", 0, nil)
+	}
+	list.SetChangedFunc(func(_ int, mainText, _ string, _ rune) {
+		logrus.WithField("text", mainText).Debug("AccountList changed")
+		state.InputMetadata.SetSelectedPostingAccount(mainText)
+	})
 	return list
 }
 
 func (al *AccountList) handleAction(action listaction.ListAction) {
+	logrus.WithField("action", action).Debug("Received listAction")
 	switch action {
 	case listaction.NEXT:
 		eventKey := tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone)
@@ -87,9 +94,11 @@ func (al *AccountList) handleAction(action listaction.ListAction) {
 
 func (al *AccountList) Refresh(state *statemod.State) {
 	input := state.InputMetadata.PostingAccountText()
-	if al.inputCache != "" && al.inputCache == input {
+	logrus.WithField("input", input).Debug("Refreshing AccountList")
+	if al.inputCache == input {
 		return
 	}
+	al.inputCache = input
 	al.Clear()
 	for _, acc := range state.GetAccounts() {
 		if fuzzy.Match(input, acc) {

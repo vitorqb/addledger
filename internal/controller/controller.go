@@ -19,6 +19,7 @@ type IInputController interface {
 	OnDateInput(date time.Time)
 	OnDescriptionInput(description string)
 	OnPostingAccountDone(account string)
+	OnPostingAccountSelectedFromContext()
 	OnPostingAccountListAcction(action listaction.ListAction)
 	OnPostingAccountChanged(newText string)
 	OnPostingValueInput(value string)
@@ -77,6 +78,11 @@ func (ic *InputController) OnPostingAccountDone(account string) {
 	posting := ic.state.JournalEntryInput.CurrentPosting()
 	posting.SetAccount(account)
 	ic.state.NextPhase()
+}
+
+func (ic *InputController) OnPostingAccountSelectedFromContext() {
+	selectedAccountFromContext := ic.state.InputMetadata.SelectedPostingAccount()
+	ic.OnPostingAccountDone(selectedAccountFromContext)
 }
 
 func (ic *InputController) OnPostingAccountListAcction(action listaction.ListAction) {

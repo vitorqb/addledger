@@ -174,6 +174,23 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, "FOO", c.state.InputMetadata.PostingAccountText())
 			},
 		},
+		{
+			name: "OnPostingAccountSelectedFromContext",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
+				c.controller.OnPostingAccountSelectedFromContext()
+				posting := c.state.JournalEntryInput.CurrentPosting()
+				acc, ok := posting.GetAccount()
+				assert.True(t, ok)
+				assert.Equal(t, "FOO", acc)
+			},
+		},
 	}
 
 	for _, tc := range testcases {

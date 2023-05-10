@@ -36,6 +36,16 @@ func TestPostingAccountField(t *testing.T) {
 				c.postingAccount.SetText("FOO")
 			},
 		},
+		{
+			name: "Sends OnPostingAccountSelectedFromContext msg",
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.EXPECT().OnPostingAccountSelectedFromContext()
+				c.controller.EXPECT().OnPostingAccountChanged("FOO")
+				c.postingAccount.SetText("FOO")
+				event := tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone)
+				c.postingAccount.InputHandler()(event, func(tview.Primitive) {})
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {

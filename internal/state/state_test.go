@@ -78,6 +78,15 @@ func TestState(t *testing.T) {
 				assert.Equal(t, []string{"FOO"}, c.state.GetAccounts())
 			},
 		},
+		{
+			name: "Manipulates SelectedPostingAccount",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
+				assert.Equal(t, 1, c.hookCallCounter)
+				acc := c.state.InputMetadata.SelectedPostingAccount()
+				assert.Equal(t, "FOO", acc)
+			},
+		},
 	}
 
 	for _, tc := range testcases {

@@ -3,6 +3,7 @@ package input
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/listaction"
 )
@@ -16,25 +17,47 @@ func NewPostingAccount(controller controller.IInputController) *PostingAccountFi
 	field := &PostingAccountField{tview.NewInputField(), controller}
 	field.SetLabel("Account: ")
 
-	// When done, send info to controller
-	field.SetDoneFunc(func(_ tcell.Key) {
-		text := field.GetText()
-		field.controller.OnPostingAccountDone(text)
-	})
-
-	// When receive a key, maybe dispatch an action to the context for
-	// autocompletion.
+	// Custom handling of user input
 	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+
+		logrus.WithField("key", event.Key()).
+			WithField("rune", event.Rune()).
+			Debug("Received event in PostingAccount input")
+
+		// If key is linked to account on Context's List of Accounts, dispatch
+		// and action to it.
 		listAction := eventKeyToListAction(event)
 		if listAction != listaction.NONE {
+			logrus.WithField("action", listAction).Debug("Dispatching listAction")
 			controller.OnPostingAccountListAcction(listAction)
 			return nil
 		}
+
+		switch key := event.Key(); key {
+		// If user hit enter...
+		case tcell.KeyEnter:
+			if field.GetText() == "" {
+				// ...with no text, he's done entering stuff!
+				field.controller.OnPostingAccountDone("")
+			} else {
+				// ...with some text written, he's selecting from context
+				field.controller.OnPostingAccountSelectedFromContext()
+			}
+			return nil
+		// if Ctrl+J, use input as it is
+		case tcell.KeyCtrlJ:
+			text := field.GetText()
+			field.controller.OnPostingAccountDone(text)
+			return nil
+		}
+
+		// Else delegates to default
 		return event
 	})
 
 	// When current text changes make sure controller is aware.
 	field.SetChangedFunc(func(text string) {
+		logrus.WithField("text", text).Debug("PostingAccount input change")
 		field.controller.OnPostingAccountChanged(text)
 	})
 	return field

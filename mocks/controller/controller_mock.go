@@ -119,6 +119,18 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAccountListAcction(action i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountListAcction", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountListAcction), action)
 }
 
+// OnPostingAccountSelectedFromContext mocks base method.
+func (m *MockIInputController) OnPostingAccountSelectedFromContext() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnPostingAccountSelectedFromContext")
+}
+
+// OnPostingAccountSelectedFromContext indicates an expected call of OnPostingAccountSelectedFromContext.
+func (mr *MockIInputControllerMockRecorder) OnPostingAccountSelectedFromContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountSelectedFromContext", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountSelectedFromContext))
+}
+
 // OnPostingValueInput mocks base method.
 func (m *MockIInputController) OnPostingValueInput(value string) {
 	m.ctrl.T.Helper()

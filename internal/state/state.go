@@ -12,7 +12,8 @@ type (
 	// InputMetadata is the state relative to inputs.
 	InputMetadata struct {
 		react.IReact
-		postingAccountText string
+		postingAccountText     string
+		selectedPostingAccount string
 	}
 
 	// State is the top-level app state
@@ -36,7 +37,7 @@ const (
 
 func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
-	inputMetadata := &InputMetadata{react.New(), ""}
+	inputMetadata := &InputMetadata{react.New(), "", ""}
 	state := &State{
 		react.New(),
 		InputDate,
@@ -101,6 +102,21 @@ func (im *InputMetadata) PostingAccountText() string {
 func (im *InputMetadata) SetPostingAccountText(x string) {
 	if im.postingAccountText != x {
 		im.postingAccountText = x
+		im.NotifyChange()
+	}
+}
+
+// SelectedPostingAccount returns the current text for the selected account in the
+// context's AccountList.
+func (im *InputMetadata) SelectedPostingAccount() string {
+	return im.selectedPostingAccount
+}
+
+// SetSelectedPostingAccount returns the current text for the selected account in the
+// context's AccountList.
+func (im *InputMetadata) SetSelectedPostingAccount(x string) {
+	if im.selectedPostingAccount != x {
+		im.selectedPostingAccount = x
 		im.NotifyChange()
 	}
 }
