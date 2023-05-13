@@ -24,6 +24,10 @@ type Config struct {
 	LedgerFile string
 	// Executable path for hledger. Empty for "hledger".
 	HLedgerExecutable string
+	// File where to send log. Empty for stderr.
+	LogFile string
+	// Level for logging
+	LogLevel string
 }
 
 // ConfigValues has all known config values
@@ -31,6 +35,8 @@ var ConfigValues = []ConfigValue{
 	{"destfile", "d", "", "Destination file (where we will write)"},
 	{"hledger-executable", "", "hledger", "Executable to use for HLedger"},
 	{"ledger-file", "", "", "Ledger File to pass to HLedger commands"},
+	{"logfile", "", "", "File where to send log output. Empty for stderr."},
+	{"loglevel", "", "WARN", "Level of logger. Defaults to warning."},
 }
 
 func Setup(flagSet *pflag.FlagSet) {
@@ -71,6 +77,8 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 		DestFile:          viper.GetString("destfile"),
 		HLedgerExecutable: viper.GetString("hledger-executable"),
 		LedgerFile:        viper.GetString("ledger-file"),
+		LogFile:           viper.GetString("logfile"),
+		LogLevel:          viper.GetString("loglevel"),
 	}
 
 	// Validate
