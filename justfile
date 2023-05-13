@@ -7,6 +7,7 @@ setup:
     mkdir -p out
     touch out/destfile
     ./scripts/setup-asdf.sh
+    ./scripts/setup-mockgen.sh
     ./scripts/setup-envfile.sh
 
 run:
