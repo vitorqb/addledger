@@ -1,0 +1,74 @@
+version: 2.1
+
+commands:
+  install-asdf:
+    parameters:
+      version:
+        default: 0.11.3
+        type: string
+    steps:
+      - run:
+          name: "Install asdf"
+          command: |
+            git clone https://github.com/asdf-vm/asdf.git $HOME/.asdf --branch v<<parameters.version>>
+            echo source $HOME/.asdf/asdf.sh >>$BASH_ENV
+  install-just:
+    steps:
+      - run:
+          name: "Install just"
+          command: |
+            mkdir -p $HOME/.local/bin
+            curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to $HOME/.local/bin
+            echo 'export PATH=$PATH:$HOME/.local/bin' >>$BASH_ENV
+  setup:
+    steps:
+      - install-asdf
+      - install-just
+      - checkout
+      - run:
+          name: "Setup"
+          command: just setup
+
+jobs:
+  test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup
+      - run:
+          name: "Run tests"
+          command: "just setup test"
+  mocks:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup
+      - run:
+          name: "Run mocks"
+          command: just mocks && git diff --exit-code    
+  lint:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup
+      - run:
+          name: "Run linter"
+          command: just lint && git diff --exit-code
+  format:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup
+      - run:
+          name: "Run formatter"
+          command: just format && git diff --exit-code
+
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/configuration-reference/#workflows
+workflows:
+  main:
+    jobs:
+      - test
+      - mocks
+      - lint
+      - format

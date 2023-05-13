@@ -9,6 +9,7 @@ then
 fi
 
 # Add needed repositories
+asdf plugin add golang
 asdf plugin add golangci-lint
 
 # Install
