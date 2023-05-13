@@ -1,14 +1,22 @@
 package utils
 
-import "github.com/rivo/tview"
+// StopSplitArray signals that the SplitArray should stop.
+type StopSplitArray struct{}
 
-func Center(width, height int, p tview.Primitive) tview.Primitive {
-	return tview.NewFlex().
-		AddItem(tview.NewBox(), 0, 1, false).
-		AddItem(tview.NewFlex().
-			SetDirection(tview.FlexRow).
-			AddItem(tview.NewBox(), 0, 1, false).
-			AddItem(p, height, 1, true).
-			AddItem(tview.NewBox(), 0, 1, false), width, 1, true).
-		AddItem(tview.NewBox(), 0, 1, false)
+func (*StopSplitArray) Error() string { return "Stop!" }
+
+// SplitArray splits an array into sub-arrays
+func SplitArray[T interface{}](size int, a []T) (next func() ([]T, error), err error) {
+	from := 0
+	to := size
+	next = func() ([]T, error) {
+		if to <= len(a) {
+			out := a[from:to]
+			from += size
+			to += size
+			return out, nil
+		}
+		return nil, &StopSplitArray{}
+	}
+	return next, nil
 }

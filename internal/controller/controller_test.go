@@ -5,10 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/controller"
+	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
+	. "github.com/vitorqb/addledger/mocks/eventbus"
 )
 
 func TestInputController(t *testing.T) {
@@ -18,6 +22,7 @@ func TestInputController(t *testing.T) {
 		controller  *InputController
 		initError   error
 		bytesBuffer *bytes.Buffer
+		eventBus    *MockIEventBus
 	}
 
 	type testcase struct {
@@ -28,7 +33,7 @@ func TestInputController(t *testing.T) {
 
 	testcases := []testcase{
 		{
-			name: "NewController Missing output causes error",
+			name: "NewController missing output causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{}
 			},
@@ -37,9 +42,21 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "OnDateInput",
+			name: "NewController missing eventBus causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{WithOutput(c.bytesBuffer)}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.ErrorContains(t, c.initError, "missing Event Bus")
+			},
+		},
+		{
+			name: "OnDateInput",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.Nil(t, c.initError)
@@ -53,7 +70,10 @@ func TestInputController(t *testing.T) {
 		{
 			name: "OnDescriptionInput",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputDescription)
@@ -66,21 +86,27 @@ func TestInputController(t *testing.T) {
 		{
 			name: "OnAccountInput and empty account",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnPostingAccountInput("")
+				c.controller.OnPostingAccountDone("")
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
 			},
 		},
 		{
 			name: "OnAccountInput not empty",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingAccount)
-				c.controller.OnPostingAccountInput("FOO")
+				c.controller.OnPostingAccountDone("FOO")
 				assert.Equal(t, statemod.InputPostingValue, c.state.CurrentPhase())
 				account, _ := c.state.JournalEntryInput.CurrentPosting().GetAccount()
 				assert.Equal(t, "FOO", account)
@@ -89,7 +115,10 @@ func TestInputController(t *testing.T) {
 		{
 			name: "OnInputRejection",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingValue)
@@ -100,7 +129,10 @@ func TestInputController(t *testing.T) {
 		{
 			name: "OnInputConfirmation",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput = testutils.JournalEntryInput1(t)
@@ -112,14 +144,82 @@ func TestInputController(t *testing.T) {
 				assert.False(t, dateFound)
 			},
 		},
+		{
+			name: "OnPostingAccountListAcction",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				expectedEvent := eventbus.Event{
+					Topic: "input.postingaccount.listaction",
+					Data:  listaction.NEXT,
+				}
+				c.eventBus.EXPECT().Send(expectedEvent)
+				c.controller.OnPostingAccountListAcction(listaction.NEXT)
+			},
+		},
+		{
+			name: "OnPostingAccountChanged",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnPostingAccountChanged("FOO")
+				assert.Equal(t, "FOO", c.state.InputMetadata.PostingAccountText())
+			},
+		},
+		{
+			name: "OnPostingAccountSelectedFromContext",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
+				c.controller.OnPostingAccountSelectedFromContext()
+				posting := c.state.JournalEntryInput.CurrentPosting()
+				acc, ok := posting.GetAccount()
+				assert.True(t, ok)
+				assert.Equal(t, "FOO", acc)
+			},
+		},
+		{
+			name: "OnPostingAccountInsertFromContext",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
+				expEvent := eventbus.Event{
+					Topic: "input.postingaccount.settext",
+					Data:  "FOO",
+				}
+				c.eventBus.EXPECT().Send(expEvent)
+				c.controller.OnPostingAccountInsertFromContext()
+			},
+		},
 	}
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			c := new(testcontext)
 			var bytesBuffer bytes.Buffer
 			c.bytesBuffer = &bytesBuffer
 			c.state = statemod.InitialState()
+			c.eventBus = NewMockIEventBus(ctrl)
 			opts := tc.opts(t, c)
 			c.controller, c.initError = NewController(c.state, opts...)
 			tc.run(t, c)

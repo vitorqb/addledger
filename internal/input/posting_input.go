@@ -1,31 +1,22 @@
 package input
 
+import "github.com/vitorqb/addledger/pkg/react"
+
 type (
 	PostingInput struct {
-		onChangeHooks []OnChangeHook
-		inputs        map[string]interface{}
+		react.IReact
+		inputs map[string]interface{}
 	}
 )
 
 func NewPostingInput() *PostingInput {
-	onChangeHooks := []OnChangeHook{}
 	inputs := map[string]interface{}{}
-	return &PostingInput{onChangeHooks: onChangeHooks, inputs: inputs}
-}
-
-func (i *PostingInput) AddOnChangeHook(hook OnChangeHook) {
-	i.onChangeHooks = append(i.onChangeHooks, hook)
-}
-
-func (i *PostingInput) notifyChange() {
-	for _, h := range i.onChangeHooks {
-		h()
-	}
+	return &PostingInput{IReact: react.New(), inputs: inputs}
 }
 
 func (i *PostingInput) SetAccount(account string) {
 	i.inputs["account"] = account
-	i.notifyChange()
+	i.NotifyChange()
 }
 
 func (i *PostingInput) GetAccount() (string, bool) {
@@ -39,7 +30,7 @@ func (i *PostingInput) GetAccount() (string, bool) {
 
 func (i *PostingInput) SetValue(value string) {
 	i.inputs["value"] = value
-	i.notifyChange()
+	i.NotifyChange()
 }
 
 func (i *PostingInput) GetValue() (string, bool) {

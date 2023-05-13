@@ -1,11 +1,14 @@
 package input
 
-import "time"
+import (
+	"time"
+
+	"github.com/vitorqb/addledger/pkg/react"
+)
 
 type (
-	OnChangeHook      func()
 	JournalEntryInput struct {
-		onChangeHooks       []OnChangeHook
+		react.IReact
 		inputs              map[string]interface{}
 		currentPostingIndex int
 	}
@@ -13,22 +16,12 @@ type (
 
 func NewJournalEntryInput() *JournalEntryInput {
 	m := make(map[string]interface{})
-	ws := []OnChangeHook{}
-	return &JournalEntryInput{ws, m, 0}
-}
-
-func (i *JournalEntryInput) AddOnChangeHook(hook OnChangeHook) {
-	i.onChangeHooks = append(i.onChangeHooks, hook)
-}
-func (i *JournalEntryInput) notifyChange() {
-	for _, h := range i.onChangeHooks {
-		h()
-	}
+	return &JournalEntryInput{react.New(), m, 0}
 }
 
 func (i *JournalEntryInput) SetDate(x time.Time) {
 	i.inputs["date"] = x
-	i.notifyChange()
+	i.NotifyChange()
 
 }
 func (i *JournalEntryInput) GetDate() (time.Time, bool) {
@@ -42,7 +35,7 @@ func (i *JournalEntryInput) GetDate() (time.Time, bool) {
 
 func (i *JournalEntryInput) SetDescription(x string) {
 	i.inputs["description"] = x
-	i.notifyChange()
+	i.NotifyChange()
 }
 func (i *JournalEntryInput) GetDescription() (string, bool) {
 	if rawValue, found := i.inputs["description"]; found {
@@ -63,7 +56,7 @@ func (i *JournalEntryInput) CurrentPosting() *PostingInput {
 	// currentPostingIndex out of range -> add one and return.
 	posting := i.AddPosting()
 	i.currentPostingIndex = i.CountPostings() - 1
-	i.notifyChange()
+	i.NotifyChange()
 	return posting
 }
 
@@ -71,7 +64,7 @@ func (i *JournalEntryInput) CurrentPosting() *PostingInput {
 // and we should advance the current posting.
 func (i *JournalEntryInput) AdvancePosting() {
 	i.currentPostingIndex++
-	i.notifyChange()
+	i.NotifyChange()
 }
 
 func (i *JournalEntryInput) CountPostings() int {
@@ -96,16 +89,16 @@ func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
 
 func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	postInput = NewPostingInput()
-	postInput.AddOnChangeHook(i.notifyChange)
+	postInput.AddOnChangeHook(i.NotifyChange)
 	if rawPostings, found := i.inputs["postings"]; found {
 		if postings, ok := rawPostings.([]*PostingInput); ok {
 			i.inputs["postings"] = append(postings, postInput)
-			i.notifyChange()
+			i.NotifyChange()
 			return
 		}
 	}
 	i.inputs["postings"] = []*PostingInput{postInput}
-	i.notifyChange()
+	i.NotifyChange()
 	return
 }
 

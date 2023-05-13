@@ -2,15 +2,28 @@ package state
 
 import (
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/pkg/hledger"
+	"github.com/vitorqb/addledger/pkg/react"
 )
 
 type (
-	Phase        string
-	OnChangeHook func()
-	State        struct {
-		onChangeHooks     []OnChangeHook
+	Phase string
+
+	// InputMetadata is the state relative to inputs.
+	InputMetadata struct {
+		react.IReact
+		postingAccountText     string
+		selectedPostingAccount string
+	}
+
+	// State is the top-level app state
+	State struct {
+		react.IReact
 		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
+		// accounts is an array w/ all known accounts.
+		accounts      []string
+		InputMetadata *InputMetadata
 	}
 )
 
@@ -24,8 +37,16 @@ const (
 
 func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
-	state := &State{[]OnChangeHook{}, InputDate, journalEntryInput}
-	journalEntryInput.AddOnChangeHook(state.notifyChange)
+	inputMetadata := &InputMetadata{react.New(), "", ""}
+	state := &State{
+		react.New(),
+		InputDate,
+		journalEntryInput,
+		[]string{},
+		inputMetadata,
+	}
+	journalEntryInput.AddOnChangeHook(state.NotifyChange)
+	inputMetadata.AddOnChangeHook(state.NotifyChange)
 	return state
 }
 
@@ -35,17 +56,16 @@ func (s *State) CurrentPhase() Phase {
 
 func (s *State) SetPhase(p Phase) {
 	s.currentPhase = p
-	s.notifyChange()
+	s.NotifyChange()
 }
 
-func (s *State) AddOnChangeHook(h OnChangeHook) {
-	s.onChangeHooks = append(s.onChangeHooks, h)
+func (s *State) SetAccounts(x []string) {
+	s.accounts = x
+	s.NotifyChange()
 }
 
-func (s *State) notifyChange() {
-	for _, h := range s.onChangeHooks {
-		h()
-	}
+func (s *State) GetAccounts() []string {
+	return s.accounts
 }
 
 func (s *State) NextPhase() {
@@ -60,5 +80,43 @@ func (s *State) NextPhase() {
 		s.currentPhase = Confirmation
 	default:
 	}
-	s.notifyChange()
+	s.NotifyChange()
+}
+
+// LoadMetadata loads metadata to state from Hledger
+func (s *State) LoadMetadata(hledgerClient hledger.IClient) error {
+	accounts, err := hledgerClient.Accounts()
+	if err != nil {
+		return err
+	}
+	s.SetAccounts(accounts)
+	return nil
+}
+
+// PostingAccountText returns the current text for the PostingAccount input.
+func (im *InputMetadata) PostingAccountText() string {
+	return im.postingAccountText
+}
+
+// PostingAccountText sets the current text for the PostingAccount input.
+func (im *InputMetadata) SetPostingAccountText(x string) {
+	if im.postingAccountText != x {
+		im.postingAccountText = x
+		im.NotifyChange()
+	}
+}
+
+// SelectedPostingAccount returns the current text for the selected account in the
+// context's AccountList.
+func (im *InputMetadata) SelectedPostingAccount() string {
+	return im.selectedPostingAccount
+}
+
+// SetSelectedPostingAccount returns the current text for the selected account in the
+// context's AccountList.
+func (im *InputMetadata) SetSelectedPostingAccount(x string) {
+	if im.selectedPostingAccount != x {
+		im.selectedPostingAccount = x
+		im.NotifyChange()
+	}
 }

@@ -6,6 +6,8 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/controller"
+	"github.com/vitorqb/addledger/internal/display/input"
+	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -17,7 +19,7 @@ type (
 		pages               *tview.Pages
 		dateField           *tview.InputField
 		descriptionField    *tview.InputField
-		postingAccountField *tview.InputField
+		postingAccountField *input.PostingAccountField
 		postingValueField   *tview.InputField
 	}
 )
@@ -31,10 +33,14 @@ const (
 	INPUT_CONFIRMATION    PageName = "INPUT_CONFIRMATION"
 )
 
-func NewInput(controller *controller.InputController, state *statemod.State) *Input {
+func NewInput(
+	controller *controller.InputController,
+	state *statemod.State,
+	eventbus eventbusmod.IEventBus,
+) *Input {
 	dateField := dateField(controller)
 	descriptionField := descriptionField(controller)
-	postingAccountField := postingAccountField(controller)
+	postingAccountField := input.NewPostingAccount(controller, eventbus)
 	postingValueField := postingValueField(controller)
 	inputConfirmationField := inputConfirmationField(controller)
 
@@ -65,17 +71,27 @@ func NewInput(controller *controller.InputController, state *statemod.State) *In
 func (i *Input) refresh() {
 	switch i.state.CurrentPhase() {
 	case statemod.InputDate:
-		i.pages.SwitchToPage(string(INPUT_DATE))
+		if i.CurrentPageName() != string(INPUT_DATE) {
+			i.pages.SwitchToPage(string(INPUT_DATE))
+		}
 	case statemod.InputDescription:
-		i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
+		if i.CurrentPageName() != string(INPUT_DESCRIPTION) {
+			i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
+		}
 	case statemod.InputPostingAccount:
-		i.postingAccountField.SetText("")
-		i.pages.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
+		if i.CurrentPageName() != string(INPUT_POSTING_ACCOUNT) {
+			i.postingAccountField.SetText("")
+			i.pages.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
+		}
 	case statemod.InputPostingValue:
-		i.postingValueField.SetText("")
-		i.pages.SwitchToPage(string(INPUT_POSTING_VALUE))
+		if i.CurrentPageName() != string(INPUT_POSTING_VALUE) {
+			i.postingValueField.SetText("")
+			i.pages.SwitchToPage(string(INPUT_POSTING_VALUE))
+		}
 	case statemod.Confirmation:
-		i.pages.SwitchToPage(string(INPUT_CONFIRMATION))
+		if i.CurrentPageName() != string(INPUT_CONFIRMATION) {
+			i.pages.SwitchToPage(string(INPUT_CONFIRMATION))
+		}
 	default:
 	}
 }
@@ -102,16 +118,6 @@ func dateField(controller *controller.InputController) *tview.InputField {
 		controller.OnDateInput(date)
 	})
 	return inputField
-}
-
-func postingAccountField(controller *controller.InputController) *tview.InputField {
-	accountInputField := tview.NewInputField()
-	accountInputField.SetLabel("Account: ")
-	accountInputField.SetDoneFunc(func(_ tcell.Key) {
-		text := accountInputField.GetText()
-		controller.OnPostingAccountInput(text)
-	})
-	return accountInputField
 }
 
 func postingValueField(controller *controller.InputController) *tview.InputField {
@@ -145,6 +151,11 @@ func inputConfirmationField(controller *controller.InputController) *tview.TextV
 		return event
 	})
 	return field
+}
+
+func (i *Input) CurrentPageName() string {
+	out, _ := i.pages.GetFrontPage()
+	return out
 }
 
 func (i *Input) GetContent() tview.Primitive {

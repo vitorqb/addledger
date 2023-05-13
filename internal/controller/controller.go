@@ -6,16 +6,36 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
-type (
-	InputController struct {
-		state  *statemod.State
-		output io.Writer
-	}
-)
+//go:generate mockgen --source=controller.go --destination=../../mocks/controller/controller_mock.go
+
+// IInputController reacts to the user inputs and interactions.
+type IInputController interface {
+	OnDateInput(date time.Time)
+	OnDescriptionInput(description string)
+	OnPostingAccountDone(account string)
+	OnPostingAccountSelectedFromContext()
+	OnPostingAccountListAcction(action listaction.ListAction)
+	OnPostingAccountChanged(newText string)
+	OnPostingAccountInsertFromContext()
+	OnPostingValueInput(value string)
+	OnInputConfirmation()
+	OnInputRejection()
+}
+
+// InputController implements IInputController.
+type InputController struct {
+	state    *statemod.State
+	output   io.Writer
+	eventBus eventbus.IEventBus
+}
+
+var _ IInputController = &InputController{}
 
 func NewController(state *statemod.State, options ...Opt) (*InputController, error) {
 	opts := &Opts{}
@@ -28,7 +48,14 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 	if opts.output == nil {
 		return nil, fmt.Errorf("missing output")
 	}
-	return &InputController{state: state, output: opts.output}, nil
+	if opts.eventBus == nil {
+		return nil, fmt.Errorf("missing Event Bus")
+	}
+	return &InputController{
+		state:    state,
+		output:   opts.output,
+		eventBus: opts.eventBus,
+	}, nil
 }
 
 func (ic *InputController) OnDateInput(date time.Time) {
@@ -41,7 +68,7 @@ func (ic *InputController) OnDescriptionInput(description string) {
 	ic.state.NextPhase()
 }
 
-func (ic *InputController) OnPostingAccountInput(account string) {
+func (ic *InputController) OnPostingAccountDone(account string) {
 	// Empty string -> user is done entering postings.
 	if account == "" {
 		ic.state.SetPhase(statemod.Confirmation)
@@ -52,6 +79,39 @@ func (ic *InputController) OnPostingAccountInput(account string) {
 	posting := ic.state.JournalEntryInput.CurrentPosting()
 	posting.SetAccount(account)
 	ic.state.NextPhase()
+}
+
+func (ic *InputController) OnPostingAccountSelectedFromContext() {
+	selectedAccountFromContext := ic.state.InputMetadata.SelectedPostingAccount()
+	ic.OnPostingAccountDone(selectedAccountFromContext)
+}
+
+// OnPostingAccountInsertFromContext inserts the text from the context to the
+// PostingAccount input.
+func (ic *InputController) OnPostingAccountInsertFromContext() {
+	textFromContext := ic.state.InputMetadata.SelectedPostingAccount()
+	event := eventbus.Event{
+		Topic: "input.postingaccount.settext",
+		Data:  textFromContext,
+	}
+	err := ic.eventBus.Send(event)
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
+}
+
+func (ic *InputController) OnPostingAccountListAcction(action listaction.ListAction) {
+	err := ic.eventBus.Send(eventbus.Event{
+		Topic: "input.postingaccount.listaction",
+		Data:  action,
+	})
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
+}
+
+func (ic *InputController) OnPostingAccountChanged(newText string) {
+	ic.state.InputMetadata.SetPostingAccountText(newText)
 }
 
 func (ic *InputController) OnPostingValueInput(value string) {
