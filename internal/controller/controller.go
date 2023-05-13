@@ -22,6 +22,7 @@ type IInputController interface {
 	OnPostingAccountSelectedFromContext()
 	OnPostingAccountListAcction(action listaction.ListAction)
 	OnPostingAccountChanged(newText string)
+	OnPostingAccountInsertFromContext()
 	OnPostingValueInput(value string)
 	OnInputConfirmation()
 	OnInputRejection()
@@ -83,6 +84,20 @@ func (ic *InputController) OnPostingAccountDone(account string) {
 func (ic *InputController) OnPostingAccountSelectedFromContext() {
 	selectedAccountFromContext := ic.state.InputMetadata.SelectedPostingAccount()
 	ic.OnPostingAccountDone(selectedAccountFromContext)
+}
+
+// OnPostingAccountInsertFromContext inserts the text from the context to the
+// PostingAccount input.
+func (ic *InputController) OnPostingAccountInsertFromContext() {
+	textFromContext := ic.state.InputMetadata.SelectedPostingAccount()
+	event := eventbus.Event{
+		Topic: "input.postingaccount.settext",
+		Data:  textFromContext,
+	}
+	err := ic.eventBus.Send(event)
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
 }
 
 func (ic *InputController) OnPostingAccountListAcction(action listaction.ListAction) {

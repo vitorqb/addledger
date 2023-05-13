@@ -5,6 +5,7 @@ import (
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/controller"
+	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/listaction"
 )
 
@@ -13,7 +14,10 @@ type PostingAccountField struct {
 	controller controller.IInputController
 }
 
-func NewPostingAccount(controller controller.IInputController) *PostingAccountField {
+func NewPostingAccount(
+	controller controller.IInputController,
+	eventbus eventbusmod.IEventBus,
+) *PostingAccountField {
 	field := &PostingAccountField{tview.NewInputField(), controller}
 	field.SetLabel("Account: ")
 
@@ -49,8 +53,11 @@ func NewPostingAccount(controller controller.IInputController) *PostingAccountFi
 			text := field.GetText()
 			field.controller.OnPostingAccountDone(text)
 			return nil
+		// if Tab then autocompletes
+		case tcell.KeyTab:
+			field.controller.OnPostingAccountInsertFromContext()
+			return nil
 		}
-
 		// Else delegates to default
 		return event
 	})
@@ -60,6 +67,23 @@ func NewPostingAccount(controller controller.IInputController) *PostingAccountFi
 		logrus.WithField("text", text).Debug("PostingAccount input change")
 		field.controller.OnPostingAccountChanged(text)
 	})
+
+	// Subscribes to eventbus
+	err := eventbus.Subscribe(eventbusmod.Subscription{
+		Topic: "input.postingaccount.settext",
+		Handler: func(e eventbusmod.Event) {
+			text, ok := e.Data.(string)
+			if !ok {
+				logrus.WithField("event", e).Error("Received invalid event")
+				return
+			}
+			field.SetText(text)
+		},
+	})
+	if err != nil {
+		logrus.WithError(err).Fatal("could not subscribe to eventbus")
+	}
+
 	return field
 }
 

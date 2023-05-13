@@ -25,7 +25,7 @@ func NewLayout(
 	eventBus eventbus.IEventBus,
 ) (*Layout, error) {
 	view := NewView(state)
-	input := NewInput(controller, state)
+	input := NewInput(controller, state, eventBus)
 	context, err := NewContext(state, eventBus)
 	if err != nil {
 		return nil, fmt.Errorf("failed to instatiate context: %w", err)

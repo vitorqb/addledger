@@ -191,6 +191,24 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, "FOO", acc)
 			},
 		},
+		{
+			name: "OnPostingAccountInsertFromContext",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
+				expEvent := eventbus.Event{
+					Topic: "input.postingaccount.settext",
+					Data:  "FOO",
+				}
+				c.eventBus.EXPECT().Send(expEvent)
+				c.controller.OnPostingAccountInsertFromContext()
+			},
+		},
 	}
 
 	for _, tc := range testcases {

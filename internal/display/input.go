@@ -7,6 +7,7 @@ import (
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/display/input"
+	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -32,10 +33,14 @@ const (
 	INPUT_CONFIRMATION    PageName = "INPUT_CONFIRMATION"
 )
 
-func NewInput(controller *controller.InputController, state *statemod.State) *Input {
+func NewInput(
+	controller *controller.InputController,
+	state *statemod.State,
+	eventbus eventbusmod.IEventBus,
+) *Input {
 	dateField := dateField(controller)
 	descriptionField := descriptionField(controller)
-	postingAccountField := input.NewPostingAccount(controller)
+	postingAccountField := input.NewPostingAccount(controller, eventbus)
 	postingValueField := postingValueField(controller)
 	inputConfirmationField := inputConfirmationField(controller)
 

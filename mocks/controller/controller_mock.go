@@ -107,6 +107,18 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAccountDone(account interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountDone", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountDone), account)
 }
 
+// OnPostingAccountInsertFromContext mocks base method.
+func (m *MockIInputController) OnPostingAccountInsertFromContext() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnPostingAccountInsertFromContext")
+}
+
+// OnPostingAccountInsertFromContext indicates an expected call of OnPostingAccountInsertFromContext.
+func (mr *MockIInputControllerMockRecorder) OnPostingAccountInsertFromContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountInsertFromContext", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountInsertFromContext))
+}
+
 // OnPostingAccountListAcction mocks base method.
 func (m *MockIInputController) OnPostingAccountListAcction(action listaction.ListAction) {
 	m.ctrl.T.Helper()
