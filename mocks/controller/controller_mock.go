@@ -47,16 +47,64 @@ func (mr *MockIInputControllerMockRecorder) OnDateInput(date interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDateInput", reflect.TypeOf((*MockIInputController)(nil).OnDateInput), date)
 }
 
-// OnDescriptionInput mocks base method.
-func (m *MockIInputController) OnDescriptionInput(description string) {
+// OnDescriptionChanged mocks base method.
+func (m *MockIInputController) OnDescriptionChanged(newText string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnDescriptionInput", description)
+	m.ctrl.Call(m, "OnDescriptionChanged", newText)
 }
 
-// OnDescriptionInput indicates an expected call of OnDescriptionInput.
-func (mr *MockIInputControllerMockRecorder) OnDescriptionInput(description interface{}) *gomock.Call {
+// OnDescriptionChanged indicates an expected call of OnDescriptionChanged.
+func (mr *MockIInputControllerMockRecorder) OnDescriptionChanged(newText interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionInput", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionInput), description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionChanged", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionChanged), newText)
+}
+
+// OnDescriptionDone mocks base method.
+func (m *MockIInputController) OnDescriptionDone() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDescriptionDone")
+}
+
+// OnDescriptionDone indicates an expected call of OnDescriptionDone.
+func (mr *MockIInputControllerMockRecorder) OnDescriptionDone() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionDone", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionDone))
+}
+
+// OnDescriptionInsertFromContext mocks base method.
+func (m *MockIInputController) OnDescriptionInsertFromContext() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDescriptionInsertFromContext")
+}
+
+// OnDescriptionInsertFromContext indicates an expected call of OnDescriptionInsertFromContext.
+func (mr *MockIInputControllerMockRecorder) OnDescriptionInsertFromContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionInsertFromContext", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionInsertFromContext))
+}
+
+// OnDescriptionListAction mocks base method.
+func (m *MockIInputController) OnDescriptionListAction(action listaction.ListAction) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDescriptionListAction", action)
+}
+
+// OnDescriptionListAction indicates an expected call of OnDescriptionListAction.
+func (mr *MockIInputControllerMockRecorder) OnDescriptionListAction(action interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionListAction", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionListAction), action)
+}
+
+// OnDescriptionSelectedFromContext mocks base method.
+func (m *MockIInputController) OnDescriptionSelectedFromContext() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDescriptionSelectedFromContext")
+}
+
+// OnDescriptionSelectedFromContext indicates an expected call of OnDescriptionSelectedFromContext.
+func (mr *MockIInputControllerMockRecorder) OnDescriptionSelectedFromContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionSelectedFromContext", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionSelectedFromContext))
 }
 
 // OnInputConfirmation mocks base method.

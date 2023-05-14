@@ -5,9 +5,12 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/display/input"
+	"github.com/vitorqb/addledger/internal/eventbus"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -39,7 +42,7 @@ func NewInput(
 	eventbus eventbusmod.IEventBus,
 ) *Input {
 	dateField := dateField(controller)
-	descriptionField := descriptionField(controller)
+	descriptionField := DescriptionField(controller, eventbus)
 	postingAccountField := input.NewPostingAccount(controller, eventbus)
 	postingValueField := postingValueField(controller)
 	inputConfirmationField := inputConfirmationField(controller)
@@ -96,17 +99,55 @@ func (i *Input) refresh() {
 	}
 }
 
-func descriptionField(controller *controller.InputController) *tview.InputField {
+func DescriptionField(
+	controller controller.IInputController,
+	eventbus eventbus.IEventBus,
+) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Description: ")
-	inputField.SetDoneFunc(func(_ tcell.Key) {
-		text := inputField.GetText()
-		controller.OnDescriptionInput(text)
+	inputField.SetChangedFunc(controller.OnDescriptionChanged)
+	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch key := event.Key(); key {
+		case tcell.KeyDown, tcell.KeyCtrlN:
+			controller.OnDescriptionListAction(listaction.NEXT)
+			return nil
+		// Arrow up -> move contextual list up
+		case tcell.KeyUp, tcell.KeyCtrlP:
+			controller.OnDescriptionListAction(listaction.PREV)
+			return nil
+		// If user hit enter...
+		case tcell.KeyEnter:
+			controller.OnDescriptionSelectedFromContext()
+			return nil
+		// if Ctrl+J, use input as it is
+		case tcell.KeyCtrlJ:
+			controller.OnDescriptionDone()
+			return nil
+		// if Tab then autocompletes
+		case tcell.KeyTab:
+			controller.OnDescriptionInsertFromContext()
+			return nil
+		}
+		return event
 	})
+	err := eventbus.Subscribe(eventbusmod.Subscription{
+		Topic: "input.description.settext",
+		Handler: func(e eventbusmod.Event) {
+			text, ok := e.Data.(string)
+			if !ok {
+				logrus.WithField("event", e).Error("Received invalid event")
+				return
+			}
+			inputField.SetText(text)
+		},
+	})
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to subscribe to Topic")
+	}
 	return inputField
 }
 
-func dateField(controller *controller.InputController) *tview.InputField {
+func dateField(controller controller.IInputController) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Date: ")
 	inputField.SetDoneFunc(func(_ tcell.Key) {

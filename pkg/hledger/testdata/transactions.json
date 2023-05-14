@@ -1,0 +1,192 @@
+[
+  {
+    "tcode": "",
+    "tcomment": "",
+    "tdate": "2018-12-01",
+    "tdate2": null,
+    "tdescription": "Supermarket",
+    "tindex": 3801,
+    "tpostings": [
+      {
+        "paccount": "liabilities:other",
+        "pamount": [
+          {
+            "acommodity": "EUR",
+            "aprice": null,
+            "aquantity": {
+              "decimalMantissa": -4000000,
+              "decimalPlaces": 5,
+              "floatingPoint": -40
+            },
+            "astyle": {
+              "ascommodityside": "L",
+              "ascommodityspaced": true,
+              "asdecimalpoint": ".",
+              "asdigitgroups": [
+                ",",
+                [
+                  3
+                ]
+              ],
+              "asprecision": 2
+            }
+          }
+        ],
+        "pbalanceassertion": null,
+        "pcomment": "",
+        "pdate": null,
+        "pdate2": null,
+        "poriginal": null,
+        "pstatus": "Unmarked",
+        "ptags": [],
+        "ptransaction_": "3801",
+        "ptype": "RegularPosting"
+      },
+      {
+        "paccount": "expenses:sports",
+        "pamount": [
+          {
+            "acommodity": "EUR",
+            "aprice": null,
+            "aquantity": {
+              "decimalMantissa": 4000000,
+              "decimalPlaces": 5,
+              "floatingPoint": 40
+            },
+            "astyle": {
+              "ascommodityside": "L",
+              "ascommodityspaced": true,
+              "asdecimalpoint": ".",
+              "asdigitgroups": [
+                ",",
+                [
+                  3
+                ]
+              ],
+              "asprecision": 2
+            }
+          }
+        ],
+        "pbalanceassertion": null,
+        "pcomment": "",
+        "pdate": null,
+        "pdate2": null,
+        "poriginal": null,
+        "pstatus": "Unmarked",
+        "ptags": [],
+        "ptransaction_": "3801",
+        "ptype": "RegularPosting"
+      }
+    ],
+    "tprecedingcomment": "",
+    "tsourcepos": [
+      {
+        "sourceColumn": 1,
+        "sourceLine": 15359,
+        "sourceName": "/home/barbosa/org/hledger/hledger.journal"
+      },
+      {
+        "sourceColumn": 1,
+        "sourceLine": 15362,
+        "sourceName": "/home/barbosa/org/hledger/hledger.journal"
+      }
+    ],
+    "tstatus": "Unmarked",
+    "ttags": []
+  },
+  {
+    "tcode": "",
+    "tcomment": "",
+    "tdate": "2018-12-22",
+    "tdate2": null,
+    "tdescription": "Bar",
+    "tindex": 3802,
+    "tpostings": [
+      {
+        "paccount": "revenues:salary",
+        "pamount": [
+          {
+            "acommodity": "EUR",
+            "aprice": null,
+            "aquantity": {
+              "decimalMantissa": -164734000,
+              "decimalPlaces": 5,
+              "floatingPoint": -1647.34
+            },
+            "astyle": {
+              "ascommodityside": "L",
+              "ascommodityspaced": true,
+              "asdecimalpoint": ".",
+              "asdigitgroups": [
+                ",",
+                [
+                  3
+                ]
+              ],
+              "asprecision": 2
+            }
+          }
+        ],
+        "pbalanceassertion": null,
+        "pcomment": "",
+        "pdate": null,
+        "pdate2": null,
+        "poriginal": null,
+        "pstatus": "Unmarked",
+        "ptags": [],
+        "ptransaction_": "3802",
+        "ptype": "RegularPosting"
+      },
+      {
+        "paccount": "assets:bank:current:lacaixa",
+        "pamount": [
+          {
+            "acommodity": "EUR",
+            "aprice": null,
+            "aquantity": {
+              "decimalMantissa": 164734000,
+              "decimalPlaces": 5,
+              "floatingPoint": 1647.34
+            },
+            "astyle": {
+              "ascommodityside": "L",
+              "ascommodityspaced": true,
+              "asdecimalpoint": ".",
+              "asdigitgroups": [
+                ",",
+                [
+                  3
+                ]
+              ],
+              "asprecision": 2
+            }
+          }
+        ],
+        "pbalanceassertion": null,
+        "pcomment": "",
+        "pdate": null,
+        "pdate2": null,
+        "poriginal": null,
+        "pstatus": "Unmarked",
+        "ptags": [],
+        "ptransaction_": "3802",
+        "ptype": "RegularPosting"
+      }
+    ],
+    "tprecedingcomment": "",
+    "tsourcepos": [
+      {
+        "sourceColumn": 1,
+        "sourceLine": 15363,
+        "sourceName": "/home/barbosa/org/hledger/hledger.journal"
+      },
+      {
+        "sourceColumn": 1,
+        "sourceLine": 15366,
+        "sourceName": "/home/barbosa/org/hledger/hledger.journal"
+      }
+    ],
+    "tstatus": "Unmarked",
+    "ttags": []
+  }
+]

@@ -17,15 +17,23 @@ import (
 // IInputController reacts to the user inputs and interactions.
 type IInputController interface {
 	OnDateInput(date time.Time)
-	OnDescriptionInput(description string)
-	OnPostingAccountDone(account string)
-	OnPostingAccountSelectedFromContext()
-	OnPostingAccountListAcction(action listaction.ListAction)
-	OnPostingAccountChanged(newText string)
-	OnPostingAccountInsertFromContext()
 	OnPostingValueInput(value string)
 	OnInputConfirmation()
 	OnInputRejection()
+
+	// Controls Posting Account input
+	OnPostingAccountChanged(newText string)
+	OnPostingAccountDone(account string)
+	OnPostingAccountInsertFromContext()
+	OnPostingAccountListAcction(action listaction.ListAction)
+	OnPostingAccountSelectedFromContext()
+
+	// Controls the Description input
+	OnDescriptionChanged(newText string)
+	OnDescriptionDone()
+	OnDescriptionInsertFromContext()
+	OnDescriptionListAction(action listaction.ListAction)
+	OnDescriptionSelectedFromContext()
 }
 
 // InputController implements IInputController.
@@ -60,11 +68,6 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 
 func (ic *InputController) OnDateInput(date time.Time) {
 	ic.state.JournalEntryInput.SetDate(date)
-	ic.state.NextPhase()
-}
-
-func (ic *InputController) OnDescriptionInput(description string) {
-	ic.state.JournalEntryInput.SetDescription(description)
 	ic.state.NextPhase()
 }
 
@@ -132,6 +135,44 @@ func (ic *InputController) OnInputConfirmation() {
 	ic.state.SetPhase(statemod.InputDate)
 }
 
+func (ic *InputController) OnDescriptionChanged(newText string) {
+	ic.state.InputMetadata.SetDescriptionText(newText)
+}
+
 func (ic *InputController) OnInputRejection() {
 	ic.state.SetPhase(statemod.InputPostingAccount)
+}
+
+func (ic *InputController) OnDescriptionListAction(action listaction.ListAction) {
+	err := ic.eventBus.Send(eventbus.Event{
+		Topic: "input.description.listaction",
+		Data:  action,
+	})
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
+}
+
+func (ic *InputController) OnDescriptionSelectedFromContext() {
+	descriptionFromContext := ic.state.InputMetadata.SelectedDescription()
+	ic.OnDescriptionChanged(descriptionFromContext)
+	ic.OnDescriptionDone()
+}
+
+func (ic *InputController) OnDescriptionDone() {
+	description := ic.state.InputMetadata.DescriptionText()
+	ic.state.JournalEntryInput.SetDescription(description)
+	ic.state.NextPhase()
+}
+
+func (ic *InputController) OnDescriptionInsertFromContext() {
+	descriptionFromContext := ic.state.InputMetadata.SelectedDescription()
+	event := eventbus.Event{
+		Topic: "input.description.settext",
+		Data:  descriptionFromContext,
+	}
+	err := ic.eventBus.Send(event)
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
 }

@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	journal "github.com/vitorqb/addledger/internal/journal"
 )
 
 // MockIClient is a mock of IClient interface.
@@ -46,4 +47,19 @@ func (m *MockIClient) Accounts() ([]string, error) {
 func (mr *MockIClientMockRecorder) Accounts() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Accounts", reflect.TypeOf((*MockIClient)(nil).Accounts))
+}
+
+// Transactions mocks base method.
+func (m *MockIClient) Transactions() ([]journal.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Transactions")
+	ret0, _ := ret[0].([]journal.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Transactions indicates an expected call of Transactions.
+func (mr *MockIClientMockRecorder) Transactions() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Transactions", reflect.TypeOf((*MockIClient)(nil).Transactions))
 }

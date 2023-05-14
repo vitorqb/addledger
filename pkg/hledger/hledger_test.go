@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/journal"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/pkg/hledger"
 )
@@ -26,6 +27,12 @@ var expectedAccounts = []string{
 	"revenues:salary",
 }
 
+// from testdata/fake_hledger.sh
+var expectedTransactions = []journal.Transaction{
+	{Description: "Supermarket"},
+	{Description: "Bar"},
+}
+
 func TestClient(t *testing.T) {
 	t.Run("Accounts (no ledger file)", func(t *testing.T) {
 		client := NewClient(tu.TestDataPath(t, "fake_hledger.sh"), "")
@@ -38,5 +45,11 @@ func TestClient(t *testing.T) {
 		accounts, err := client.Accounts()
 		assert.NoError(t, err)
 		assert.Equal(t, expectedAccounts, accounts)
+	})
+	t.Run("Transactions (ledger file)", func(t *testing.T) {
+		client := NewClient(tu.TestDataPath(t, "fake_hledger.sh"), "foo")
+		transactions, err := client.Transactions()
+		assert.NoError(t, err)
+		assert.Equal(t, expectedTransactions, transactions)
 	})
 }
