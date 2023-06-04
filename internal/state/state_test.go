@@ -5,6 +5,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/state"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
@@ -69,13 +70,16 @@ func TestState(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				ctrl := gomock.NewController(t)
 				defer ctrl.Finish()
+				transactions := []journal.Transaction{{Description: "FOO"}, {Description: "Bar"}}
 				hledgerClient := hledger_mock.NewMockIClient(ctrl)
 				hledgerClient.EXPECT().Accounts().Return([]string{"FOO"}, nil)
+				hledgerClient.EXPECT().Transactions().Return(transactions, nil)
 
 				err := c.state.LoadMetadata(hledgerClient)
 				assert.Nil(t, err)
-				assert.Equal(t, 1, c.hookCallCounter)
+				assert.Equal(t, 2, c.hookCallCounter)
 				assert.Equal(t, []string{"FOO"}, c.state.GetAccounts())
+				assert.Equal(t, transactions, c.state.JournalMetadata.Transactions())
 			},
 		},
 		{

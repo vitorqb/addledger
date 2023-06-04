@@ -68,7 +68,7 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "OnDescriptionInput",
+			name: "Description input changes and done",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{
 					WithOutput(c.bytesBuffer),
@@ -77,7 +77,8 @@ func TestInputController(t *testing.T) {
 			},
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputDescription)
-				c.controller.OnDescriptionInput("FOO")
+				c.controller.OnDescriptionChanged("FOO")
+				c.controller.OnDescriptionDone()
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 				foundDescription, _ := c.state.JournalEntryInput.GetDescription()
 				assert.Equal(t, "FOO", foundDescription)

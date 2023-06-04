@@ -24,27 +24,22 @@ func NewPostingAccount(
 	// Custom handling of user input
 	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
-		logrus.WithField("key", event.Key()).
-			WithField("rune", event.Rune()).
-			Debug("Received event in PostingAccount input")
-
-		// If key is linked to account on Context's List of Accounts, dispatch
-		// and action to it.
-		listAction := eventKeyToListAction(event)
-		if listAction != listaction.NONE {
-			logrus.WithField("action", listAction).Debug("Dispatching listAction")
-			controller.OnPostingAccountListAcction(listAction)
-			return nil
-		}
-
 		switch key := event.Key(); key {
+		// Arrow down -> move contextual list down
+		case tcell.KeyDown, tcell.KeyCtrlN:
+			field.controller.OnPostingAccountListAcction(listaction.NEXT)
+			return nil
+		// Arrow up -> move contextual list up
+		case tcell.KeyUp, tcell.KeyCtrlP:
+			field.controller.OnPostingAccountListAcction(listaction.PREV)
+			return nil
 		// If user hit enter...
 		case tcell.KeyEnter:
+			// ...with no text, he's done entering stuff!
 			if field.GetText() == "" {
-				// ...with no text, he's done entering stuff!
 				field.controller.OnPostingAccountDone("")
-			} else {
 				// ...with some text written, he's selecting from context
+			} else {
 				field.controller.OnPostingAccountSelectedFromContext()
 			}
 			return nil
@@ -85,14 +80,4 @@ func NewPostingAccount(
 	}
 
 	return field
-}
-
-func eventKeyToListAction(event *tcell.EventKey) listaction.ListAction {
-	switch key := event.Key(); key {
-	case tcell.KeyDown, tcell.KeyCtrlN:
-		return listaction.NEXT
-	case tcell.KeyUp, tcell.KeyCtrlP:
-		return listaction.PREV
-	}
-	return listaction.NONE
 }
