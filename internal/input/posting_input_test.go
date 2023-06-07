@@ -21,7 +21,7 @@ func TestPostingInput(t *testing.T) {
 
 	testcases := []test{
 		{
-			"Set Account",
+			"Set and clear Account",
 			func(t *testing.T, c *context) {
 				_, found := c.postingInput.GetAccount()
 				assert.False(t, found)
@@ -30,10 +30,14 @@ func TestPostingInput(t *testing.T) {
 				assert.True(t, found)
 				assert.Equal(t, "FOO", account)
 				assert.Equal(t, 1, c.onChangeCallCount)
+				c.postingInput.ClearAccount()
+				_, found = c.postingInput.GetAccount()
+				assert.False(t, found)
+				assert.Equal(t, 2, c.onChangeCallCount)
 			},
 		},
 		{
-			"Set Value",
+			"Set and clear Value",
 			func(t *testing.T, c *context) {
 				_, found := c.postingInput.GetValue()
 				assert.False(t, found)
@@ -45,6 +49,12 @@ func TestPostingInput(t *testing.T) {
 				assert.True(t, found)
 				assert.Equal(t, "EUR 12.20", value)
 				assert.Equal(t, 1, c.onChangeCallCount)
+
+				c.postingInput.ClearValue()
+				_, found = c.postingInput.GetValue()
+
+				assert.False(t, found)
+				assert.Equal(t, 2, c.onChangeCallCount)
 			},
 		},
 	}

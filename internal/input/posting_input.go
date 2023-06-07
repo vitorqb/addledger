@@ -19,6 +19,11 @@ func (i *PostingInput) SetAccount(account string) {
 	i.NotifyChange()
 }
 
+func (i *PostingInput) ClearAccount() {
+	delete(i.inputs, "account")
+	i.NotifyChange()
+}
+
 func (i *PostingInput) GetAccount() (string, bool) {
 	if rawValue, found := i.inputs["account"]; found {
 		if value, ok := rawValue.(string); ok {
@@ -40,4 +45,9 @@ func (i *PostingInput) GetValue() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (i *PostingInput) ClearValue() {
+	delete(i.inputs, "value")
+	i.NotifyChange()
 }
