@@ -99,6 +99,21 @@ func (s *State) NextPhase() {
 	s.NotifyChange()
 }
 
+func (s *State) PrevPhase() {
+	switch s.currentPhase {
+	case InputDescription:
+		s.currentPhase = InputDate
+	case InputPostingAccount:
+		s.currentPhase = InputDescription
+	case InputPostingValue:
+		s.currentPhase = InputPostingAccount
+	case Confirmation:
+		s.currentPhase = InputPostingValue
+	default:
+	}
+	s.NotifyChange()
+}
+
 // LoadMetadata loads metadata to state from Hledger
 func (s *State) LoadMetadata(hledgerClient hledger.IClient) error {
 

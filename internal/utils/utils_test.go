@@ -28,3 +28,10 @@ func TestSplitArray(t *testing.T) {
 		assert.ErrorIs(t, &StopSplitArray{}, err)
 	})
 }
+
+func TestRemoveIndex(t *testing.T) {
+	assert.Equal(t, []int{1, 2}, RemoveIndex(0, []int{0, 1, 2}))
+	assert.Equal(t, []int{0, 2}, RemoveIndex(1, []int{0, 1, 2}))
+	assert.Equal(t, []int{0, 1}, RemoveIndex(2, []int{0, 1, 2}))
+	assert.Equal(t, []int{}, RemoveIndex(0, []int{0}))
+}

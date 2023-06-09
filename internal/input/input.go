@@ -3,6 +3,7 @@ package input
 import (
 	"time"
 
+	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
 
@@ -33,6 +34,11 @@ func (i *JournalEntryInput) GetDate() (time.Time, bool) {
 	return time.Time{}, false
 }
 
+func (i *JournalEntryInput) ClearDate() {
+	delete(i.inputs, "date")
+	i.NotifyChange()
+}
+
 func (i *JournalEntryInput) SetDescription(x string) {
 	i.inputs["description"] = x
 	i.NotifyChange()
@@ -44,6 +50,11 @@ func (i *JournalEntryInput) GetDescription() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (i *JournalEntryInput) ClearDescription() {
+	delete(i.inputs, "description")
+	i.NotifyChange()
 }
 
 // CurrentPosting returns the current posting being edited.
@@ -61,9 +72,12 @@ func (i *JournalEntryInput) CurrentPosting() *PostingInput {
 }
 
 // AdvancePosting is called when a posting has finished to be inputed,
-// and we should advance the current posting.
+// and we should advance the current posting. If it doesn't exist, adds it.
 func (i *JournalEntryInput) AdvancePosting() {
 	i.currentPostingIndex++
+	if _, found := i.GetPosting(i.currentPostingIndex); !found {
+		i.AddPosting()
+	}
 	i.NotifyChange()
 }
 
@@ -100,6 +114,21 @@ func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	i.inputs["postings"] = []*PostingInput{postInput}
 	i.NotifyChange()
 	return
+}
+
+func (i *JournalEntryInput) DeleteCurrentPosting() {
+	if rawPostings, found := i.inputs["postings"]; found {
+		if postings, ok := rawPostings.([]*PostingInput); ok {
+			if i.currentPostingIndex >= 0 && i.currentPostingIndex < len(postings) {
+				postings = utils.RemoveIndex(i.currentPostingIndex, postings)
+				i.inputs["postings"] = postings
+				if i.currentPostingIndex > 0 && i.currentPostingIndex >= len(postings) {
+					i.currentPostingIndex--
+				}
+				i.NotifyChange()
+			}
+		}
+	}
 }
 
 // Repr transforms the JournalEntryInput into a string.

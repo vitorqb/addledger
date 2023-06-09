@@ -20,3 +20,8 @@ func SplitArray[T interface{}](size int, a []T) (next func() ([]T, error), err e
 	}
 	return next, nil
 }
+
+// RemoveIndex removes an entry from an array
+func RemoveIndex[T interface{}](i int, a []T) []T {
+	return append(a[:i], a[i+1:]...)
+}

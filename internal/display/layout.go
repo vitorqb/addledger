@@ -3,6 +3,7 @@ package display
 import (
 	"fmt"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
@@ -20,7 +21,7 @@ type (
 )
 
 func NewLayout(
-	controller *controller.InputController,
+	controller controller.IInputController,
 	state *state.State,
 	eventBus eventbus.IEventBus,
 ) (*Layout, error) {
@@ -36,6 +37,14 @@ func NewLayout(
 		AddItem(view.GetContent(), 0, 5, false).
 		AddItem(input.GetContent(), 0, 1, false).
 		AddItem(context.GetContent(), 0, 10, false)
+	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch key := event.Key(); key {
+		case tcell.KeyCtrlZ:
+			controller.OnUndo()
+			return nil
+		}
+		return event
+	})
 	return &Layout{
 		state:   state,
 		View:    view,

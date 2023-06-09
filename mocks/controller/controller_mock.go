@@ -202,3 +202,15 @@ func (mr *MockIInputControllerMockRecorder) OnPostingValueInput(value interface{
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingValueInput", reflect.TypeOf((*MockIInputController)(nil).OnPostingValueInput), value)
 }
+
+// OnUndo mocks base method.
+func (m *MockIInputController) OnUndo() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnUndo")
+}
+
+// OnUndo indicates an expected call of OnUndo.
+func (mr *MockIInputControllerMockRecorder) OnUndo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnUndo", reflect.TypeOf((*MockIInputController)(nil).OnUndo))
+}

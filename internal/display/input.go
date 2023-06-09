@@ -17,7 +17,7 @@ import (
 type (
 	PageName string
 	Input    struct {
-		controller          *controller.InputController
+		controller          controller.IInputController
 		state               *statemod.State
 		pages               *tview.Pages
 		dateField           *tview.InputField
@@ -37,7 +37,7 @@ const (
 )
 
 func NewInput(
-	controller *controller.InputController,
+	controller controller.IInputController,
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) *Input {
@@ -161,7 +161,7 @@ func dateField(controller controller.IInputController) *tview.InputField {
 	return inputField
 }
 
-func postingValueField(controller *controller.InputController) *tview.InputField {
+func postingValueField(controller controller.IInputController) *tview.InputField {
 	valueInputField := tview.NewInputField()
 	valueInputField.SetLabel("Value: ")
 	valueInputField.SetDoneFunc(func(_ tcell.Key) {
@@ -171,7 +171,7 @@ func postingValueField(controller *controller.InputController) *tview.InputField
 	return valueInputField
 }
 
-func inputConfirmationField(controller *controller.InputController) *tview.TextView {
+func inputConfirmationField(controller controller.IInputController) *tview.TextView {
 	field := tview.NewTextView()
 	field.SetText("Do you want to commit the transaction? [Y/n]")
 	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {

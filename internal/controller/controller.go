@@ -21,6 +21,9 @@ type IInputController interface {
 	OnInputConfirmation()
 	OnInputRejection()
 
+	// Called when an user wants to undo it's last action.
+	OnUndo()
+
 	// Controls Posting Account input
 	OnPostingAccountChanged(newText string)
 	OnPostingAccountDone(account string)
@@ -74,6 +77,8 @@ func (ic *InputController) OnDateInput(date time.Time) {
 func (ic *InputController) OnPostingAccountDone(account string) {
 	// Empty string -> user is done entering postings.
 	if account == "" {
+		// remove the current posting since it's empty
+		ic.state.JournalEntryInput.DeleteCurrentPosting()
 		ic.state.SetPhase(statemod.Confirmation)
 		return
 	}
@@ -128,19 +133,21 @@ func (ic *InputController) OnInputConfirmation() {
 	_, err := io.WriteString(ic.output, "\n\n"+ic.state.JournalEntryInput.Repr())
 	if err != nil {
 		// TODO Let user know somehow!
-		logrus.WithError(err).Warn("failed to write to file")
+		logrus.WithError(err).Fatal("failed to write to file")
 		return
 	}
 	ic.state.JournalEntryInput = input.NewJournalEntryInput()
 	ic.state.SetPhase(statemod.InputDate)
 }
 
-func (ic *InputController) OnDescriptionChanged(newText string) {
-	ic.state.InputMetadata.SetDescriptionText(newText)
+func (ic *InputController) OnInputRejection() {
+	// put back an empty posting so the user can add to it
+	ic.state.JournalEntryInput.AdvancePosting()
+	ic.state.SetPhase(statemod.InputPostingAccount)
 }
 
-func (ic *InputController) OnInputRejection() {
-	ic.state.SetPhase(statemod.InputPostingAccount)
+func (ic *InputController) OnDescriptionChanged(newText string) {
+	ic.state.InputMetadata.SetDescriptionText(newText)
 }
 
 func (ic *InputController) OnDescriptionListAction(action listaction.ListAction) {
@@ -162,6 +169,9 @@ func (ic *InputController) OnDescriptionSelectedFromContext() {
 func (ic *InputController) OnDescriptionDone() {
 	description := ic.state.InputMetadata.DescriptionText()
 	ic.state.JournalEntryInput.SetDescription(description)
+	if ic.state.JournalEntryInput.CountPostings() == 0 {
+		ic.state.JournalEntryInput.AddPosting()
+	}
 	ic.state.NextPhase()
 }
 
@@ -174,5 +184,30 @@ func (ic *InputController) OnDescriptionInsertFromContext() {
 	err := ic.eventBus.Send(event)
 	if err != nil {
 		logrus.WithError(err).Warn("Failed to send event")
+	}
+}
+
+func (ic *InputController) OnUndo() {
+	switch ic.state.CurrentPhase() {
+	case statemod.InputDate:
+		ic.state.PrevPhase()
+	case statemod.InputDescription:
+		ic.state.JournalEntryInput.ClearDate()
+		ic.state.PrevPhase()
+	case statemod.InputPostingAccount:
+		ic.state.JournalEntryInput.DeleteCurrentPosting()
+		if ic.state.JournalEntryInput.CountPostings() == 0 {
+			// We don't have any postings - clear description and go back
+			ic.state.JournalEntryInput.ClearDescription()
+			ic.state.PrevPhase()
+		} else {
+			// We have a posting to go back to - clear last value and go back
+			ic.state.JournalEntryInput.CurrentPosting().ClearValue()
+			ic.state.SetPhase(statemod.InputPostingValue)
+		}
+	case statemod.InputPostingValue:
+		ic.state.JournalEntryInput.CurrentPosting().ClearAccount()
+		ic.state.PrevPhase()
+	default:
 	}
 }
