@@ -1,3 +1,5 @@
 .vicommands
 /out/
 /.env
+/bin/dlv-*
+/bin/mockgen-*

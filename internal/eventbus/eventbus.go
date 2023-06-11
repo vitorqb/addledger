@@ -1,6 +1,6 @@
 package eventbus
 
-//go:generate mockgen --source=eventbus.go --destination=../../mocks/eventbus/eventbus_mock.go
+//go:generate $MOCKGEN --source=eventbus.go --destination=../../mocks/eventbus/eventbus_mock.go
 
 // Event represents an event
 type Event struct {

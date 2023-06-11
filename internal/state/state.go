@@ -24,6 +24,11 @@ type (
 		selectedPostingAccount string
 		descriptionText        string
 		selectedDescription    string
+
+		// Controls posting ammount
+		postingAmmountGuess MaybeValue[journal.Ammount]
+		postingAmmountInput MaybeValue[journal.Ammount]
+		postingAmmountText  string
 	}
 
 	// State is the top-level app state
@@ -37,19 +42,34 @@ type (
 		InputMetadata   *InputMetadata
 		JournalMetadata *JournalMetadata
 	}
+
+	// MaybeValue is a helper container that may contain a value or not
+	MaybeValue[T any] struct {
+		IsSet bool
+		Value T
+	}
 )
 
 const (
 	InputDate           Phase = "INPUT_DATE"
 	InputDescription    Phase = "INPUT_DESCRIPTION"
 	InputPostingAccount Phase = "INPUT_POSTING_ACCOUNT"
-	InputPostingValue   Phase = "INPUT_POSTING_VALUE"
+	InputPostingAmmount Phase = "INPUT_POSTING_AMMOUNT"
 	Confirmation        Phase = "CONFIRMATION"
 )
 
 func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
-	inputMetadata := &InputMetadata{react.New(), "", "", "", ""}
+	inputMetadata := &InputMetadata{
+		IReact:                 react.New(),
+		postingAccountText:     "",
+		selectedPostingAccount: "",
+		descriptionText:        "",
+		selectedDescription:    "",
+		postingAmmountGuess:    MaybeValue[journal.Ammount]{},
+		postingAmmountInput:    MaybeValue[journal.Ammount]{},
+		postingAmmountText:     "",
+	}
 	// !!!! TODO Add postings here, or have a setup method that loads them.
 	journalMetadata := &JournalMetadata{react.New(), []journal.Transaction{}}
 	state := &State{
@@ -91,8 +111,8 @@ func (s *State) NextPhase() {
 	case InputDescription:
 		s.currentPhase = InputPostingAccount
 	case InputPostingAccount:
-		s.currentPhase = InputPostingValue
-	case InputPostingValue:
+		s.currentPhase = InputPostingAmmount
+	case InputPostingAmmount:
 		s.currentPhase = Confirmation
 	default:
 	}
@@ -105,10 +125,10 @@ func (s *State) PrevPhase() {
 		s.currentPhase = InputDate
 	case InputPostingAccount:
 		s.currentPhase = InputDescription
-	case InputPostingValue:
+	case InputPostingAmmount:
 		s.currentPhase = InputPostingAccount
 	case Confirmation:
-		s.currentPhase = InputPostingValue
+		s.currentPhase = InputPostingAmmount
 	default:
 	}
 	s.NotifyChange()
@@ -175,6 +195,67 @@ func (im *InputMetadata) SetSelectedDescription(x string) {
 		im.selectedDescription = x
 		im.NotifyChange()
 	}
+}
+
+// SetPostingAmmountGuess sets the current guess for the ammount to enter.
+func (im *InputMetadata) SetPostingAmmountGuess(x journal.Ammount) {
+	im.postingAmmountGuess.Value = x
+	im.postingAmmountGuess.IsSet = true
+	im.NotifyChange()
+}
+
+// GetPostingAmmountGuess returns the current guess for the ammount to enter. The
+// second returned value described whether the value is set or not.
+func (im *InputMetadata) GetPostingAmmountGuess() (journal.Ammount, bool) {
+	if !im.postingAmmountGuess.IsSet {
+		return journal.Ammount{}, false
+	}
+	return im.postingAmmountGuess.Value, true
+}
+
+// ClearPostingAmmountGuess cleats the guess for the ammount to enter.
+func (im *InputMetadata) ClearPostingAmmountGuess() {
+	im.postingAmmountGuess.IsSet = false
+	im.NotifyChange()
+}
+
+// SetPostingAmmountInput sets the current inputted ammount by the user.
+func (im *InputMetadata) SetPostingAmmountInput(x journal.Ammount) {
+	im.postingAmmountInput.Value = x
+	im.postingAmmountInput.IsSet = true
+	im.NotifyChange()
+}
+
+// GetPostingAmmountInput returns the current input for the ammount to enter. The
+// second returned value described whether the value is set or not.
+func (im *InputMetadata) GetPostingAmmountInput() (journal.Ammount, bool) {
+	if !im.postingAmmountInput.IsSet {
+		return journal.Ammount{}, false
+	}
+	return im.postingAmmountInput.Value, true
+}
+
+// ClearPostingAmmountInput cleats the input for the ammount to enter.
+func (im *InputMetadata) ClearPostingAmmountInput() {
+	im.postingAmmountInput.IsSet = false
+	im.NotifyChange()
+}
+
+// GetPostingAmmountText returns the current text inputted by the user for PostingAmmount.
+func (im *InputMetadata) GetPostingAmmountText() string {
+	return im.postingAmmountText
+}
+
+// SetPostingAmmountText sets the current text inputted by the user for PostingAmmount.
+func (im *InputMetadata) SetPostingAmmountText(x string) {
+	im.postingAmmountText = x
+	im.NotifyChange()
+}
+
+// ClearPostingAmmountText sets the current text inputted by the user for PostingAmmount.
+func (im *InputMetadata) ClearPostingAmmountText() {
+	im.postingAmmountText = ""
+	im.NotifyChange()
 }
 
 // DescriptionText returns the current text for the selected description in

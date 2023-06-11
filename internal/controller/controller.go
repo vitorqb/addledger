@@ -8,18 +8,22 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
-//go:generate mockgen --source=controller.go --destination=../../mocks/controller/controller_mock.go
+//go:generate $MOCKGEN --source=controller.go --destination=../../mocks/controller/controller_mock.go
 
 // IInputController reacts to the user inputs and interactions.
 type IInputController interface {
 	OnDateInput(date time.Time)
-	OnPostingValueInput(value string)
 	OnInputConfirmation()
 	OnInputRejection()
+
+	// Handles user entering a new ammount for a posting
+	OnPostingAmmountChanged(text string)
+	OnPostingAmmountDone(input.DoneSource)
 
 	// Called when an user wants to undo it's last action.
 	OnUndo()
@@ -122,11 +126,37 @@ func (ic *InputController) OnPostingAccountChanged(newText string) {
 	ic.state.InputMetadata.SetPostingAccountText(newText)
 }
 
-func (ic *InputController) OnPostingValueInput(value string) {
-	posting := ic.state.JournalEntryInput.CurrentPosting()
-	posting.SetValue(value)
-	ic.state.JournalEntryInput.AdvancePosting()
-	ic.state.SetPhase(statemod.InputPostingAccount)
+func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
+	var ammount journal.Ammount
+	var success bool
+
+	switch source {
+	case input.Context:
+		ammount, success = ic.state.InputMetadata.GetPostingAmmountGuess()
+	case input.Input:
+		ammount, success = ic.state.InputMetadata.GetPostingAmmountInput()
+	default:
+		logrus.Fatalf("Uknown source for Posting Ammount: %s", source)
+	}
+
+	if success {
+		posting := ic.state.JournalEntryInput.CurrentPosting()
+		posting.SetAmmount(ammount)
+		ic.state.JournalEntryInput.AdvancePosting()
+		ic.state.SetPhase(statemod.InputPostingAccount)
+	}
+}
+
+func (ic *InputController) OnPostingAmmountChanged(text string) {
+	if text != ic.state.InputMetadata.GetPostingAmmountText() {
+		ic.state.InputMetadata.SetPostingAmmountText(text)
+		ammount, err := input.TextToAmmount(text)
+		if err != nil {
+			ic.state.InputMetadata.ClearPostingAmmountInput()
+		} else {
+			ic.state.InputMetadata.SetPostingAmmountInput(ammount)
+		}
+	}
 }
 
 func (ic *InputController) OnInputConfirmation() {
@@ -201,11 +231,11 @@ func (ic *InputController) OnUndo() {
 			ic.state.JournalEntryInput.ClearDescription()
 			ic.state.PrevPhase()
 		} else {
-			// We have a posting to go back to - clear last value and go back
-			ic.state.JournalEntryInput.CurrentPosting().ClearValue()
-			ic.state.SetPhase(statemod.InputPostingValue)
+			// We have a posting to go back to - clear last ammount and go back
+			ic.state.JournalEntryInput.CurrentPosting().ClearAmmount()
+			ic.state.SetPhase(statemod.InputPostingAmmount)
 		}
-	case statemod.InputPostingValue:
+	case statemod.InputPostingAmmount:
 		ic.state.JournalEntryInput.CurrentPosting().ClearAccount()
 		ic.state.PrevPhase()
 	default:

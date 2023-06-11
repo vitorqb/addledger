@@ -7,9 +7,10 @@ import (
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/controller"
-	"github.com/vitorqb/addledger/internal/display/input"
+	display_input "github.com/vitorqb/addledger/internal/display/input"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
@@ -22,8 +23,8 @@ type (
 		pages               *tview.Pages
 		dateField           *tview.InputField
 		descriptionField    *tview.InputField
-		postingAccountField *input.PostingAccountField
-		postingValueField   *tview.InputField
+		postingAccountField *display_input.PostingAccountField
+		postingAmmountField *tview.InputField
 	}
 )
 
@@ -32,7 +33,7 @@ const (
 	INPUT_DATE            PageName = "INPUT_DATE"
 	INPUT_DESCRIPTION     PageName = "INPUT_DESCRIPTION"
 	INPUT_POSTING_ACCOUNT PageName = "INPUT_POSTING_ACCOUNT"
-	INPUT_POSTING_VALUE   PageName = "INPUT_POSTING_VALUE"
+	INPUT_POSTING_AMMOUNT PageName = "INPUT_POSTING_AMMOUNT"
 	INPUT_CONFIRMATION    PageName = "INPUT_CONFIRMATION"
 )
 
@@ -43,8 +44,8 @@ func NewInput(
 ) *Input {
 	dateField := dateField(controller)
 	descriptionField := DescriptionField(controller, eventbus)
-	postingAccountField := input.NewPostingAccount(controller, eventbus)
-	postingValueField := postingValueField(controller)
+	postingAccountField := display_input.NewPostingAccount(controller, eventbus)
+	postingAmmountField := PostingAmmountField(controller)
 	inputConfirmationField := inputConfirmationField(controller)
 
 	pages := tview.NewPages()
@@ -52,7 +53,7 @@ func NewInput(
 	pages.AddPage(string(INPUT_DATE), dateField, true, false)
 	pages.AddPage(string(INPUT_DESCRIPTION), descriptionField, true, false)
 	pages.AddPage(string(INPUT_POSTING_ACCOUNT), postingAccountField, true, false)
-	pages.AddPage(string(INPUT_POSTING_VALUE), postingValueField, true, false)
+	pages.AddPage(string(INPUT_POSTING_AMMOUNT), postingAmmountField, true, false)
 	pages.AddPage(string(INPUT_CONFIRMATION), inputConfirmationField, true, false)
 
 	inputBox := &Input{
@@ -60,7 +61,7 @@ func NewInput(
 		state:               state,
 		pages:               pages,
 		dateField:           dateField,
-		postingValueField:   postingValueField,
+		postingAmmountField: postingAmmountField,
 		descriptionField:    descriptionField,
 		postingAccountField: postingAccountField,
 	}
@@ -86,10 +87,10 @@ func (i *Input) refresh() {
 			i.postingAccountField.SetText("")
 			i.pages.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
 		}
-	case statemod.InputPostingValue:
-		if i.CurrentPageName() != string(INPUT_POSTING_VALUE) {
-			i.postingValueField.SetText("")
-			i.pages.SwitchToPage(string(INPUT_POSTING_VALUE))
+	case statemod.InputPostingAmmount:
+		if i.CurrentPageName() != string(INPUT_POSTING_AMMOUNT) {
+			i.postingAmmountField.SetText("")
+			i.pages.SwitchToPage(string(INPUT_POSTING_AMMOUNT))
 		}
 	case statemod.Confirmation:
 		if i.CurrentPageName() != string(INPUT_CONFIRMATION) {
@@ -161,14 +162,24 @@ func dateField(controller controller.IInputController) *tview.InputField {
 	return inputField
 }
 
-func postingValueField(controller controller.IInputController) *tview.InputField {
-	valueInputField := tview.NewInputField()
-	valueInputField.SetLabel("Value: ")
-	valueInputField.SetDoneFunc(func(_ tcell.Key) {
-		text := valueInputField.GetText()
-		controller.OnPostingValueInput(text)
+func PostingAmmountField(controller controller.IInputController) *tview.InputField {
+	postingAmmountField := tview.NewInputField()
+	postingAmmountField.SetLabel("Ammount: ")
+	postingAmmountField.SetChangedFunc(func(text string) {
+		controller.OnPostingAmmountChanged(text)
 	})
-	return valueInputField
+	postingAmmountField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyEnter:
+			controller.OnPostingAmmountDone(input.Context)
+			return nil
+		case tcell.KeyCtrlJ:
+			controller.OnPostingAmmountDone(input.Input)
+			return nil
+		}
+		return event
+	})
+	return postingAmmountField
 }
 
 func inputConfirmationField(controller controller.IInputController) *tview.TextView {

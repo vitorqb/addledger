@@ -9,7 +9,7 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 )
 
-//go:generate mockgen --source=hledger.go --destination=../../mocks/hledger/hledger_mock.go
+//go:generate $MOCKGEN --source=hledger.go --destination=../../mocks/hledger/hledger_mock.go
 
 // IClient represents an HLedger client.
 type IClient interface {

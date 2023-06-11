@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
@@ -16,6 +19,17 @@ import (
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
+var anAmmount = journal.Ammount{
+	Commodity: "BRL",
+	Quantity:  decimal.New(9999, -3),
+}
+var anAmmountStr = "BRL 9.999"
+var anotherAmmount = journal.Ammount{
+	Commodity: "EUR",
+	Quantity:  decimal.New(1220, -2),
+}
+
+var anotherAmmountStr = "EUR 12.20"
 
 func TestInputController(t *testing.T) {
 
@@ -109,7 +123,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingAccount)
 				c.controller.OnPostingAccountDone("FOO")
-				assert.Equal(t, statemod.InputPostingValue, c.state.CurrentPhase())
+				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
 				account, _ := c.state.JournalEntryInput.CurrentPosting().GetAccount()
 				assert.Equal(t, "FOO", account)
 			},
@@ -123,7 +137,7 @@ func TestInputController(t *testing.T) {
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
-				c.state.SetPhase(statemod.InputPostingValue)
+				c.state.SetPhase(statemod.InputPostingAmmount)
 				c.controller.OnInputRejection()
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 			},
@@ -174,6 +188,71 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnPostingAccountChanged("FOO")
 				assert.Equal(t, "FOO", c.state.InputMetadata.PostingAccountText())
+			},
+		},
+		{
+			name: "OnPostingAmmountDone from input",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
+				c.controller.OnPostingAmmountDone(input.Input)
+				posting, _ := c.state.JournalEntryInput.GetPosting(0)
+				ammount, _ := posting.GetAmmount()
+				assert.Equal(t, anAmmount, ammount)
+			},
+		},
+		{
+			name: "OnPostingAmmountDone from guess",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetPostingAmmountGuess(anAmmount)
+				c.controller.OnPostingAmmountDone(input.Context)
+				posting, _ := c.state.JournalEntryInput.GetPosting(0)
+				ammount, _ := posting.GetAmmount()
+				assert.Equal(t, anAmmount, ammount)
+			},
+		},
+		{
+			name: "OnPostingAmmountChanged saves to state success",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnPostingAmmountChanged("EUR 12.20")
+				text := c.state.InputMetadata.GetPostingAmmountText()
+				assert.Equal(t, "EUR 12.20", text)
+				ammount, found := c.state.InputMetadata.GetPostingAmmountInput()
+				assert.True(t, found)
+				assert.Equal(t, anotherAmmount, ammount)
+			},
+		},
+		{
+			name: "OnPostingAmmountChanged saves to state parse fails",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnPostingAmmountChanged("aaa")
+				text := c.state.InputMetadata.GetPostingAmmountText()
+				assert.Equal(t, "aaa", text)
+				_, found := c.state.InputMetadata.GetPostingAmmountInput()
+				assert.False(t, found)
 			},
 		},
 		{
@@ -272,7 +351,8 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
 				c.controller.OnPostingAccountDone("BAR")
-				c.controller.OnPostingValueInput("EUR 12.20")
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
 
 				// Must have 2 postings - the filled one and an empty one.
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
@@ -283,8 +363,8 @@ func TestInputController(t *testing.T) {
 
 				// Must not have a single posting without value
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 1)
-				_, valueFound := c.state.JournalEntryInput.CurrentPosting().GetValue()
-				assert.False(t, valueFound)
+				_, ammountFound := c.state.JournalEntryInput.CurrentPosting().GetAmmount()
+				assert.False(t, ammountFound)
 			},
 		},
 		{
@@ -301,18 +381,20 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
 				c.controller.OnPostingAccountDone("BAR")
-				c.controller.OnPostingValueInput("EUR 12.20")
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
 				c.controller.OnPostingAccountDone("BAR2")
-				c.controller.OnPostingValueInput("EUR -12.20")
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
 
 				// Should have 3 postings - 2 filled and 1 empty
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 3)
 				lastPosting := c.state.JournalEntryInput.CurrentPosting()
 				_, accFound := lastPosting.GetAccount()
 				assert.False(t, accFound)
-				_, valueFound := lastPosting.GetValue()
-				assert.False(t, valueFound)
+				_, ammountFound := lastPosting.GetAmmount()
+				assert.False(t, ammountFound)
 
 				// Submit
 				c.controller.OnPostingAccountDone("")
@@ -323,9 +405,9 @@ func TestInputController(t *testing.T) {
 				accValue, accFound := lastPosting.GetAccount()
 				assert.True(t, accFound)
 				assert.Equal(t, "BAR2", accValue)
-				valueValue, valueFound := lastPosting.GetValue()
-				assert.True(t, valueFound)
-				assert.Equal(t, "EUR -12.20", valueValue)
+				ammountValue, ammountFound := lastPosting.GetAmmount()
+				assert.True(t, ammountFound)
+				assert.Equal(t, journal.Ammount{Commodity: "EUR", Quantity: decimal.New(1220, -2)}, ammountValue)
 			},
 		},
 		{
@@ -342,10 +424,12 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
 				c.controller.OnPostingAccountDone("BAR")
-				c.controller.OnPostingValueInput("EUR 12.20")
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
 				c.controller.OnPostingAccountDone("BAR2")
-				c.controller.OnPostingValueInput("EUR -12.20")
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
 
 				// Goes to confirm page
 				c.controller.OnPostingAccountDone("")
@@ -361,8 +445,39 @@ func TestInputController(t *testing.T) {
 				lastPosting := c.state.JournalEntryInput.CurrentPosting()
 				_, accFound := lastPosting.GetAccount()
 				assert.False(t, accFound)
-				_, valueFound := lastPosting.GetValue()
-				assert.False(t, valueFound)
+				_, ammountFound := lastPosting.GetAmmount()
+				assert.False(t, ammountFound)
+			},
+		},
+		{
+			name: "OnPostingAmmountDone",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnDateInput(aTime)
+				c.controller.OnDescriptionChanged("FOO")
+				c.controller.OnDescriptionDone()
+				c.controller.OnPostingAccountChanged("BAR")
+				c.controller.OnPostingAccountDone("BAR")
+				c.controller.OnPostingAmmountChanged(anAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// The ammount has been saved to the posting
+				posting, found := c.state.JournalEntryInput.GetPosting(0)
+				assert.True(t, found)
+				ammount, found := posting.GetAmmount()
+				assert.True(t, found)
+				assert.Equal(t, anAmmount, ammount)
+
+				// Phase is set to posting account
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+
+				// A new empty posting is there
+				assert.Equal(t, 2, c.state.JournalEntryInput.CountPostings())
 			},
 		},
 	}

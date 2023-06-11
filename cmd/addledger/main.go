@@ -65,6 +65,10 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
 	}
 
+	// Starts the AmmountGuesserEngine. Note it's linked to state refresh
+	// so we don't need it's instance.
+	_ = injector.AmmountGuesserEngine(state)
+
 	// Starts a new layout
 	layout, err := display.NewLayout(controller, state, eventBus)
 	if err != nil {
