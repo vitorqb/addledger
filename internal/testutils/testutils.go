@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/utils"
 )
 
@@ -28,10 +30,16 @@ func JournalEntryInput1(t *testing.T) *input.JournalEntryInput {
 	journalEntryInput.SetDescription("Description1")
 	posting1 := journalEntryInput.AddPosting()
 	posting1.SetAccount("ACC1")
-	posting1.SetValue("EUR 12.20")
+	posting1.SetAmmount(journal.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(1220, -2),
+	})
 	posting2 := journalEntryInput.AddPosting()
 	posting2.SetAccount("ACC2")
-	posting2.SetValue("EUR -12.20")
+	posting2.SetAmmount(journal.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(-1220, -2),
+	})
 	return journalEntryInput
 }
 

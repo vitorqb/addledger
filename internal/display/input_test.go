@@ -8,10 +8,16 @@ import (
 	"github.com/rivo/tview"
 	. "github.com/vitorqb/addledger/internal/display"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
+	statemod "github.com/vitorqb/addledger/internal/state"
 	mock_controller "github.com/vitorqb/addledger/mocks/controller"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
 )
+
+var enterEventKey = tcell.NewEventKey(tcell.KeyEnter, 'e', tcell.ModNone)
+var ctrlJEventKey = tcell.NewEventKey(tcell.KeyCtrlJ, 'j', tcell.ModCtrl)
+var fakeSetFocus = func(p tview.Primitive) {}
 
 func TestDescriptionField(t *testing.T) {
 	type testcontext struct {
@@ -40,7 +46,7 @@ func TestDescriptionField(t *testing.T) {
 				field := DescriptionField(c.controller, c.eventbus)
 
 				event := tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone)
-				field.InputHandler()(event, func(p tview.Primitive) {})
+				field.InputHandler()(event, fakeSetFocus)
 			},
 		},
 		{
@@ -51,7 +57,7 @@ func TestDescriptionField(t *testing.T) {
 				field := DescriptionField(c.controller, c.eventbus)
 
 				event := tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone)
-				field.InputHandler()(event, func(p tview.Primitive) {})
+				field.InputHandler()(event, fakeSetFocus)
 			},
 		},
 		{
@@ -62,7 +68,7 @@ func TestDescriptionField(t *testing.T) {
 				field := DescriptionField(c.controller, c.eventbus)
 
 				event := tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone)
-				field.InputHandler()(event, func(p tview.Primitive) {})
+				field.InputHandler()(event, fakeSetFocus)
 			},
 		},
 		{
@@ -73,7 +79,7 @@ func TestDescriptionField(t *testing.T) {
 				field := DescriptionField(c.controller, c.eventbus)
 
 				event := tcell.NewEventKey(tcell.KeyTAB, ' ', tcell.ModNone)
-				field.InputHandler()(event, func(p tview.Primitive) {})
+				field.InputHandler()(event, fakeSetFocus)
 			},
 		},
 		{
@@ -84,7 +90,7 @@ func TestDescriptionField(t *testing.T) {
 				field := DescriptionField(c.controller, c.eventbus)
 
 				event := tcell.NewEventKey(tcell.KeyCtrlJ, ' ', tcell.ModNone)
-				field.InputHandler()(event, func(p tview.Primitive) {})
+				field.InputHandler()(event, fakeSetFocus)
 			},
 		},
 		{
@@ -110,6 +116,51 @@ func TestDescriptionField(t *testing.T) {
 			c := new(testcontext)
 			c.controller = mock_controller.NewMockIInputController(ctrl)
 			c.eventbus = mock_eventbus.NewMockIEventBus(ctrl)
+			tc.run(c, t)
+		})
+	}
+}
+
+func TestPostingAmmountField(t *testing.T) {
+	type testcontext struct {
+		controller *mock_controller.MockIInputController
+		eventbus   *mock_eventbus.MockIEventBus
+		state      *statemod.State
+	}
+	type testcase struct {
+		name string
+		run  func(c *testcontext, t *testing.T)
+	}
+	var testcases = []testcase{
+		{
+			name: "Calls controller when done (enter)",
+			run: func(c *testcontext, t *testing.T) {
+				c.controller.EXPECT().OnPostingAmmountChanged("EUR 12.20")
+				c.controller.EXPECT().OnPostingAmmountDone(input.Context)
+				field := PostingAmmountField(c.controller)
+				field.SetText("EUR 12.20")
+				field.InputHandler()(enterEventKey, fakeSetFocus)
+			},
+		},
+		{
+			name: "Calls controller when done (ctrl+j)",
+			run: func(c *testcontext, t *testing.T) {
+				c.controller.EXPECT().OnPostingAmmountChanged("EUR 12.20")
+				c.controller.EXPECT().OnPostingAmmountDone(input.Input)
+				field := PostingAmmountField(c.controller)
+				field.SetText("EUR 12.20")
+				field.InputHandler()(ctrlJEventKey, fakeSetFocus)
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			c := new(testcontext)
+			c.controller = mock_controller.NewMockIInputController(ctrl)
+			c.eventbus = mock_eventbus.NewMockIEventBus(ctrl)
+			c.state = statemod.InitialState()
 			tc.run(c, t)
 		})
 	}

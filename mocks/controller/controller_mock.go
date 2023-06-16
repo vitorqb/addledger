@@ -9,6 +9,7 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
+	input "github.com/vitorqb/addledger/internal/input"
 	listaction "github.com/vitorqb/addledger/internal/listaction"
 )
 
@@ -191,16 +192,28 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAccountSelectedFromContext(
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountSelectedFromContext", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountSelectedFromContext))
 }
 
-// OnPostingValueInput mocks base method.
-func (m *MockIInputController) OnPostingValueInput(value string) {
+// OnPostingAmmountChanged mocks base method.
+func (m *MockIInputController) OnPostingAmmountChanged(text string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnPostingValueInput", value)
+	m.ctrl.Call(m, "OnPostingAmmountChanged", text)
 }
 
-// OnPostingValueInput indicates an expected call of OnPostingValueInput.
-func (mr *MockIInputControllerMockRecorder) OnPostingValueInput(value interface{}) *gomock.Call {
+// OnPostingAmmountChanged indicates an expected call of OnPostingAmmountChanged.
+func (mr *MockIInputControllerMockRecorder) OnPostingAmmountChanged(text interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingValueInput", reflect.TypeOf((*MockIInputController)(nil).OnPostingValueInput), value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAmmountChanged", reflect.TypeOf((*MockIInputController)(nil).OnPostingAmmountChanged), text)
+}
+
+// OnPostingAmmountDone mocks base method.
+func (m *MockIInputController) OnPostingAmmountDone(arg0 input.DoneSource) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnPostingAmmountDone", arg0)
+}
+
+// OnPostingAmmountDone indicates an expected call of OnPostingAmmountDone.
+func (mr *MockIInputControllerMockRecorder) OnPostingAmmountDone(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAmmountDone", reflect.TypeOf((*MockIInputController)(nil).OnPostingAmmountDone), arg0)
 }
 
 // OnUndo mocks base method.

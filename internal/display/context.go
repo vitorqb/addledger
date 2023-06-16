@@ -32,6 +32,12 @@ func NewContext(
 		return nil, fmt.Errorf("failed to create description picker: %w", err)
 	}
 
+	// Creates a Ammount Guesser
+	ammountGuesser, err := contextmod.NewAmmountGuesser(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ammount guesser: %w", err)
+	}
+
 	// Creates Context
 	context := new(Context)
 	context.state = state
@@ -39,6 +45,7 @@ func NewContext(
 	context.pages.SetBorder(true)
 	context.pages.AddPage("accountList", accountList, true, false)
 	context.pages.AddPage("descriptionPicker", descriptionPicker, true, false)
+	context.pages.AddPage("ammountGuesser", ammountGuesser, true, false)
 	context.pages.AddPage("empty", tview.NewBox(), true, false)
 	context.pages.SwitchToPage("accountList")
 	context.Refresh()
@@ -55,6 +62,8 @@ func (c Context) Refresh() {
 		c.pages.SwitchToPage("accountList")
 	case statemod.InputDescription:
 		c.pages.SwitchToPage("descriptionPicker")
+	case statemod.InputPostingAmmount:
+		c.pages.SwitchToPage("ammountGuesser")
 	default:
 		c.pages.SwitchToPage("empty")
 	}

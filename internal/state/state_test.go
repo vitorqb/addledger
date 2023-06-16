@@ -4,11 +4,17 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/state"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
+
+var anAmmount = journal.Ammount{
+	Commodity: "EUR",
+	Quantity:  decimal.New(2400, -2),
+}
 
 func TestState(t *testing.T) {
 
@@ -89,6 +95,53 @@ func TestState(t *testing.T) {
 				assert.Equal(t, 1, c.hookCallCounter)
 				acc := c.state.InputMetadata.SelectedPostingAccount()
 				assert.Equal(t, "FOO", acc)
+			},
+		},
+		{
+			name: "Manipulates PostingAmmountGuess",
+			run: func(t *testing.T, c *testcontext) {
+				_, found := c.state.InputMetadata.GetPostingAmmountGuess()
+				assert.False(t, found)
+				c.state.InputMetadata.SetPostingAmmountGuess(anAmmount)
+				assert.Equal(t, 1, c.hookCallCounter)
+				ammount, found := c.state.InputMetadata.GetPostingAmmountGuess()
+				assert.True(t, found)
+				assert.Equal(t, anAmmount, ammount)
+				c.state.InputMetadata.ClearPostingAmmountGuess()
+				_, found = c.state.InputMetadata.GetPostingAmmountGuess()
+				assert.False(t, found)
+				assert.Equal(t, 2, c.hookCallCounter)
+			},
+		},
+		{
+			name: "Manipulates PostingAmmountInput",
+			run: func(t *testing.T, c *testcontext) {
+				_, found := c.state.InputMetadata.GetPostingAmmountInput()
+				assert.False(t, found)
+				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
+				assert.Equal(t, 1, c.hookCallCounter)
+				ammount, found := c.state.InputMetadata.GetPostingAmmountInput()
+				assert.True(t, found)
+				assert.Equal(t, anAmmount, ammount)
+				c.state.InputMetadata.ClearPostingAmmountInput()
+				_, found = c.state.InputMetadata.GetPostingAmmountInput()
+				assert.False(t, found)
+				assert.Equal(t, 2, c.hookCallCounter)
+			},
+		},
+		{
+			name: "Manipulates PostingAmmountText",
+			run: func(t *testing.T, c *testcontext) {
+				text := c.state.InputMetadata.GetPostingAmmountText()
+				assert.Equal(t, "", text)
+				c.state.InputMetadata.SetPostingAmmountText("EUR 12.20")
+				assert.Equal(t, 1, c.hookCallCounter)
+				text = c.state.InputMetadata.GetPostingAmmountText()
+				assert.Equal(t, "EUR 12.20", text)
+				c.state.InputMetadata.ClearPostingAmmountText()
+				text = c.state.InputMetadata.GetPostingAmmountText()
+				assert.Equal(t, "", text)
+				assert.Equal(t, 2, c.hookCallCounter)
 			},
 		},
 	}

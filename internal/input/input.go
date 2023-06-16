@@ -1,8 +1,12 @@
 package input
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
+	"github.com/shopspring/decimal"
+	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
@@ -101,6 +105,15 @@ func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
 	return NewPostingInput(), false
 }
 
+func (i *JournalEntryInput) GetPostings() []*PostingInput {
+	if postingsInputs, found := i.inputs["postings"]; found {
+		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
+			return postingsInputs
+		}
+	}
+	return []*PostingInput{}
+}
+
 func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	postInput = NewPostingInput()
 	postInput.AddOnChangeHook(i.NotifyChange)
@@ -149,8 +162,11 @@ func (jei *JournalEntryInput) Repr() string {
 				text += account
 			}
 			text += "    "
-			if value, found := posting.GetValue(); found {
-				text += value
+			if ammount, found := posting.GetAmmount(); found {
+				if ammount.Commodity != "" {
+					text += ammount.Commodity + " "
+				}
+				text += ammount.Quantity.String()
 			}
 		} else {
 			break
@@ -158,3 +174,31 @@ func (jei *JournalEntryInput) Repr() string {
 	}
 	return text
 }
+
+func TextToAmmount(x string) (journal.Ammount, error) {
+	var err error
+	var quantity decimal.Decimal
+	var commodity string
+	switch words := strings.Split(x, " "); len(words) {
+	case 1:
+		quantity, err = decimal.NewFromString(words[0])
+	case 2:
+		commodity = words[0]
+		quantity, err = decimal.NewFromString(words[1])
+	default:
+		return journal.Ammount{}, fmt.Errorf("invalid format")
+	}
+	if err != nil {
+		return journal.Ammount{}, fmt.Errorf("invalid format: %w", err)
+	}
+	return journal.Ammount{Commodity: commodity, Quantity: quantity}, nil
+}
+
+// DoneSource represents the possible sources of value when an user is done entering
+// and input
+type DoneSource string
+
+const (
+	Context DoneSource = "context"
+	Input   DoneSource = "input"
+)

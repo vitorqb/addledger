@@ -4,8 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/input"
+	"github.com/vitorqb/addledger/internal/journal"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
 
@@ -174,17 +176,17 @@ func TestRepr(t *testing.T) {
 				i.SetDescription("FOO BAR")
 				posting1 := i.AddPosting()
 				posting1.SetAccount("ACC")
-				posting1.SetValue("EUR 12.20")
+				posting1.SetAmmount(anAmmount)
 				posting2 := i.AddPosting()
 				posting2.SetAccount("ACC2")
-				posting2.SetValue("EUR -12.20")
+				posting2.SetAmmount(anotherAmmount)
 				return i
 			},
 			expected: strings.Join(
 				[]string{
 					"1993-11-23 FOO BAR",
-					"    ACC    EUR 12.20",
-					"    ACC2    EUR -12.20",
+					"    ACC    EUR 2.2",
+					"    ACC2    EUR -2.2",
 				},
 				"\n",
 			),
@@ -195,6 +197,76 @@ func TestRepr(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			result := tc.journalEntry(t).Repr()
 			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
+
+func TestTextToAmmount(t *testing.T) {
+	type testcase struct {
+		text     string
+		ammount  journal.Ammount
+		errorMsg string
+	}
+	var testcases = []testcase{
+		{
+			text: "EUR 12.20",
+			ammount: journal.Ammount{
+				Commodity: "EUR",
+				Quantity:  decimal.New(1220, -2),
+			},
+		},
+		{
+			text: "EUR 99999.99999",
+			ammount: journal.Ammount{
+				Commodity: "EUR",
+				Quantity:  decimal.NewFromFloat(99999.99999),
+			},
+		},
+		{
+			text: "12.20",
+			ammount: journal.Ammount{
+				Commodity: "",
+				Quantity:  decimal.New(1220, -2),
+			},
+		},
+		{
+			text:     "12,20",
+			errorMsg: "invalid format",
+		},
+		{
+			text:     "EUR",
+			errorMsg: "invalid format",
+		},
+		{
+			text:     "EUR 12 12",
+			errorMsg: "invalid format",
+		},
+		{
+			text:     "12 FOO",
+			errorMsg: "invalid format",
+		},
+		{
+			text:     "EUR  12.20",
+			errorMsg: "invalid format",
+		},
+		{
+			text:     "EUR 12.20 ",
+			errorMsg: "invalid format",
+		},
+		{
+			text:     " EUR 12.20 ",
+			errorMsg: "invalid format",
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.text, func(t *testing.T) {
+			result, err := TextToAmmount(tc.text)
+			if tc.errorMsg == "" {
+				assert.Nil(t, err)
+				assert.Equal(t, tc.ammount, result)
+			} else {
+				assert.ErrorContains(t, err, tc.errorMsg)
+			}
 		})
 	}
 }

@@ -1,6 +1,9 @@
 package input
 
-import "github.com/vitorqb/addledger/pkg/react"
+import (
+	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/pkg/react"
+)
 
 type (
 	PostingInput struct {
@@ -33,21 +36,21 @@ func (i *PostingInput) GetAccount() (string, bool) {
 	return "", false
 }
 
-func (i *PostingInput) SetValue(value string) {
-	i.inputs["value"] = value
+func (i *PostingInput) SetAmmount(value journal.Ammount) {
+	i.inputs["ammount"] = value
 	i.NotifyChange()
 }
 
-func (i *PostingInput) GetValue() (string, bool) {
-	if rawValue, found := i.inputs["value"]; found {
-		if value, ok := rawValue.(string); ok {
+func (i *PostingInput) GetAmmount() (journal.Ammount, bool) {
+	if rawValue, found := i.inputs["ammount"]; found {
+		if value, ok := rawValue.(journal.Ammount); ok {
 			return value, true
 		}
 	}
-	return "", false
+	return journal.Ammount{}, false
 }
 
-func (i *PostingInput) ClearValue() {
-	delete(i.inputs, "value")
+func (i *PostingInput) ClearAmmount() {
+	delete(i.inputs, "ammount")
 	i.NotifyChange()
 }
