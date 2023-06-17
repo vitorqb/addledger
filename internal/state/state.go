@@ -3,7 +3,6 @@ package state
 import (
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/pkg/hledger"
 	"github.com/vitorqb/addledger/pkg/react"
 )
 
@@ -15,6 +14,8 @@ type (
 		react.IReact
 		// transactions is a list with all transactions
 		transactions []journal.Transaction
+		// accounts is a list of all known accounts
+		accounts []journal.Account
 	}
 
 	// InputMetadata is the state relative to inputs.
@@ -36,11 +37,8 @@ type (
 		react.IReact
 		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
-		// accounts is an array w/ all known accounts.
-		// !!!! TODO Move accounts to JournalMetadata
-		accounts        []string
-		InputMetadata   *InputMetadata
-		JournalMetadata *JournalMetadata
+		InputMetadata     *InputMetadata
+		JournalMetadata   *JournalMetadata
 	}
 
 	// MaybeValue is a helper container that may contain a value or not
@@ -70,13 +68,11 @@ func InitialState() *State {
 		postingAmmountInput:    MaybeValue[journal.Ammount]{},
 		postingAmmountText:     "",
 	}
-	// !!!! TODO Add postings here, or have a setup method that loads them.
-	journalMetadata := &JournalMetadata{react.New(), []journal.Transaction{}}
+	journalMetadata := NewJournalMetadata()
 	state := &State{
 		react.New(),
 		InputDate,
 		journalEntryInput,
-		[]string{},
 		inputMetadata,
 		journalMetadata,
 	}
@@ -93,15 +89,6 @@ func (s *State) CurrentPhase() Phase {
 func (s *State) SetPhase(p Phase) {
 	s.currentPhase = p
 	s.NotifyChange()
-}
-
-func (s *State) SetAccounts(x []string) {
-	s.accounts = x
-	s.NotifyChange()
-}
-
-func (s *State) GetAccounts() []string {
-	return s.accounts
 }
 
 func (s *State) NextPhase() {
@@ -132,26 +119,6 @@ func (s *State) PrevPhase() {
 	default:
 	}
 	s.NotifyChange()
-}
-
-// LoadMetadata loads metadata to state from Hledger
-func (s *State) LoadMetadata(hledgerClient hledger.IClient) error {
-
-	// load accounts
-	accounts, err := hledgerClient.Accounts()
-	if err != nil {
-		return err
-	}
-	s.SetAccounts(accounts)
-
-	// load postings
-	postings, err := hledgerClient.Transactions()
-	if err != nil {
-		return err
-	}
-	s.JournalMetadata.SetTransactions(postings)
-
-	return nil
 }
 
 // PostingAccountText returns the current text for the PostingAccount input.
@@ -269,11 +236,28 @@ func (im *InputMetadata) SetDescriptionText(x string) {
 	im.NotifyChange()
 }
 
+func NewJournalMetadata() *JournalMetadata {
+	return &JournalMetadata{
+		react.New(),
+		[]journal.Transaction{},
+		[]journal.Account{},
+	}
+}
+
 // Transactions returns all known postings for the journal
 func (jm *JournalMetadata) Transactions() []journal.Transaction { return jm.transactions }
 
 // SetTransactions sets all known postings for the journal
 func (jm *JournalMetadata) SetTransactions(x []journal.Transaction) {
 	jm.transactions = x
+	jm.NotifyChange()
+}
+
+// Accounts returns all known postings for the journal
+func (jm *JournalMetadata) Accounts() []journal.Account { return jm.accounts }
+
+// SetAccounts sets all known postings for the journal
+func (jm *JournalMetadata) SetAccounts(x []journal.Account) {
+	jm.accounts = x
 	jm.NotifyChange()
 }

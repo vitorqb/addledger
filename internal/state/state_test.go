@@ -3,12 +3,10 @@ package state_test
 import (
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/state"
-	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
 
 var anAmmount = journal.Ammount{
@@ -60,32 +58,6 @@ func TestState(t *testing.T) {
 				c.state.SetPhase(InputDescription)
 				assert.Equal(t, InputDescription, c.state.CurrentPhase())
 				assert.Equal(t, 2, c.hookCallCounter)
-			},
-		},
-		{
-			name: "SetAccounts",
-			run: func(t *testing.T, c *testcontext) {
-				c.state.SetAccounts([]string{"FOO"})
-				assert.Equal(t, 1, c.hookCallCounter)
-				accounts := c.state.GetAccounts()
-				assert.Equal(t, []string{"FOO"}, accounts)
-			},
-		},
-		{
-			name: "LoadMetadata",
-			run: func(t *testing.T, c *testcontext) {
-				ctrl := gomock.NewController(t)
-				defer ctrl.Finish()
-				transactions := []journal.Transaction{{Description: "FOO"}, {Description: "Bar"}}
-				hledgerClient := hledger_mock.NewMockIClient(ctrl)
-				hledgerClient.EXPECT().Accounts().Return([]string{"FOO"}, nil)
-				hledgerClient.EXPECT().Transactions().Return(transactions, nil)
-
-				err := c.state.LoadMetadata(hledgerClient)
-				assert.Nil(t, err)
-				assert.Equal(t, 2, c.hookCallCounter)
-				assert.Equal(t, []string{"FOO"}, c.state.GetAccounts())
-				assert.Equal(t, transactions, c.state.JournalMetadata.Transactions())
 			},
 		},
 		{
@@ -155,4 +127,40 @@ func TestState(t *testing.T) {
 			tc.run(t, c)
 		})
 	}
+}
+
+func TestJournalMetadata(t *testing.T) {
+	type testcontext struct {
+		hookCallCounter int
+		journalMetadata *JournalMetadata
+	}
+
+	type testcase struct {
+		name string
+		run  func(t *testing.T, c *testcontext)
+	}
+
+	testcases := []testcase{
+		{
+			name: "Manipulate accounts",
+			run: func(t *testing.T, c *testcontext) {
+				assert.Empty(t, c.journalMetadata.Accounts())
+				accs := []journal.Account{"FOO", "BAR"}
+				c.journalMetadata.SetAccounts(accs)
+				assert.Equal(t, accs, c.journalMetadata.Accounts())
+				assert.Equal(t, 1, c.hookCallCounter)
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := new(testcontext)
+			c.hookCallCounter = 0
+			c.journalMetadata = NewJournalMetadata()
+			c.journalMetadata.AddOnChangeHook(func() { c.hookCallCounter++ })
+			tc.run(t, c)
+		})
+	}
+
 }

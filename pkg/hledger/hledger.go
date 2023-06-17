@@ -14,7 +14,7 @@ import (
 // IClient represents an HLedger client.
 type IClient interface {
 	// Accounts returns a list of all known accounts.
-	Accounts() ([]string, error)
+	Accounts() ([]journal.Account, error)
 	// Transactions returns a list of all known transactions.
 	Transactions() ([]journal.Transaction, error)
 }
@@ -27,7 +27,7 @@ type Client struct {
 
 var _ IClient = &Client{}
 
-func (c *Client) Accounts() (accounts []string, err error) {
+func (c *Client) Accounts() (accounts []journal.Account, err error) {
 	cmdArgs := []string{"accounts"}
 	if c.ledgerFile != "" {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--file=%s", c.ledgerFile))
@@ -35,10 +35,13 @@ func (c *Client) Accounts() (accounts []string, err error) {
 	cmd := exec.Command(c.executable, cmdArgs...)
 	cmdOutputBytes, err := cmd.Output()
 	if err != nil {
-		return []string{}, fmt.Errorf("Failed to get accounts: %w", err)
+		return []journal.Account{}, fmt.Errorf("Failed to get accounts: %w", err)
 	}
 	cmdOutputStr := strings.TrimSpace(string(cmdOutputBytes))
-	return strings.Split(cmdOutputStr, "\n"), nil
+	for _, acc := range strings.Split(cmdOutputStr, "\n") {
+		accounts = append(accounts, journal.Account(acc))
+	}
+	return accounts, nil
 }
 
 func (c *Client) Transactions() ([]journal.Transaction, error) {
