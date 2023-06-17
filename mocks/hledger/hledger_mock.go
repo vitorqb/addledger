@@ -35,10 +35,10 @@ func (m *MockIClient) EXPECT() *MockIClientMockRecorder {
 }
 
 // Accounts mocks base method.
-func (m *MockIClient) Accounts() ([]string, error) {
+func (m *MockIClient) Accounts() ([]journal.Account, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Accounts")
-	ret0, _ := ret[0].([]string)
+	ret0, _ := ret[0].([]journal.Account)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

@@ -4,3 +4,6 @@ package journal
 type Transaction struct {
 	Description string `json:"tdescription"`
 }
+
+// An Account represents a hledger account
+type Account string

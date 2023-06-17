@@ -74,8 +74,11 @@ func newAccountList(
 	eventbus eventbusmod.IEventBus,
 ) (*widgets.ContextualList, error) {
 	list := widgets.NewContextualList(
-		func() []string {
-			return state.GetAccounts()
+		func() (out []string) {
+			for _, acc := range state.JournalMetadata.Accounts() {
+				out = append(out, string(acc))
+			}
+			return out
 		},
 		func(s string) {
 			state.InputMetadata.SetSelectedPostingAccount(s)

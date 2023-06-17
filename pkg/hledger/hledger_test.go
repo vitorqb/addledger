@@ -10,7 +10,7 @@ import (
 )
 
 // from testdata/fake_hledger.sh
-var expectedAccounts = []string{
+var expectedAccounts = []journal.Account{
 	"assets:bank:current:bnext",
 	"assets:bank:savings:itau",
 	"assets:cash",

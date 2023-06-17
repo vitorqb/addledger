@@ -4,7 +4,7 @@ package injector
 import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	configmod "github.com/vitorqb/addledger/internal/config"
-	"github.com/vitorqb/addledger/internal/state"
+	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
 
@@ -15,7 +15,7 @@ func HledgerClient(config *configmod.Config) hledger.IClient {
 
 // AmmountGuesserEngine instantiates a new guesser engine for ammounts and
 // links it to the state
-func AmmountGuesserEngine(state *state.State) ammountguesser.IEngine {
+func AmmountGuesserEngine(state *statemod.State) ammountguesser.IEngine {
 	// starts an engine
 	ammountGuesserEngine := ammountguesser.NewEngine()
 
@@ -53,4 +53,25 @@ func AmmountGuesserEngine(state *state.State) ammountguesser.IEngine {
 
 	// returns
 	return ammountGuesserEngine
+}
+
+func State(hledgerClient hledger.IClient) (*statemod.State, error) {
+	// Initializes a new state
+	state := statemod.InitialState()
+
+	// load accounts
+	accounts, err := hledgerClient.Accounts()
+	if err != nil {
+		return &statemod.State{}, err
+	}
+	state.JournalMetadata.SetAccounts(accounts)
+
+	// load transactions
+	postings, err := hledgerClient.Transactions()
+	if err != nil {
+		return &statemod.State{}, err
+	}
+	state.JournalMetadata.SetTransactions(postings)
+
+	return state, nil
 }

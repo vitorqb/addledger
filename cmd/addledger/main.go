@@ -10,7 +10,6 @@ import (
 	"github.com/vitorqb/addledger/internal/display"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/injector"
-	"github.com/vitorqb/addledger/internal/state"
 )
 
 func main() {
@@ -38,11 +37,10 @@ func main() {
 	// Creates a hledger client
 	hledgerClient := injector.HledgerClient(config)
 
-	// Loads state w/ metadata
-	state := state.InitialState()
-	err = state.LoadMetadata(hledgerClient)
+	// Loads state
+	state, err := injector.State(hledgerClient)
 	if err != nil {
-		logrus.WithError(err).Fatal("Failed to load metadata")
+		logrus.WithError(err).Fatal("Failed to load state")
 	}
 
 	// Opens the destination file
