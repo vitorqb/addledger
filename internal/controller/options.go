@@ -3,6 +3,7 @@ package controller
 import (
 	"io"
 
+	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 )
 
@@ -12,6 +13,8 @@ type Opts struct {
 	output io.Writer
 	// The instance of IEventBus to use
 	eventBus eventbus.IEventBus
+	// The instance of DateGuesser to user
+	dateGuesser dateguesser.IDateGuesser
 }
 
 // Opt configures options for an InputController
@@ -39,6 +42,14 @@ func WithOutput(output io.Writer) Opt {
 func WithEventBus(eventBus eventbus.IEventBus) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.eventBus = eventBus
+		return nil
+	})
+}
+
+// WithDateGuesser configures which IDateGuesser to use.
+func WithDateGuesser(dateGuesser dateguesser.IDateGuesser) Opt {
+	return OptFn(func(opts *Opts) error {
+		opts.dateGuesser = dateGuesser
 		return nil
 	})
 }

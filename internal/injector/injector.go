@@ -4,6 +4,7 @@ package injector
 import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	configmod "github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/dateguesser"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
@@ -53,6 +54,10 @@ func AmmountGuesserEngine(state *statemod.State) ammountguesser.IEngine {
 
 	// returns
 	return ammountGuesserEngine
+}
+
+func DateGuesser() (dateguesser.IDateGuesser, error) {
+	return dateguesser.New()
 }
 
 func State(hledgerClient hledger.IClient) (*statemod.State, error) {

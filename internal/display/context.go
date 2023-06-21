@@ -38,6 +38,12 @@ func NewContext(
 		return nil, fmt.Errorf("failed to create ammount guesser: %w", err)
 	}
 
+	// Creates a date guesser
+	dateGuesser, err := NewDateGuesser(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create date guesser: %w", err)
+	}
+
 	// Creates Context
 	context := new(Context)
 	context.state = state
@@ -46,8 +52,9 @@ func NewContext(
 	context.pages.AddPage("accountList", accountList, true, false)
 	context.pages.AddPage("descriptionPicker", descriptionPicker, true, false)
 	context.pages.AddPage("ammountGuesser", ammountGuesser, true, false)
+	context.pages.AddPage("dateGuesser", dateGuesser, true, false)
 	context.pages.AddPage("empty", tview.NewBox(), true, false)
-	context.pages.SwitchToPage("accountList")
+	context.pages.SwitchToPage("dateGuesser")
 	context.Refresh()
 	state.AddOnChangeHook(context.Refresh)
 
@@ -58,6 +65,8 @@ func (c Context) GetContent() *tview.Pages { return c.pages }
 
 func (c Context) Refresh() {
 	switch c.state.CurrentPhase() {
+	case statemod.InputDate:
+		c.pages.SwitchToPage("dateGuesser")
 	case statemod.InputPostingAccount:
 		c.pages.SwitchToPage("accountList")
 	case statemod.InputDescription:
@@ -96,4 +105,18 @@ func newAccountList(
 		return nil, fmt.Errorf("failed to subscribe to eventBus: %w", err)
 	}
 	return list, nil
+}
+
+func NewDateGuesser(state *statemod.State) (*tview.TextView, error) {
+	guesser := tview.NewTextView()
+	refresh := func() {
+		if guess, found := state.InputMetadata.GetDateGuess(); found {
+			guesser.SetText(guess.Format("2006-01-02") + "\n" + guess.Format("Mon, 02 Jan 2006"))
+		} else {
+			guesser.SetText("")
+		}
+	}
+	refresh()
+	state.AddOnChangeHook(refresh)
+	return guesser, nil
 }

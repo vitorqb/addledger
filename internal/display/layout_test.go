@@ -47,6 +47,8 @@ func TestNewLayout(t *testing.T) {
 			// Subscribe is called multiple times for each subscription
 			// that happens in the entire layout.
 			c.eventbus.EXPECT().Subscribe(gomock.Any()).AnyTimes()
+			// Some controller methods are called on startup
+			c.controller.EXPECT().OnDateChanged("")
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus)
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)

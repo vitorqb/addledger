@@ -15,6 +15,7 @@ import (
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
+	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
 )
 
@@ -39,12 +40,21 @@ func TestInputController(t *testing.T) {
 		initError   error
 		bytesBuffer *bytes.Buffer
 		eventBus    *MockIEventBus
+		dateGuesser *MockIDateGuesser
 	}
 
 	type testcase struct {
 		name string
 		opts func(t *testing.T, c *testcontext) []Opt
 		run  func(t *testing.T, c *testcontext)
+	}
+
+	defaultOpts := func(t *testing.T, c *testcontext) []Opt {
+		return []Opt{
+			WithOutput(c.bytesBuffer),
+			WithEventBus(c.eventBus),
+			WithDateGuesser(c.dateGuesser),
+		}
 	}
 
 	testcases := []testcase{
@@ -67,7 +77,7 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "OnDateInput",
+			name: "NewController missing eventGuesser causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{
 					WithOutput(c.bytesBuffer),
@@ -75,21 +85,53 @@ func TestInputController(t *testing.T) {
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
+				assert.ErrorContains(t, c.initError, "missing DateGuesser")
+			},
+		},
+		{
+			name: "On date change and done",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
 				assert.Nil(t, c.initError)
-				c.controller.OnDateInput(aTime)
+				c.dateGuesser.EXPECT().Guess("2022-01-01").Return(aTime, true)
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
 				assert.Equal(t, statemod.InputDescription, c.state.CurrentPhase())
 				foundDate, _ := c.state.JournalEntryInput.GetDate()
 				assert.Equal(t, aTime, foundDate)
 			},
 		},
 		{
-			name: "Description input changes and done",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
+			name: "On date change but no guess",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				assert.Nil(t, c.initError)
+				c.dateGuesser.EXPECT().Guess("aaa").Return(time.Time{}, false)
+				c.controller.OnDateChanged("aaa")
+				c.controller.OnDateDone()
+				assert.Equal(t, statemod.InputDate, c.state.CurrentPhase())
+				_, dateFound := c.state.JournalEntryInput.GetDate()
+				assert.False(t, dateFound)
 			},
+		},
+		{
+			name: "On date cleans up date on second entry",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				assert.Nil(t, c.initError)
+				c.dateGuesser.EXPECT().Guess("2023-01-01").Return(aTime, true)
+				c.dateGuesser.EXPECT().Guess("aaa").Return(time.Time{}, false)
+				c.controller.OnDateChanged("2023-01-01")
+				foundDate, _ := c.state.JournalEntryInput.GetDate()
+				assert.Equal(t, aTime, foundDate)
+				c.controller.OnDateChanged("aaa")
+				_, dateFound := c.state.JournalEntryInput.GetDate()
+				assert.False(t, dateFound)
+			},
+		},
+		{
+			name: "Description input changes and done",
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputDescription)
 				c.controller.OnDescriptionChanged("FOO")
@@ -101,12 +143,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnAccountInput and empty account",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnPostingAccountDone("")
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
@@ -114,12 +151,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnAccountInput not empty",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingAccount)
 				c.controller.OnPostingAccountDone("FOO")
@@ -130,12 +162,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnInputRejection",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingAmmount)
 				c.controller.OnInputRejection()
@@ -144,12 +171,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnInputConfirmation",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput = testutils.JournalEntryInput1(t)
 				c.controller.OnInputConfirmation()
@@ -162,12 +184,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAccountListAcction",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				expectedEvent := eventbus.Event{
 					Topic: "input.postingaccount.listaction",
@@ -179,12 +196,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAccountChanged",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnPostingAccountChanged("FOO")
 				assert.Equal(t, "FOO", c.state.InputMetadata.PostingAccountText())
@@ -192,12 +204,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAmmountDone from input",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
 				c.controller.OnPostingAmmountDone(input.Input)
@@ -208,12 +215,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAmmountDone from guess",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAmmountGuess(anAmmount)
 				c.controller.OnPostingAmmountDone(input.Context)
@@ -224,12 +226,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAmmountChanged saves to state success",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnPostingAmmountChanged("EUR 12.20")
 				text := c.state.InputMetadata.GetPostingAmmountText()
@@ -241,12 +238,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAmmountChanged saves to state parse fails",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnPostingAmmountChanged("aaa")
 				text := c.state.InputMetadata.GetPostingAmmountText()
@@ -257,12 +249,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAccountSelectedFromContext",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
 				c.controller.OnPostingAccountSelectedFromContext()
@@ -274,12 +261,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAccountInsertFromContext",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
 				expEvent := eventbus.Event{
@@ -292,12 +274,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnUndo moves the state page back",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.NextPhase()
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
@@ -307,12 +284,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnUndo cleans up the last user input",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.NextPhase()
@@ -323,12 +295,7 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnUndo with posting account ",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.NextPhase()
@@ -339,14 +306,11 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "Undo after first posting is entered ",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnDateInput(aTime)
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
@@ -369,14 +333,11 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "Must remove empty posting after finished entering postings",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnDateInput(aTime)
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
@@ -412,14 +373,11 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "Must have empty posting after confirmation rejection",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnDateInput(aTime)
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
@@ -451,14 +409,11 @@ func TestInputController(t *testing.T) {
 		},
 		{
 			name: "OnPostingAmmountDone",
-			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{
-					WithOutput(c.bytesBuffer),
-					WithEventBus(c.eventBus),
-				}
-			},
+			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnDateInput(aTime)
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
@@ -491,6 +446,7 @@ func TestInputController(t *testing.T) {
 			c.bytesBuffer = &bytesBuffer
 			c.state = statemod.InitialState()
 			c.eventBus = NewMockIEventBus(ctrl)
+			c.dateGuesser = NewMockIDateGuesser(ctrl)
 			opts := tc.opts(t, c)
 			c.controller, c.initError = NewController(c.state, opts...)
 			tc.run(t, c)

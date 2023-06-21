@@ -3,9 +3,9 @@ package controller
 import (
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
@@ -17,9 +17,12 @@ import (
 
 // IInputController reacts to the user inputs and interactions.
 type IInputController interface {
-	OnDateInput(date time.Time)
 	OnInputConfirmation()
 	OnInputRejection()
+
+	// Handles user entering a new date for a posting
+	OnDateChanged(text string)
+	OnDateDone()
 
 	// Handles user entering a new ammount for a posting
 	OnPostingAmmountChanged(text string)
@@ -45,9 +48,10 @@ type IInputController interface {
 
 // InputController implements IInputController.
 type InputController struct {
-	state    *statemod.State
-	output   io.Writer
-	eventBus eventbus.IEventBus
+	state       *statemod.State
+	output      io.Writer
+	eventBus    eventbus.IEventBus
+	dateGuesser dateguesser.IDateGuesser
 }
 
 var _ IInputController = &InputController{}
@@ -66,16 +70,31 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 	if opts.eventBus == nil {
 		return nil, fmt.Errorf("missing Event Bus")
 	}
+	if opts.dateGuesser == nil {
+		return nil, fmt.Errorf("missing DateGuesser")
+	}
 	return &InputController{
-		state:    state,
-		output:   opts.output,
-		eventBus: opts.eventBus,
+		state:       state,
+		output:      opts.output,
+		eventBus:    opts.eventBus,
+		dateGuesser: opts.dateGuesser,
 	}, nil
 }
 
-func (ic *InputController) OnDateInput(date time.Time) {
-	ic.state.JournalEntryInput.SetDate(date)
-	ic.state.NextPhase()
+func (ic *InputController) OnDateChanged(x string) {
+	date, success := ic.dateGuesser.Guess(x)
+	if success {
+		ic.state.InputMetadata.SetDateGuess(date)
+	} else {
+		ic.state.InputMetadata.ClearDateGuess()
+	}
+}
+
+func (ic *InputController) OnDateDone() {
+	if date, found := ic.state.InputMetadata.GetDateGuess(); found {
+		ic.state.JournalEntryInput.SetDate(date)
+		ic.state.NextPhase()
+	}
 }
 
 func (ic *InputController) OnPostingAccountDone(account string) {

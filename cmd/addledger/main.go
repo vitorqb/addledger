@@ -54,10 +54,17 @@ func main() {
 	// Starts the EventBus
 	eventBus := eventbus.New()
 
+	// Starts a date guesser
+	dateGuesser, err := injector.DateGuesser()
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load date guesser")
+	}
+
 	// Starts a new controller
 	controller, err := controller.NewController(state,
 		controller.WithOutput(destFile),
 		controller.WithEventBus(eventBus),
+		controller.WithDateGuesser(dateGuesser),
 	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
