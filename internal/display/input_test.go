@@ -165,3 +165,46 @@ func TestPostingAmmountField(t *testing.T) {
 		})
 	}
 }
+
+func TestDateField(t *testing.T) {
+	type testcontext struct {
+		controller *mock_controller.MockIInputController
+		state      *statemod.State
+	}
+	type testcase struct {
+		name string
+		run  func(c *testcontext, t *testing.T)
+	}
+	var testcases = []testcase{
+		{
+			name: "Call controller when done",
+			run: func(c *testcontext, t *testing.T) {
+				c.controller.EXPECT().OnDateChanged("")
+				c.controller.EXPECT().OnDateChanged("1993-11-23")
+				c.controller.EXPECT().OnDateDone()
+				dateField := DateField(c.controller)
+				dateField.SetText("1993-11-23")
+				dateField.InputHandler()(enterEventKey, fakeSetFocus)
+			},
+		},
+		{
+			name: "Call controller when change",
+			run: func(c *testcontext, t *testing.T) {
+				c.controller.EXPECT().OnDateChanged("")
+				c.controller.EXPECT().OnDateChanged("1993-11-23")
+				dateField := DateField(c.controller)
+				dateField.SetText("1993-11-23")
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			c := new(testcontext)
+			c.controller = mock_controller.NewMockIInputController(ctrl)
+			c.state = statemod.InitialState()
+			tc.run(c, t)
+		})
+	}
+}

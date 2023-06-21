@@ -6,7 +6,6 @@ package mock_controller
 
 import (
 	reflect "reflect"
-	time "time"
 
 	gomock "github.com/golang/mock/gomock"
 	input "github.com/vitorqb/addledger/internal/input"
@@ -36,16 +35,28 @@ func (m *MockIInputController) EXPECT() *MockIInputControllerMockRecorder {
 	return m.recorder
 }
 
-// OnDateInput mocks base method.
-func (m *MockIInputController) OnDateInput(date time.Time) {
+// OnDateChanged mocks base method.
+func (m *MockIInputController) OnDateChanged(text string) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnDateInput", date)
+	m.ctrl.Call(m, "OnDateChanged", text)
 }
 
-// OnDateInput indicates an expected call of OnDateInput.
-func (mr *MockIInputControllerMockRecorder) OnDateInput(date interface{}) *gomock.Call {
+// OnDateChanged indicates an expected call of OnDateChanged.
+func (mr *MockIInputControllerMockRecorder) OnDateChanged(text interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDateInput", reflect.TypeOf((*MockIInputController)(nil).OnDateInput), date)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDateChanged", reflect.TypeOf((*MockIInputController)(nil).OnDateChanged), text)
+}
+
+// OnDateDone mocks base method.
+func (m *MockIInputController) OnDateDone() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDateDone")
+}
+
+// OnDateDone indicates an expected call of OnDateDone.
+func (mr *MockIInputControllerMockRecorder) OnDateDone() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDateDone", reflect.TypeOf((*MockIInputController)(nil).OnDateDone))
 }
 
 // OnDescriptionChanged mocks base method.

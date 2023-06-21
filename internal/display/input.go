@@ -1,8 +1,6 @@
 package display
 
 import (
-	"time"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
@@ -42,7 +40,7 @@ func NewInput(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) *Input {
-	dateField := dateField(controller)
+	dateField := DateField(controller)
 	descriptionField := DescriptionField(controller, eventbus)
 	postingAccountField := display_input.NewPostingAccount(controller, eventbus)
 	postingAmmountField := PostingAmmountField(controller)
@@ -148,16 +146,13 @@ func DescriptionField(
 	return inputField
 }
 
-func dateField(controller controller.IInputController) *tview.InputField {
+func DateField(controller controller.IInputController) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Date: ")
+	inputField.SetChangedFunc(controller.OnDateChanged)
+	inputField.SetText("")
 	inputField.SetDoneFunc(func(_ tcell.Key) {
-		text := inputField.GetText()
-		date, err := time.Parse("2006-01-02", text)
-		if err != nil {
-			return
-		}
-		controller.OnDateInput(date)
+		controller.OnDateDone()
 	})
 	return inputField
 }

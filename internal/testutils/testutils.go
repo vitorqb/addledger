@@ -24,6 +24,14 @@ func Date1(t *testing.T) time.Time {
 	return out
 }
 
+func Date2(t *testing.T) time.Time {
+	out, err := time.Parse("2006-01-02", "2001-01-01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
 func JournalEntryInput1(t *testing.T) *input.JournalEntryInput {
 	journalEntryInput := input.NewJournalEntryInput()
 	journalEntryInput.SetDate(Date1(t))

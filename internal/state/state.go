@@ -1,6 +1,8 @@
 package state
 
 import (
+	"time"
+
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/pkg/react"
@@ -27,9 +29,12 @@ type (
 		selectedDescription    string
 
 		// Controls posting ammount
-		postingAmmountGuess MaybeValue[journal.Ammount]
-		postingAmmountInput MaybeValue[journal.Ammount]
+		postingAmmountGuess *MaybeValue[journal.Ammount]
+		postingAmmountInput *MaybeValue[journal.Ammount]
 		postingAmmountText  string
+
+		// Controls date
+		dateGuess *MaybeValue[time.Time]
 	}
 
 	// State is the top-level app state
@@ -48,6 +53,15 @@ type (
 	}
 )
 
+func (mv *MaybeValue[T]) Set(x T) {
+	mv.Value = x
+	mv.IsSet = true
+}
+
+func (mv *MaybeValue[T]) Clear() {
+	mv.IsSet = false
+}
+
 const (
 	InputDate           Phase = "INPUT_DATE"
 	InputDescription    Phase = "INPUT_DESCRIPTION"
@@ -64,9 +78,10 @@ func InitialState() *State {
 		selectedPostingAccount: "",
 		descriptionText:        "",
 		selectedDescription:    "",
-		postingAmmountGuess:    MaybeValue[journal.Ammount]{},
-		postingAmmountInput:    MaybeValue[journal.Ammount]{},
+		postingAmmountGuess:    &MaybeValue[journal.Ammount]{},
+		postingAmmountInput:    &MaybeValue[journal.Ammount]{},
 		postingAmmountText:     "",
+		dateGuess:              &MaybeValue[time.Time]{},
 	}
 	journalMetadata := NewJournalMetadata()
 	state := &State{
@@ -166,8 +181,7 @@ func (im *InputMetadata) SetSelectedDescription(x string) {
 
 // SetPostingAmmountGuess sets the current guess for the ammount to enter.
 func (im *InputMetadata) SetPostingAmmountGuess(x journal.Ammount) {
-	im.postingAmmountGuess.Value = x
-	im.postingAmmountGuess.IsSet = true
+	im.postingAmmountGuess.Set(x)
 	im.NotifyChange()
 }
 
@@ -182,14 +196,13 @@ func (im *InputMetadata) GetPostingAmmountGuess() (journal.Ammount, bool) {
 
 // ClearPostingAmmountGuess cleats the guess for the ammount to enter.
 func (im *InputMetadata) ClearPostingAmmountGuess() {
-	im.postingAmmountGuess.IsSet = false
+	im.postingAmmountGuess.Clear()
 	im.NotifyChange()
 }
 
 // SetPostingAmmountInput sets the current inputted ammount by the user.
 func (im *InputMetadata) SetPostingAmmountInput(x journal.Ammount) {
-	im.postingAmmountInput.Value = x
-	im.postingAmmountInput.IsSet = true
+	im.postingAmmountInput.Set(x)
 	im.NotifyChange()
 }
 
@@ -204,7 +217,7 @@ func (im *InputMetadata) GetPostingAmmountInput() (journal.Ammount, bool) {
 
 // ClearPostingAmmountInput cleats the input for the ammount to enter.
 func (im *InputMetadata) ClearPostingAmmountInput() {
-	im.postingAmmountInput.IsSet = false
+	im.postingAmmountInput.Clear()
 	im.NotifyChange()
 }
 
@@ -222,6 +235,26 @@ func (im *InputMetadata) SetPostingAmmountText(x string) {
 // ClearPostingAmmountText sets the current text inputted by the user for PostingAmmount.
 func (im *InputMetadata) ClearPostingAmmountText() {
 	im.postingAmmountText = ""
+	im.NotifyChange()
+}
+
+// GetDateGuess returns the current date guess
+func (im *InputMetadata) GetDateGuess() (time.Time, bool) {
+	if !im.dateGuess.IsSet {
+		return time.Time{}, false
+	}
+	return im.dateGuess.Value, true
+}
+
+// SetDateGuess sets the current date guess
+func (im *InputMetadata) SetDateGuess(x time.Time) {
+	im.dateGuess.Set(x)
+	im.NotifyChange()
+}
+
+// ClearDateGuess clears the current date guess
+func (im *InputMetadata) ClearDateGuess() {
+	im.dateGuess.Clear()
 	im.NotifyChange()
 }
 
