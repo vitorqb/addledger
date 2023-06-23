@@ -33,10 +33,9 @@ type IInputController interface {
 
 	// Controls Posting Account input
 	OnPostingAccountChanged(newText string)
-	OnPostingAccountDone(account string)
+	OnPostingAccountDone(source input.DoneSource)
 	OnPostingAccountInsertFromContext()
 	OnPostingAccountListAcction(action listaction.ListAction)
-	OnPostingAccountSelectedFromContext()
 
 	// Controls the Description input
 	OnDescriptionChanged(newText string)
@@ -97,24 +96,26 @@ func (ic *InputController) OnDateDone() {
 	}
 }
 
-func (ic *InputController) OnPostingAccountDone(account string) {
-	// Empty string -> user is done entering postings.
+func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
+	account := ""
+	switch source {
+	case input.Context:
+		account = ic.state.InputMetadata.SelectedPostingAccount()
+	case input.Input:
+		account = ic.state.InputMetadata.PostingAccountText()
+	}
+
+	// If account is empty - do nothing
 	if account == "" {
-		// remove the current posting since it's empty
-		ic.state.JournalEntryInput.DeleteCurrentPosting()
-		ic.state.SetPhase(statemod.Confirmation)
 		return
 	}
 
-	// Otherwise save the account and move to value
+	// We have an account - save the posting
 	posting := ic.state.JournalEntryInput.CurrentPosting()
 	posting.SetAccount(account)
-	ic.state.NextPhase()
-}
 
-func (ic *InputController) OnPostingAccountSelectedFromContext() {
-	selectedAccountFromContext := ic.state.InputMetadata.SelectedPostingAccount()
-	ic.OnPostingAccountDone(selectedAccountFromContext)
+	// Go to ammount
+	ic.state.NextPhase()
 }
 
 // OnPostingAccountInsertFromContext inserts the text from the context to the
@@ -159,10 +160,19 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 	}
 
 	if success {
+		// Saves ammount
 		posting := ic.state.JournalEntryInput.CurrentPosting()
 		posting.SetAmmount(ammount)
-		ic.state.JournalEntryInput.AdvancePosting()
-		ic.state.SetPhase(statemod.InputPostingAccount)
+
+		// If there is balance outstanding, go to next posting
+		if !ic.state.JournalEntryInput.PostingHasZeroBalance() {
+			ic.state.JournalEntryInput.AdvancePosting()
+			ic.state.SetPhase(statemod.InputPostingAccount)
+			return
+		}
+
+		// Else, go to confirmation
+		ic.state.SetPhase(statemod.Confirmation)
 	}
 }
 

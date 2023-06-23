@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/controller"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
 )
 
@@ -33,20 +34,14 @@ func NewPostingAccount(
 		case tcell.KeyUp, tcell.KeyCtrlP:
 			field.controller.OnPostingAccountListAcction(listaction.PREV)
 			return nil
-		// If user hit enter...
+		// If user hit enter, select from context (list)
 		case tcell.KeyEnter:
-			// ...with no text, he's done entering stuff!
-			if field.GetText() == "" {
-				field.controller.OnPostingAccountDone("")
-				// ...with some text written, he's selecting from context
-			} else {
-				field.controller.OnPostingAccountSelectedFromContext()
-			}
+			field.controller.OnPostingAccountDone(input.Context)
 			return nil
 		// if Ctrl+J, use input as it is
 		case tcell.KeyCtrlJ:
-			text := field.GetText()
-			field.controller.OnPostingAccountDone(text)
+			field.controller.OnPostingAccountChanged(field.GetText())
+			field.controller.OnPostingAccountDone(input.Context)
 			return nil
 		// if Tab then autocompletes
 		case tcell.KeyTab:

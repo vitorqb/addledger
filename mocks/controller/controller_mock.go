@@ -156,15 +156,15 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAccountChanged(newText inte
 }
 
 // OnPostingAccountDone mocks base method.
-func (m *MockIInputController) OnPostingAccountDone(account string) {
+func (m *MockIInputController) OnPostingAccountDone(source input.DoneSource) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnPostingAccountDone", account)
+	m.ctrl.Call(m, "OnPostingAccountDone", source)
 }
 
 // OnPostingAccountDone indicates an expected call of OnPostingAccountDone.
-func (mr *MockIInputControllerMockRecorder) OnPostingAccountDone(account interface{}) *gomock.Call {
+func (mr *MockIInputControllerMockRecorder) OnPostingAccountDone(source interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountDone", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountDone), account)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountDone", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountDone), source)
 }
 
 // OnPostingAccountInsertFromContext mocks base method.
@@ -189,18 +189,6 @@ func (m *MockIInputController) OnPostingAccountListAcction(action listaction.Lis
 func (mr *MockIInputControllerMockRecorder) OnPostingAccountListAcction(action interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountListAcction", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountListAcction), action)
-}
-
-// OnPostingAccountSelectedFromContext mocks base method.
-func (m *MockIInputController) OnPostingAccountSelectedFromContext() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnPostingAccountSelectedFromContext")
-}
-
-// OnPostingAccountSelectedFromContext indicates an expected call of OnPostingAccountSelectedFromContext.
-func (mr *MockIInputControllerMockRecorder) OnPostingAccountSelectedFromContext() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAccountSelectedFromContext", reflect.TypeOf((*MockIInputController)(nil).OnPostingAccountSelectedFromContext))
 }
 
 // OnPostingAmmountChanged mocks base method.

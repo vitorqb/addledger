@@ -25,12 +25,21 @@ var anAmmount = journal.Ammount{
 	Quantity:  decimal.New(9999, -3),
 }
 var anAmmountStr = "BRL 9.999"
+var anAmmountNeg = journal.Ammount{
+	Commodity: anAmmount.Commodity,
+	Quantity:  anAmmount.Quantity.Neg(),
+}
+var anAmmountNegStr = "BRL -9.999"
 var anotherAmmount = journal.Ammount{
 	Commodity: "EUR",
 	Quantity:  decimal.New(1220, -2),
 }
-
 var anotherAmmountStr = "EUR 12.20"
+var anotherAmmountNeg = journal.Ammount{
+	Commodity: anotherAmmount.Commodity,
+	Quantity:  anotherAmmount.Quantity.Neg(),
+}
+var anotherAmmountNegStr = "EUR -12.20"
 
 func TestInputController(t *testing.T) {
 
@@ -142,22 +151,61 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "OnAccountInput and empty account",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.controller.OnPostingAccountDone("")
-				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
-			},
-		},
-		{
-			name: "OnAccountInput not empty",
+			name: "OnPostingAccountDone from context",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputPostingAccount)
-				c.controller.OnPostingAccountDone("FOO")
+				c.state.InputMetadata.SetPostingAccountText("BAR")
+				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
+
+				c.controller.OnPostingAccountDone(input.Context)
+
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
-				account, _ := c.state.JournalEntryInput.CurrentPosting().GetAccount()
+				posting := c.state.JournalEntryInput.CurrentPosting()
+				account, _ := posting.GetAccount()
 				assert.Equal(t, "FOO", account)
+			},
+		},
+		{
+			name: "OnPostingAccountDone from context no account",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputPostingAccount)
+				c.state.InputMetadata.SetSelectedPostingAccount("")
+				c.state.InputMetadata.SetPostingAccountText("BAR")
+
+				c.controller.OnPostingAccountDone(input.Context)
+
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+			},
+		},
+		{
+			name: "OnPostingAccountDone from input",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputPostingAccount)
+				c.state.InputMetadata.SetSelectedPostingAccount("BAR")
+				c.state.InputMetadata.SetPostingAccountText("FOO")
+
+				c.controller.OnPostingAccountDone(input.Input)
+
+				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
+				posting := c.state.JournalEntryInput.CurrentPosting()
+				account, _ := posting.GetAccount()
+				assert.Equal(t, "FOO", account)
+			},
+		},
+		{
+			name: "OnPostingAccountDone from input no account",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputPostingAccount)
+				c.state.InputMetadata.SetSelectedPostingAccount("BAR")
+				c.state.InputMetadata.SetPostingAccountText("")
+
+				c.controller.OnPostingAccountDone(input.Input)
+
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 			},
 		},
 		{
@@ -251,8 +299,9 @@ func TestInputController(t *testing.T) {
 			name: "OnPostingAccountSelectedFromContext",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetPostingAccountText("BAR")
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
-				c.controller.OnPostingAccountSelectedFromContext()
+				c.controller.OnPostingAccountDone(input.Context)
 				posting := c.state.JournalEntryInput.CurrentPosting()
 				acc, ok := posting.GetAccount()
 				assert.True(t, ok)
@@ -305,6 +354,42 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
+			name: "After two unbalanced postings dont advance to confirmation",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
+				c.controller.OnDescriptionChanged("FOO")
+				c.controller.OnDescriptionDone()
+				c.controller.OnPostingAccountChanged("FOO")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anAmmountNegStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAccountChanged("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Should still be on entering postings
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+
+				// First posting
+				firstPosting, _ := c.state.JournalEntryInput.GetPosting(0)
+				firstPostingAccount, _ := firstPosting.GetAccount()
+				assert.Equal(t, "FOO", firstPostingAccount)
+				firstPostingAmmount, _ := firstPosting.GetAmmount()
+				assert.Equal(t, anAmmountNeg, firstPostingAmmount)
+
+				// Second posting
+				secondPosting, _ := c.state.JournalEntryInput.GetPosting(1)
+				secondPostingAccount, _ := secondPosting.GetAccount()
+				assert.Equal(t, "BAR", secondPostingAccount)
+				secondPostingAmmount, _ := secondPosting.GetAmmount()
+				assert.Equal(t, anotherAmmountNeg, secondPostingAmmount)
+			},
+		},
+		{
 			name: "Undo after first posting is entered ",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
@@ -314,7 +399,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
 				c.controller.OnPostingAmmountDone(input.Input)
 
@@ -332,7 +417,7 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "Must remove empty posting after finished entering postings",
+			name: "Must write to ",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
@@ -341,34 +426,30 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
 				c.controller.OnPostingAmmountDone(input.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
-				c.controller.OnPostingAccountDone("BAR2")
-				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
 				c.controller.OnPostingAmmountDone(input.Input)
 
-				// Should have 3 postings - 2 filled and 1 empty
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 3)
-				lastPosting := c.state.JournalEntryInput.CurrentPosting()
-				_, accFound := lastPosting.GetAccount()
-				assert.False(t, accFound)
-				_, ammountFound := lastPosting.GetAmmount()
-				assert.False(t, ammountFound)
-
-				// Submit
-				c.controller.OnPostingAccountDone("")
-
-				// Must have deleted the last posting
+				// Should have 2 filled postings and be on confirmation page
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
-				lastPosting = c.state.JournalEntryInput.CurrentPosting()
-				accValue, accFound := lastPosting.GetAccount()
-				assert.True(t, accFound)
-				assert.Equal(t, "BAR2", accValue)
-				ammountValue, ammountFound := lastPosting.GetAmmount()
-				assert.True(t, ammountFound)
-				assert.Equal(t, journal.Ammount{Commodity: "EUR", Quantity: decimal.New(1220, -2)}, ammountValue)
+				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
+				lastPosting := c.state.JournalEntryInput.CurrentPosting()
+				acc, _ := lastPosting.GetAccount()
+				assert.Equal(t, "BAR2", acc)
+				ammount, _ := lastPosting.GetAmmount()
+				assert.Equal(t, anotherAmmountNeg, ammount)
+
+				// Confirms submission
+				c.controller.OnInputConfirmation()
+
+				// Must have written to output
+				wrote := c.bytesBuffer.String()
+				assert.Contains(t, wrote, "BAR2")
+				assert.Contains(t, wrote, "EUR -12.2")
 			},
 		},
 		{
@@ -381,16 +462,16 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
 				c.controller.OnPostingAmmountDone(input.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
-				c.controller.OnPostingAccountDone("BAR2")
-				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
 				c.controller.OnPostingAmmountDone(input.Input)
 
-				// Goes to confirm page
-				c.controller.OnPostingAccountDone("")
+				// Should have gone to confirmation page
+				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
 
 				// Should have 2 filled postings (empty one deleted)
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
@@ -398,13 +479,49 @@ func TestInputController(t *testing.T) {
 				// User decides to go back
 				c.controller.OnInputRejection()
 
-				// Should have 3 postings - 2 filled and 1 empty
+				// Should have 3 postings, 2 filled + 1 empty
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 3)
 				lastPosting := c.state.JournalEntryInput.CurrentPosting()
 				_, accFound := lastPosting.GetAccount()
 				assert.False(t, accFound)
 				_, ammountFound := lastPosting.GetAmmount()
 				assert.False(t, ammountFound)
+			},
+		},
+		{
+			name: "User undo on confirmation page",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
+				c.controller.OnDescriptionChanged("FOO")
+				c.controller.OnDescriptionDone()
+				c.controller.OnPostingAccountChanged("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAccountChanged("BAR2")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Should have gone to confirmation page
+				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
+
+				// Should have 2 filled postings (empty one deleted)
+				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+
+				// User decides to undo
+				c.controller.OnUndo()
+
+				// Should have 2 filled postings
+				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				lastPosting := c.state.JournalEntryInput.CurrentPosting()
+				acc, _ := lastPosting.GetAccount()
+				assert.Equal(t, "BAR2", acc)
+				ammount, _ := lastPosting.GetAmmount()
+				assert.Equal(t, anotherAmmountNeg, ammount)
 			},
 		},
 		{
@@ -417,7 +534,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
 				c.controller.OnPostingAmmountChanged(anAmmountStr)
 				c.controller.OnPostingAmmountDone(input.Input)
 
