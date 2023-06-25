@@ -17,6 +17,8 @@ import (
 
 // IInputController reacts to the user inputs and interactions.
 type IInputController interface {
+	// Handles user confirming/rejecting the transaction at the end, after
+	// inputing everything
 	OnInputConfirmation()
 	OnInputRejection()
 
