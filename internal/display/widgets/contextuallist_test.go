@@ -85,6 +85,48 @@ func TestContextualList(t *testing.T) {
 				assert.Equal(t, "THREE", c.selected)
 			},
 		},
+		{
+			name: "Default is printed first.",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetDefaultFunc = func() (string, bool) {
+					return "FOO", true
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.Equal(t, 4, c.contextualList.GetItemCount())
+				assert.Equal(t, "FOO", c.selected)
+				firstItem, _ := c.contextualList.GetItemText(0)
+				assert.Equal(t, "FOO", firstItem)
+
+				// Refreshes and keeps the same
+				c.input = ""
+				c.contextualList.Refresh()
+				assert.Equal(t, 4, c.contextualList.GetItemCount())
+				assert.Equal(t, "FOO", c.selected)
+				firstItem, _ = c.contextualList.GetItemText(0)
+				assert.Equal(t, "FOO", firstItem)
+			},
+		},
+		{
+			name: "Default is printed after writting something.",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetDefaultFunc = func() (string, bool) {
+					return "FOO", true
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.input = "ONE"
+				c.contextualList.Refresh()
+				c.input = ""
+				c.contextualList.Refresh()
+
+				// Assert default is at pos 0
+				assert.Equal(t, 4, c.contextualList.GetItemCount())
+				assert.Equal(t, "FOO", c.selected)
+				firstItem, _ := c.contextualList.GetItemText(0)
+				assert.Equal(t, "FOO", firstItem)
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {

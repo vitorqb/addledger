@@ -20,6 +20,8 @@ type ContextualListOptions struct {
 	SetSelectedFunc func(string)
 	// GetInputFunc is a function that must return the user input.
 	GetInputFunc func() string
+	// GetDefaultFunc is a function that returns the default value.
+	GetDefaultFunc func() (defaultValue string, success bool)
 }
 
 // ContextualList is a List widget for the context that allows the user to
@@ -27,9 +29,11 @@ type ContextualListOptions struct {
 type ContextualList struct {
 	*tview.List
 	inputCache      string
+	defaultCache    string
 	getItemsFunc    func() []string
 	getInputFunc    func() string
 	setSelectedFunc func(string)
+	getDefaultFunc  func() (defaultValue string, success bool)
 }
 
 // NewContextualList creates a new ContextualList. `getItemsFunc` is a
@@ -45,20 +49,30 @@ func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
 	if options.GetItemsFunc == nil {
 		return nil, fmt.Errorf("missing GetItemsFunc")
 	}
+	if options.GetDefaultFunc == nil {
+		options.GetDefaultFunc = func() (string, bool) { return "", false }
+	}
 
 	// Builds list
 	list := &ContextualList{
-		tview.NewList(),
-		"",
-		options.GetItemsFunc,
-		options.GetInputFunc,
-		options.SetSelectedFunc,
+		List:            tview.NewList(),
+		inputCache:      "",
+		defaultCache:    "",
+		getItemsFunc:    options.GetItemsFunc,
+		getInputFunc:    options.GetInputFunc,
+		setSelectedFunc: options.SetSelectedFunc,
+		getDefaultFunc:  options.GetDefaultFunc,
 	}
 	list.ShowSecondaryText(false)
 	list.SetChangedFunc(func(_ int, mainText, _ string, _ rune) {
 		logrus.WithField("text", mainText).Debug("AccountList changed")
 		list.setSelectedFunc(mainText)
 	})
+	if list.getDefaultFunc != nil {
+		if defaultValue, success := list.getDefaultFunc(); success {
+			list.AddItem(defaultValue, "", 0, nil)
+		}
+	}
 	for _, item := range list.getItemsFunc() {
 		list.AddItem(item, "", 0, nil)
 	}
@@ -95,27 +109,53 @@ func (cl *ContextualList) HandleActionFromEvent(e eventbus.Event) {
 func (cl *ContextualList) Refresh() {
 	input := cl.getInputFunc()
 
-	// If cache hit, just return
-	if cl.inputCache == input {
+	// Cache hits
+	if input == cl.inputCache {
+
+		// If input is empty, we need to check whether the default changed!
+		if input == "" {
+			defaultValue, _ := cl.getDefaultFunc()
+
+			// If default didn't change, nothing to do.
+			if defaultValue == cl.defaultCache {
+				return
+			}
+
+			// Default changed, so we need to print items again.
+			cl.defaultCache = defaultValue
+			cl.printItemsEmptyInput()
+			return
+		}
+
+		// Input is not empty and hasn't changed - nothing to do.
 		return
 	}
 
-	// No cache - clear inputs
+	// No cache hit - new input!
 	cl.inputCache = input
-	cl.Clear()
 
-	// If the input is empty, don't do any matches so we can preserve the order
+	// If the input is empty, handle default and don't do any match.
 	if input == "" {
-		for _, item := range cl.getItemsFunc() {
-			cl.AddItem(item, "", 0, nil)
-		}
+		cl.printItemsEmptyInput()
 		return
 	}
 
 	// Input is not empty - match and sort by match
+	cl.Clear()
 	matches := fuzzy.RankFindFold(input, cl.getItemsFunc())
 	sort.Sort(matches)
 	for _, match := range matches {
 		cl.AddItem(match.Target, "", 0, nil)
+	}
+}
+
+func (cl *ContextualList) printItemsEmptyInput() {
+	cl.Clear()
+	defaultValue, hasDefault := cl.getDefaultFunc()
+	if hasDefault {
+		cl.AddItem(defaultValue, "", 0, nil)
+	}
+	for _, item := range cl.getItemsFunc() {
+		cl.AddItem(item, "", 0, nil)
 	}
 }
