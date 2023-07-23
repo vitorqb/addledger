@@ -11,6 +11,16 @@ import (
 	"github.com/vitorqb/addledger/internal/listaction"
 )
 
+// ContextualListOptions represents all options for a ContextualList
+type ContextualListOptions struct {
+	// GetItemsFunc is a function that must return the items to be printed.
+	GetItemsFunc func() []string
+	// SetSelectedFunc is a function called when an item is selected.
+	SetSelectedFunc func(string)
+	// GetInputFunc is a function that must return the user input.
+	GetInputFunc func() string
+}
+
 // ContextualList is a List widget for the context that allows the user to
 // select an entry from it for an input.
 type ContextualList struct {
@@ -26,18 +36,21 @@ type ContextualList struct {
 // is a function that is called with the selected item every time it
 // changes. `getInputFunc` is a function that returns the current
 // input used to filter the entries.
-func NewContextualList(
-	getItemsFunc func() []string,
-	setSelectedFunc func(string),
-	getInputFunc func() string,
-) *ContextualList {
-	list := &ContextualList{tview.NewList(), "", getItemsFunc, getInputFunc, setSelectedFunc}
+func NewContextualList(options ContextualListOptions) *ContextualList {
+	// !!!! TODO Warn on invalid input and return error.
+	list := &ContextualList{
+		tview.NewList(),
+		"",
+		options.GetItemsFunc,
+		options.GetInputFunc,
+		options.SetSelectedFunc,
+	}
 	list.ShowSecondaryText(false)
 	list.SetChangedFunc(func(_ int, mainText, _ string, _ rune) {
 		logrus.WithField("text", mainText).Debug("AccountList changed")
-		setSelectedFunc(mainText)
+		list.setSelectedFunc(mainText)
 	})
-	for _, item := range getItemsFunc() {
+	for _, item := range list.getItemsFunc() {
 		list.AddItem(item, "", 0, nil)
 	}
 	return list

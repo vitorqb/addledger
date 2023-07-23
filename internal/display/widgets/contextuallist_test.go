@@ -73,17 +73,17 @@ func TestContextualList(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			c := new(testcontext)
 			c.input = "T"
-			c.contextualList = NewContextualList(
-				func() []string {
+			c.contextualList = NewContextualList(ContextualListOptions{
+				GetItemsFunc: func() []string {
 					return []string{"THREE", "TWO", "ONE"}
 				},
-				func(s string) {
+				SetSelectedFunc: func(s string) {
 					c.selected = s
 				},
-				func() string {
+				GetInputFunc: func() string {
 					return c.input
 				},
-			)
+			})
 			testcase.run(t, c)
 		})
 	}

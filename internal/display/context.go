@@ -82,20 +82,20 @@ func newAccountList(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) (*widgets.ContextualList, error) {
-	list := widgets.NewContextualList(
-		func() (out []string) {
+	list := widgets.NewContextualList(widgets.ContextualListOptions{
+		GetItemsFunc: func() (out []string) {
 			for _, acc := range state.JournalMetadata.Accounts() {
 				out = append(out, string(acc))
 			}
 			return out
 		},
-		func(s string) {
+		SetSelectedFunc: func(s string) {
 			state.InputMetadata.SetSelectedPostingAccount(s)
 		},
-		func() string {
+		GetInputFunc: func() string {
 			return state.InputMetadata.PostingAccountText()
 		},
-	)
+	})
 	state.AddOnChangeHook(func() { list.Refresh() })
 	err := eventbus.Subscribe(eventbusmod.Subscription{
 		Topic:   "input.postingaccount.listaction",

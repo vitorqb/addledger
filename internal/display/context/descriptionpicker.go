@@ -15,8 +15,8 @@ func NewDescriptionPicker(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) (*widgets.ContextualList, error) {
-	list := widgets.NewContextualList(
-		func() []string {
+	list := widgets.NewContextualList(widgets.ContextualListOptions{
+		GetItemsFunc: func() []string {
 			descriptions := []string{}
 			for _, transaction := range state.JournalMetadata.Transactions() {
 				descriptions = append(descriptions, transaction.Description)
@@ -26,13 +26,13 @@ func NewDescriptionPicker(
 			utils.Reverse(out)
 			return out
 		},
-		func(s string) {
+		SetSelectedFunc: func(s string) {
 			state.InputMetadata.SetSelectedDescription(s)
 		},
-		func() string {
+		GetInputFunc: func() string {
 			return state.InputMetadata.DescriptionText()
 		},
-	)
+	})
 	state.AddOnChangeHook(list.Refresh)
 	err := eventbus.Subscribe(eventbusmod.Subscription{
 		Topic:   "input.description.listaction",
