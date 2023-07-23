@@ -34,8 +34,8 @@ run:
     {{GO}} run cmd/addledger/main.go
 
 # Runs all tests
-test: mocks
-    {{GO}} test ./...
+test target="./...": mocks
+    {{GO}} test {{target}}
 
 # Creates all mocks
 mocks:
