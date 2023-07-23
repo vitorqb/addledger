@@ -5,6 +5,8 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 )
 
+//go:generate $MOCKGEN --source=accountguesser.go --destination=../../mocks/accountguesser/accountguesser_mock.go
+
 // TransactionHistory represents a history of transactions.
 type TransactionHistory []journal.Transaction
 

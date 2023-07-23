@@ -54,3 +54,15 @@ func (i *PostingInput) ClearAmmount() {
 	delete(i.inputs, "ammount")
 	i.NotifyChange()
 }
+
+func (i *PostingInput) ToPosting() journal.Posting {
+	account, _ := i.GetAccount()
+	ammount, _ := i.GetAmmount()
+	return journal.Posting{Account: account, Ammount: ammount}
+}
+
+func (i *PostingInput) IsComplete() bool {
+	_, accountFound := i.GetAccount()
+	_, ammountFound := i.GetAmmount()
+	return accountFound && ammountFound
+}
