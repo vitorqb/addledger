@@ -41,7 +41,7 @@ func TestAccountGuesser(t *testing.T) {
 						Posting: []journal.Posting{
 							{
 								Account: "expenses:supermarket",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 						},
 					},
@@ -62,7 +62,7 @@ func TestAccountGuesser(t *testing.T) {
 						Posting: []journal.Posting{
 							{
 								Account: "expenses:supermarket",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 						},
 					},
@@ -85,11 +85,11 @@ func TestAccountGuesser(t *testing.T) {
 						Posting: []journal.Posting{
 							{
 								Account: "expenses:supermarket",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 							{
 								Account: "assets:current-account",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 						},
 					},
@@ -99,7 +99,7 @@ func TestAccountGuesser(t *testing.T) {
 				return []journal.Posting{
 					{
 						Account: "expenses:supermarket",
-						Ammount: []journal.Ammount{},
+						Ammount: journal.Ammount{},
 					},
 				}
 			},
@@ -117,11 +117,11 @@ func TestAccountGuesser(t *testing.T) {
 						Posting: []journal.Posting{
 							{
 								Account: "foo",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 							{
 								Account: "bar",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 						},
 					},
@@ -131,11 +131,11 @@ func TestAccountGuesser(t *testing.T) {
 						Posting: []journal.Posting{
 							{
 								Account: "expenses:supermarket",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 							{
 								Account: "assets:current-account",
-								Ammount: []journal.Ammount{},
+								Ammount: journal.Ammount{},
 							},
 						},
 					},
@@ -157,11 +157,11 @@ func TestAccountGuesser(t *testing.T) {
 					Posting: []journal.Posting{
 						{
 							Account: "foo",
-							Ammount: []journal.Ammount{},
+							Ammount: journal.Ammount{},
 						},
 						{
 							Account: "bar",
-							Ammount: []journal.Ammount{},
+							Ammount: journal.Ammount{},
 						},
 					},
 				}

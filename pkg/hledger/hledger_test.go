@@ -37,20 +37,16 @@ var expectedTransactions = []journal.Transaction{
 		Posting: []journal.Posting{
 			{
 				Account: "liabilities:other",
-				Ammount: []journal.Ammount{
-					{
-						Commodity: "EUR",
-						Quantity:  decimal.New(-4000000, -5),
-					},
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(-4000000, -5),
 				},
 			},
 			{
 				Account: "expenses:sports",
-				Ammount: []journal.Ammount{
-					{
-						Commodity: "EUR",
-						Quantity:  decimal.New(4000000, -5),
-					},
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(4000000, -5),
 				},
 			},
 		},
@@ -61,20 +57,16 @@ var expectedTransactions = []journal.Transaction{
 		Posting: []journal.Posting{
 			{
 				Account: "revenues:salary",
-				Ammount: []journal.Ammount{
-					{
-						Commodity: "EUR",
-						Quantity:  decimal.New(-164734000, -5),
-					},
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(-164734000, -5),
 				},
 			},
 			{
 				Account: "assets:bank:current:lacaixa",
-				Ammount: []journal.Ammount{
-					{
-						Commodity: "EUR",
-						Quantity:  decimal.New(164734000, -5),
-					},
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(164734000, -5),
 				},
 			},
 		},

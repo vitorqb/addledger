@@ -5,7 +5,7 @@ import "time"
 // Posting represents a Posting inside a transaction
 type Posting struct {
 	Account string
-	Ammount []Ammount
+	Ammount Ammount
 }
 
 // Transaction represents a transaction inside a journal.
