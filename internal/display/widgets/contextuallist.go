@@ -72,12 +72,25 @@ func (cl *ContextualList) HandleActionFromEvent(e eventbus.Event) {
 // with items that match the current input.
 func (cl *ContextualList) Refresh() {
 	input := cl.getInputFunc()
-	logrus.WithField("input", input).Debug("Refreshing ContextualList")
+
+	// If cache hit, just return
 	if cl.inputCache == input {
 		return
 	}
+
+	// No cache - clear inputs
 	cl.inputCache = input
 	cl.Clear()
+
+	// If the input is empty, don't do any matches so we can preserve the order
+	if input == "" {
+		for _, item := range cl.getItemsFunc() {
+			cl.AddItem(item, "", 0, nil)
+		}
+		return
+	}
+
+	// Input is not empty - match and sort by match
 	matches := fuzzy.RankFindFold(input, cl.getItemsFunc())
 	sort.Sort(matches)
 	for _, match := range matches {

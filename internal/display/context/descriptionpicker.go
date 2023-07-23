@@ -6,6 +6,7 @@ import (
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/utils"
 )
 
 // DescriptionPicker presents a list of known descriptions to the user,
@@ -16,15 +17,14 @@ func NewDescriptionPicker(
 ) (*widgets.ContextualList, error) {
 	list := widgets.NewContextualList(
 		func() []string {
-			descriptionsMap := make(map[string]interface{})
-			for _, p := range state.JournalMetadata.Transactions() {
-				descriptionsMap[p.Description] = 1
+			descriptions := []string{}
+			for _, transaction := range state.JournalMetadata.Transactions() {
+				descriptions = append(descriptions, transaction.Description)
 			}
-			var descriptions []string
-			for k := range descriptionsMap {
-				descriptions = append(descriptions, k)
-			}
-			return descriptions
+			out := utils.Unique(descriptions)
+			// NOTE: call reverse so last transactions will be suggested first.
+			utils.Reverse(out)
+			return out
 		},
 		func(s string) {
 			state.InputMetadata.SetSelectedDescription(s)
