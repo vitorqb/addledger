@@ -1,6 +1,7 @@
 package widgets
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/gdamore/tcell/v2"
@@ -36,8 +37,16 @@ type ContextualList struct {
 // is a function that is called with the selected item every time it
 // changes. `getInputFunc` is a function that returns the current
 // input used to filter the entries.
-func NewContextualList(options ContextualListOptions) *ContextualList {
-	// !!!! TODO Warn on invalid input and return error.
+func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
+	// Validates input
+	if options.GetInputFunc == nil {
+		return nil, fmt.Errorf("missing GetInputFunc")
+	}
+	if options.GetItemsFunc == nil {
+		return nil, fmt.Errorf("missing GetItemsFunc")
+	}
+
+	// Builds list
 	list := &ContextualList{
 		tview.NewList(),
 		"",
@@ -53,7 +62,7 @@ func NewContextualList(options ContextualListOptions) *ContextualList {
 	for _, item := range list.getItemsFunc() {
 		list.AddItem(item, "", 0, nil)
 	}
-	return list
+	return list, nil
 }
 
 // HandleAction handles a ListAction (e.g. next, prev, etc).

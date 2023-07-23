@@ -13,12 +13,29 @@ func TestContextualList(t *testing.T) {
 		contextualList *ContextualList
 		selected       string
 		input          string
+		options        *ContextualListOptions
 	}
 	type testcase struct {
-		name string
-		run  func(t *testing.T, c *testcontext)
+		name            string
+		run             func(t *testing.T, c *testcontext)
+		setupOptions    func(o *ContextualListOptions)
+		buildErrorMatch string
 	}
 	testcases := []testcase{
+		{
+			name: "Fails to build if missing GetItemsFunc",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetInputFunc = nil
+			},
+			buildErrorMatch: "missing GetInputFunc",
+		},
+		{
+			name: "Fails to build if missing GetInputFunc",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetInputFunc = nil
+			},
+			buildErrorMatch: "missing GetInputFunc",
+		},
 		{
 			name: "Fills list with items",
 			run: func(t *testing.T, c *testcontext) {
@@ -71,9 +88,10 @@ func TestContextualList(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
+			var err error
 			c := new(testcontext)
 			c.input = "T"
-			c.contextualList = NewContextualList(ContextualListOptions{
+			c.options = &ContextualListOptions{
 				GetItemsFunc: func() []string {
 					return []string{"THREE", "TWO", "ONE"}
 				},
@@ -83,8 +101,16 @@ func TestContextualList(t *testing.T) {
 				GetInputFunc: func() string {
 					return c.input
 				},
-			})
-			testcase.run(t, c)
+			}
+			if testcase.setupOptions != nil {
+				testcase.setupOptions(c.options)
+			}
+			c.contextualList, err = NewContextualList(*c.options)
+			if testcase.buildErrorMatch != "" {
+				assert.ErrorContains(t, err, testcase.buildErrorMatch)
+			} else {
+				testcase.run(t, c)
+			}
 		})
 	}
 }

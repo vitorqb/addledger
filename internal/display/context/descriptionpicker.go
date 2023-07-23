@@ -15,7 +15,7 @@ func NewDescriptionPicker(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) (*widgets.ContextualList, error) {
-	list := widgets.NewContextualList(widgets.ContextualListOptions{
+	list, err := widgets.NewContextualList(widgets.ContextualListOptions{
 		GetItemsFunc: func() []string {
 			descriptions := []string{}
 			for _, transaction := range state.JournalMetadata.Transactions() {
@@ -33,8 +33,11 @@ func NewDescriptionPicker(
 			return state.InputMetadata.DescriptionText()
 		},
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to build contextual list: %w", err)
+	}
 	state.AddOnChangeHook(list.Refresh)
-	err := eventbus.Subscribe(eventbusmod.Subscription{
+	err = eventbus.Subscribe(eventbusmod.Subscription{
 		Topic:   "input.description.listaction",
 		Handler: list.HandleActionFromEvent,
 	})

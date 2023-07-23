@@ -82,7 +82,7 @@ func newAccountList(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) (*widgets.ContextualList, error) {
-	list := widgets.NewContextualList(widgets.ContextualListOptions{
+	list, err := widgets.NewContextualList(widgets.ContextualListOptions{
 		GetItemsFunc: func() (out []string) {
 			for _, acc := range state.JournalMetadata.Accounts() {
 				out = append(out, string(acc))
@@ -96,8 +96,12 @@ func newAccountList(
 			return state.InputMetadata.PostingAccountText()
 		},
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to build contextual list: %w", err)
+	}
+
 	state.AddOnChangeHook(func() { list.Refresh() })
-	err := eventbus.Subscribe(eventbusmod.Subscription{
+	err = eventbus.Subscribe(eventbusmod.Subscription{
 		Topic:   "input.postingaccount.listaction",
 		Handler: list.HandleActionFromEvent,
 	})
