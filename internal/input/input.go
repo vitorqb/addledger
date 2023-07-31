@@ -94,6 +94,29 @@ func (i *JournalEntryInput) CountPostings() int {
 	return 0
 }
 
+// PostingBalance returns the balance left for all postings
+func (i *JournalEntryInput) PostingBalance() []journal.Ammount {
+	postings := i.GetPostings()
+	var ammounts []journal.Ammount
+	for _, posting := range postings {
+		ammount, found := posting.GetAmmount()
+		if found {
+			ammounts = append(ammounts, ammount)
+		}
+	}
+	return journal.Balance(ammounts)
+}
+
+// PostingHasZeroBalance returns true if there is no left balance
+func (i *JournalEntryInput) PostingHasZeroBalance() bool {
+	for _, ammount := range i.PostingBalance() {
+		if !ammount.Quantity.Equal(decimal.Zero) {
+			return false
+		}
+	}
+	return true
+}
+
 func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
 	if postingsInputs, found := i.inputs["postings"]; found {
 		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {

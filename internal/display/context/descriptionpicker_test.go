@@ -28,7 +28,7 @@ func TestDescriptionPicker(t *testing.T) {
 			name: "Loads descriptions from state",
 			run: func(t *testing.T, c *testcontext) {
 				assert.Equal(t, 2, c.descPicker.GetItemCount())
-				assert.Equal(t, "Description One", c.state.InputMetadata.SelectedDescription())
+				assert.Equal(t, "Description Two", c.state.InputMetadata.SelectedDescription())
 				err := c.eventbus.Send(eventbus.Event{
 					Topic: "input.description.listaction",
 					Data:  listaction.NEXT,
@@ -36,7 +36,7 @@ func TestDescriptionPicker(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				assert.Equal(t, "Description Two", c.state.InputMetadata.SelectedDescription())
+				assert.Equal(t, "Description One", c.state.InputMetadata.SelectedDescription())
 			},
 		},
 	}

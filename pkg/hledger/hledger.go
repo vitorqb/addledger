@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/journal"
 )
 
@@ -17,12 +19,6 @@ type IClient interface {
 	Accounts() ([]journal.Account, error)
 	// Transactions returns a list of all known transactions.
 	Transactions() ([]journal.Transaction, error)
-}
-
-// Client is the default implementation for IClient.
-type Client struct {
-	executable string
-	ledgerFile string
 }
 
 var _ IClient = &Client{}
@@ -45,7 +41,8 @@ func (c *Client) Accounts() (accounts []journal.Account, err error) {
 }
 
 func (c *Client) Transactions() ([]journal.Transaction, error) {
-	var transactions []journal.Transaction
+	transactions := []journal.Transaction{}
+	jsontransactions := []JSONTransaction{}
 	cmdArgs := []string{}
 	if c.ledgerFile != "" {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--file=%s", c.ledgerFile))
@@ -56,9 +53,26 @@ func (c *Client) Transactions() ([]journal.Transaction, error) {
 	if err != nil {
 		return transactions, fmt.Errorf("failed to get transactions: %w", err)
 	}
-	err = json.Unmarshal(cmdOutputBytes, &transactions)
+	err = json.Unmarshal(cmdOutputBytes, &jsontransactions)
 	if err != nil {
 		return transactions, fmt.Errorf("failed to unmarshall transactions: %w", err)
+	}
+	for _, jsontransaction := range jsontransactions {
+		date, err := time.Parse("2006-01-02", jsontransaction.Date)
+		if err != nil {
+			logrus.Warn("Failed to parse date: %w", err)
+			continue
+		}
+		postings, err := ParsePostingsJson(jsontransaction.Postings)
+		if err != nil {
+			logrus.Warn("Failed to parse postings: %w", err)
+		}
+		transaction := journal.Transaction{
+			Description: jsontransaction.Description,
+			Date:        date,
+			Posting:     postings,
+		}
+		transactions = append(transactions, transaction)
 	}
 	return transactions, nil
 }

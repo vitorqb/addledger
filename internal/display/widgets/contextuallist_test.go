@@ -13,31 +13,48 @@ func TestContextualList(t *testing.T) {
 		contextualList *ContextualList
 		selected       string
 		input          string
+		options        *ContextualListOptions
 	}
 	type testcase struct {
-		name string
-		run  func(t *testing.T, c *testcontext)
+		name            string
+		run             func(t *testing.T, c *testcontext)
+		setupOptions    func(o *ContextualListOptions)
+		buildErrorMatch string
 	}
 	testcases := []testcase{
+		{
+			name: "Fails to build if missing GetItemsFunc",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetInputFunc = nil
+			},
+			buildErrorMatch: "missing GetInputFunc",
+		},
+		{
+			name: "Fails to build if missing GetInputFunc",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetInputFunc = nil
+			},
+			buildErrorMatch: "missing GetInputFunc",
+		},
 		{
 			name: "Fills list with items",
 			run: func(t *testing.T, c *testcontext) {
 				assert.Equal(t, 3, c.contextualList.GetItemCount())
 				text, _ := c.contextualList.GetItemText(0)
-				assert.Equal(t, "ONE", text)
+				assert.Equal(t, "THREE", text)
 			},
 		},
 		{
 			name: "Stores selected item",
 			run: func(t *testing.T, c *testcontext) {
 				c.contextualList.SetCurrentItem(2)
-				assert.Equal(t, "THREE", c.selected)
+				assert.Equal(t, "ONE", c.selected)
 			},
 		},
 		{
 			name: "Handle list actions",
 			run: func(t *testing.T, c *testcontext) {
-				assert.Equal(t, c.selected, "ONE")
+				assert.Equal(t, c.selected, "THREE")
 				c.contextualList.HandleAction(listaction.NEXT)
 				assert.Equal(t, c.selected, "TWO")
 			},
@@ -54,23 +71,88 @@ func TestContextualList(t *testing.T) {
 				assert.Equal(t, c.selected, "THREE")
 			},
 		},
+		{
+			name: "Refresh preserves order from getItemsFunc",
+			run: func(t *testing.T, c *testcontext) {
+				// Writes something
+				c.input = "THREE"
+				c.contextualList.Refresh()
+
+				// Resets
+				c.input = ""
+				c.contextualList.Refresh()
+				assert.Equal(t, c.contextualList.GetItemCount(), 3)
+				assert.Equal(t, "THREE", c.selected)
+			},
+		},
+		{
+			name: "Default is printed first.",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetDefaultFunc = func() (string, bool) {
+					return "FOO", true
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.Equal(t, 4, c.contextualList.GetItemCount())
+				assert.Equal(t, "FOO", c.selected)
+				firstItem, _ := c.contextualList.GetItemText(0)
+				assert.Equal(t, "FOO", firstItem)
+
+				// Refreshes and keeps the same
+				c.input = ""
+				c.contextualList.Refresh()
+				assert.Equal(t, 4, c.contextualList.GetItemCount())
+				assert.Equal(t, "FOO", c.selected)
+				firstItem, _ = c.contextualList.GetItemText(0)
+				assert.Equal(t, "FOO", firstItem)
+			},
+		},
+		{
+			name: "Default is printed after writting something.",
+			setupOptions: func(o *ContextualListOptions) {
+				o.GetDefaultFunc = func() (string, bool) {
+					return "FOO", true
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.input = "ONE"
+				c.contextualList.Refresh()
+				c.input = ""
+				c.contextualList.Refresh()
+
+				// Assert default is at pos 0
+				assert.Equal(t, 4, c.contextualList.GetItemCount())
+				assert.Equal(t, "FOO", c.selected)
+				firstItem, _ := c.contextualList.GetItemText(0)
+				assert.Equal(t, "FOO", firstItem)
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
+			var err error
 			c := new(testcontext)
 			c.input = "T"
-			c.contextualList = NewContextualList(
-				func() []string {
-					return []string{"ONE", "TWO", "THREE"}
+			c.options = &ContextualListOptions{
+				GetItemsFunc: func() []string {
+					return []string{"THREE", "TWO", "ONE"}
 				},
-				func(s string) {
+				SetSelectedFunc: func(s string) {
 					c.selected = s
 				},
-				func() string {
+				GetInputFunc: func() string {
 					return c.input
 				},
-			)
-			testcase.run(t, c)
+			}
+			if testcase.setupOptions != nil {
+				testcase.setupOptions(c.options)
+			}
+			c.contextualList, err = NewContextualList(*c.options)
+			if testcase.buildErrorMatch != "" {
+				assert.ErrorContains(t, err, testcase.buildErrorMatch)
+			} else {
+				testcase.run(t, c)
+			}
 		})
 	}
 }

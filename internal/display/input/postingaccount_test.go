@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display/input"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
 	. "github.com/vitorqb/addledger/mocks/controller"
 )
@@ -42,8 +43,8 @@ func TestPostingAccountField(t *testing.T) {
 		{
 			name: "Sends OnPostingAccountSelectedFromContext msg",
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.EXPECT().OnPostingAccountSelectedFromContext()
 				c.controller.EXPECT().OnPostingAccountChanged("FOO")
+				c.controller.EXPECT().OnPostingAccountDone(input.Context)
 				c.postingAccount.SetText("FOO")
 				event := tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone)
 				c.postingAccount.InputHandler()(event, func(tview.Primitive) {})

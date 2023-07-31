@@ -4,9 +4,11 @@ import (
 	"fmt"
 
 	"github.com/rivo/tview"
+	"github.com/vitorqb/addledger/internal/accountguesser"
 	contextmod "github.com/vitorqb/addledger/internal/display/context"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -19,9 +21,14 @@ func NewContext(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) (*Context, error) {
+	// !!!! TODO INJECT THIS
+	accountGuesser, err := accountguesser.New(accountguesser.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create account guesser: %w", err)
+	}
 
 	// Creates an AccountList widget
-	accountList, err := newAccountList(state, eventbus)
+	accountList, err := NewAccountList(state, eventbus, accountGuesser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create account list: %w", err)
 	}
@@ -78,26 +85,44 @@ func (c Context) Refresh() {
 	}
 }
 
-func newAccountList(
+func NewAccountList(
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
+	accountGuesser accountguesser.IAccountGuesser,
 ) (*widgets.ContextualList, error) {
-	list := widgets.NewContextualList(
-		func() (out []string) {
+	list, err := widgets.NewContextualList(widgets.ContextualListOptions{
+		GetItemsFunc: func() (out []string) {
 			for _, acc := range state.JournalMetadata.Accounts() {
 				out = append(out, string(acc))
 			}
 			return out
 		},
-		func(s string) {
+		SetSelectedFunc: func(s string) {
 			state.InputMetadata.SetSelectedPostingAccount(s)
 		},
-		func() string {
+		GetInputFunc: func() string {
 			return state.InputMetadata.PostingAccountText()
 		},
-	)
+		GetDefaultFunc: func() (defaultValue string, success bool) {
+			transactionHistory := state.JournalMetadata.Transactions()
+			inputPostings := state.JournalEntryInput.GetPostings()
+			var postings []journal.Posting
+			for _, inputPostings := range inputPostings {
+				if inputPostings.IsComplete() {
+					postings = append(postings, inputPostings.ToPosting())
+				}
+			}
+			description, _ := state.JournalEntryInput.GetDescription()
+			acc, success := accountGuesser.Guess(transactionHistory, postings, description)
+			return string(acc), success
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to build contextual list: %w", err)
+	}
+
 	state.AddOnChangeHook(func() { list.Refresh() })
-	err := eventbus.Subscribe(eventbusmod.Subscription{
+	err = eventbus.Subscribe(eventbusmod.Subscription{
 		Topic:   "input.postingaccount.listaction",
 		Handler: list.HandleActionFromEvent,
 	})

@@ -122,6 +122,57 @@ func TestJournalEntryInput(t *testing.T) {
 				assert.Same(t, addedPosting, currentPosting)
 			},
 		},
+		{
+			"Calculate posting balance no postings",
+			func(t *testing.T, c *context) {
+				expected := []journal.Ammount{}
+				assert.Equal(t, expected, c.input.PostingBalance())
+			},
+		},
+		{
+			"Calculate posting balance with postings total 0",
+			func(t *testing.T, c *context) {
+				ammount1 := journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(12, 1),
+				}
+				c.input.AddPosting().SetAmmount(ammount1)
+				ammount2 := journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(-12, 1),
+				}
+				c.input.AddPosting().SetAmmount(ammount2)
+				expected := []journal.Ammount{}
+				assert.Equal(t, expected, c.input.PostingBalance())
+			},
+		},
+		{
+			"Calculate posting balance with postings total not 0",
+			func(t *testing.T, c *context) {
+				ammount1 := journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(12, 1),
+				}
+				c.input.AddPosting().SetAmmount(ammount1)
+				ammount2 := journal.Ammount{
+					Commodity: "BRL",
+					Quantity:  decimal.New(-12, 1),
+				}
+				c.input.AddPosting().SetAmmount(ammount2)
+				expected := []journal.Ammount{ammount1, ammount2}
+				assert.ElementsMatch(t, expected, c.input.PostingBalance())
+			},
+		},
+		{
+			"Ignore postings without ammount",
+			func(t *testing.T, c *context) {
+				c.input.AddPosting()
+				c.input.AddPosting()
+				c.input.AddPosting().SetAmmount(anAmmount)
+				expected := []journal.Ammount{anAmmount}
+				assert.Equal(t, expected, c.input.PostingBalance())
+			},
+		},
 	}
 
 	for _, tc := range tests {
