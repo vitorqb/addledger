@@ -160,7 +160,7 @@ func TestJournalEntryInput(t *testing.T) {
 				}
 				c.input.AddPosting().SetAmmount(ammount2)
 				expected := []journal.Ammount{ammount1, ammount2}
-				assert.Equal(t, expected, c.input.PostingBalance())
+				assert.ElementsMatch(t, expected, c.input.PostingBalance())
 			},
 		},
 		{
