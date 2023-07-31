@@ -3,18 +3,23 @@ package accountguesser_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/stringmatcher"
 	"github.com/vitorqb/addledger/internal/testutils"
+	. "github.com/vitorqb/addledger/mocks/stringmatcher"
 )
 
 func TestAccountGuesser(t *testing.T) {
 	type testcontext struct {
 		accountguesser *AccountGuesser
+		stringMatcher  *MockIStringMatcher
 	}
 	type testcase struct {
 		name               string
+		setup              func(*testing.T, *testcontext)
 		transactionHistory func() TransactionHistory
 		inputPostings      func() []journal.Posting
 		description        string
@@ -51,6 +56,29 @@ func TestAccountGuesser(t *testing.T) {
 			description:   "Supermarket",
 			success:       true,
 			expected:      "expenses:supermarket",
+		},
+		{
+			name: "distance higher than 15 (from cache)",
+			transactionHistory: func() TransactionHistory {
+				return []journal.Transaction{
+					{
+						Description: "BA",
+						Date:        testutils.Date1(t),
+						Posting: []journal.Posting{
+							{
+								Account: "expenses:supermarket",
+								Ammount: journal.Ammount{},
+							},
+						},
+					},
+				}
+			},
+			setup: func(t1 *testing.T, t2 *testcontext) {
+				t2.stringMatcher.EXPECT().Distance("AB", "BA").Return(999)
+			},
+			inputPostings: func() []journal.Posting { return []journal.Posting{} },
+			description:   "AB",
+			success:       false,
 		},
 		{
 			name: "close match",
@@ -178,10 +206,36 @@ func TestAccountGuesser(t *testing.T) {
 			expected:    "expenses:supermarket",
 		},
 	}
+
+	// Default setup if test does not define one
+	defaultSetup := func(t *testing.T, c *testcontext) {
+		// Ensure stringMatcher.Distance return real distance
+		realMacher, err := stringmatcher.New(&stringmatcher.Options{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		c.stringMatcher.EXPECT().Distance(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(func(a string, b string) int {
+			return realMacher.Distance(a, b)
+		})
+	}
+
+	// Run test cases
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			c := new(testcontext)
-			c.accountguesser = New()
+			c.stringMatcher = NewMockIStringMatcher(ctrl)
+			if tc.setup != nil {
+				tc.setup(t, c)
+			} else {
+				defaultSetup(t, c)
+			}
+			c.accountguesser, err = New(Options{StringMatcher: c.stringMatcher})
+			if err != nil {
+				t.Fatal(err)
+			}
 			actual, success := c.accountguesser.Guess(tc.transactionHistory(), tc.inputPostings(), tc.description)
 			assert.Equal(t, tc.success, success)
 			if tc.success {

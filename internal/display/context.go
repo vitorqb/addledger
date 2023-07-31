@@ -22,7 +22,10 @@ func NewContext(
 	eventbus eventbusmod.IEventBus,
 ) (*Context, error) {
 	// !!!! TODO INJECT THIS
-	accountGuesser := accountguesser.New()
+	accountGuesser, err := accountguesser.New(accountguesser.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create account guesser: %w", err)
+	}
 
 	// Creates an AccountList widget
 	accountList, err := NewAccountList(state, eventbus, accountGuesser)

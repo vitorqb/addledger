@@ -1,8 +1,8 @@
 package accountguesser
 
 import (
-	"github.com/antzucaro/matchr"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/stringmatcher"
 )
 
 //go:generate $MOCKGEN --source=accountguesser.go --destination=../../mocks/accountguesser/accountguesser_mock.go
@@ -21,12 +21,14 @@ type IAccountGuesser interface {
 }
 
 // AccountGuesser implements IAccountGuesser
-type AccountGuesser struct{}
+type AccountGuesser struct {
+	matcher stringmatcher.IStringMatcher
+}
 
 var _ IAccountGuesser = &AccountGuesser{}
 
 // Guess implements IAccountGuesser.
-func (*AccountGuesser) Guess(
+func (a *AccountGuesser) Guess(
 	transactionHistory TransactionHistory,
 	inputPostings []journal.Posting,
 	description string,
@@ -36,7 +38,7 @@ func (*AccountGuesser) Guess(
 
 	// Finds matching transaction
 	for _, transaction := range transactionHistory {
-		distance := matchr.DamerauLevenshtein(description, transaction.Description)
+		distance := a.matcher.Distance(description, transaction.Description)
 
 		// We found a transaction with better score
 		if distance < minDistance {
@@ -73,5 +75,19 @@ func (*AccountGuesser) Guess(
 	return journal.Account(matchedPosting.Account), true
 }
 
+// Options contains the options for an AccountGuesser
+type Options struct {
+	StringMatcher stringmatcher.IStringMatcher
+}
+
 // New returns a new implementation of AccountGuesser
-func New() *AccountGuesser { return &AccountGuesser{} }
+func New(options Options) (*AccountGuesser, error) {
+	var err error
+	if options.StringMatcher == nil {
+		options.StringMatcher, err = stringmatcher.New(&stringmatcher.Options{})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &AccountGuesser{options.StringMatcher}, nil
+}
