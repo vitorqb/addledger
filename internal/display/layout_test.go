@@ -53,7 +53,7 @@ func TestNewLayout(t *testing.T) {
 			// Some controller methods are called on startup
 			c.controller.EXPECT().OnDateChanged("")
 			// AccountGuesser is called on startup
-			c.accountGuesser.EXPECT().Guess(gomock.Any(), gomock.Any(), gomock.Any())
+			c.accountGuesser.EXPECT().Guess()
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.accountGuesser)
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)

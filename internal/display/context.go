@@ -8,7 +8,6 @@ import (
 	contextmod "github.com/vitorqb/addledger/internal/display/context"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
-	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -99,16 +98,7 @@ func NewAccountList(
 			return state.InputMetadata.PostingAccountText()
 		},
 		GetDefaultFunc: func() (defaultValue string, success bool) {
-			transactionHistory := state.JournalMetadata.Transactions()
-			inputPostings := state.JournalEntryInput.GetPostings()
-			var postings []journal.Posting
-			for _, inputPostings := range inputPostings {
-				if inputPostings.IsComplete() {
-					postings = append(postings, inputPostings.ToPosting())
-				}
-			}
-			description, _ := state.JournalEntryInput.GetDescription()
-			acc, success := accountGuesser.Guess(transactionHistory, postings, description)
+			acc, success := accountGuesser.Guess()
 			return string(acc), success
 		},
 	})

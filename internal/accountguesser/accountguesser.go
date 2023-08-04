@@ -13,32 +13,41 @@ type TransactionHistory []journal.Transaction
 // IAccountGuesser is an interface for an AccountGuesser, whose goal is to
 // guess which account the user wants to input.
 type IAccountGuesser interface {
-	Guess(
-		transactionHistory TransactionHistory,
-		inputPostings []journal.Posting,
-		description string,
-	) (guess journal.Account, success bool)
+	Guess() (guess journal.Account, success bool)
 }
 
-// AccountGuesser implements IAccountGuesser
-type AccountGuesser struct {
-	matcher stringmatcher.IStringMatcher
+var _ IAccountGuesser = &DescriptionMatchAccountGuesser{}
+
+// DescriptionMatchAccountGuesser matches a transaction from the transaction history that is
+// similar to a description, and returns the suggested account based on the matched transaction.
+// `inputPostings` must be the postings the user has already entered for the new transaction.
+type DescriptionMatchAccountGuesser struct {
+	matcher            stringmatcher.IStringMatcher
+	transactionHistory TransactionHistory
+	inputPostings      []journal.Posting
+	description        string
 }
 
-var _ IAccountGuesser = &AccountGuesser{}
+func (ag *DescriptionMatchAccountGuesser) SetTransactionHistory(x TransactionHistory) {
+	ag.transactionHistory = x
+}
+
+func (ag *DescriptionMatchAccountGuesser) SetInputPostings(x []journal.Posting) {
+	ag.inputPostings = x
+}
+
+func (ag *DescriptionMatchAccountGuesser) SetDescription(x string) {
+	ag.description = x
+}
 
 // Guess implements IAccountGuesser.
-func (a *AccountGuesser) Guess(
-	transactionHistory TransactionHistory,
-	inputPostings []journal.Posting,
-	description string,
-) (journal.Account, bool) {
+func (ag *DescriptionMatchAccountGuesser) Guess() (guess journal.Account, success bool) {
 	matchedTransaction := journal.Transaction{}
-	minDistance := 15
+	minDistance := 999
 
 	// Finds matching transaction
-	for _, transaction := range transactionHistory {
-		distance := a.matcher.Distance(description, transaction.Description)
+	for _, transaction := range ag.transactionHistory {
+		distance := ag.matcher.Distance(ag.description, transaction.Description)
 
 		// We found a transaction with better score
 		if distance < minDistance {
@@ -48,7 +57,7 @@ func (a *AccountGuesser) Guess(
 		}
 
 		// We found a transaction with same score that is more recent.
-		if distance < 20 && distance == minDistance {
+		if distance < 6 && distance == minDistance {
 			if transaction.Date.After(matchedTransaction.Date) {
 				matchedTransaction = transaction
 				continue
@@ -57,12 +66,12 @@ func (a *AccountGuesser) Guess(
 	}
 
 	// If we had no match, return
-	if minDistance >= 20 {
+	if minDistance >= 6 {
 		return "", false
 	}
 
 	// We had a match, so find posting the user is entering
-	desiredPostingIndex := len(inputPostings)
+	desiredPostingIndex := len(ag.inputPostings)
 
 	// If the user has already entered more posting than matched transaction,
 	// we can't use it.
@@ -75,13 +84,13 @@ func (a *AccountGuesser) Guess(
 	return journal.Account(matchedPosting.Account), true
 }
 
-// Options contains the options for an AccountGuesser
-type Options struct {
+// DescriptionMatchOption contains the options for a DescriptionMatchAccountGuesser
+type DescriptionMatchOption struct {
 	StringMatcher stringmatcher.IStringMatcher
 }
 
-// New returns a new implementation of AccountGuesser
-func New(options Options) (*AccountGuesser, error) {
+// NewDescriptionMatchAccountGuesser returns a new implementation of AccountGuesser
+func NewDescriptionMatchAccountGuesser(options DescriptionMatchOption) (*DescriptionMatchAccountGuesser, error) {
 	var err error
 	if options.StringMatcher == nil {
 		options.StringMatcher, err = stringmatcher.New(&stringmatcher.Options{})
@@ -89,5 +98,60 @@ func New(options Options) (*AccountGuesser, error) {
 			return nil, err
 		}
 	}
-	return &AccountGuesser{options.StringMatcher}, nil
+	return &DescriptionMatchAccountGuesser{
+		options.StringMatcher,
+		TransactionHistory{},
+		[]journal.Posting{},
+		"",
+	}, nil
+}
+
+// LastTransactionAccountGuesser uses the last entered transaction to try
+// to guess an account
+type LastTransactionAccountGuesser struct {
+	transactionHistory TransactionHistory
+}
+
+var _ IAccountGuesser = &LastTransactionAccountGuesser{}
+
+func (ag *LastTransactionAccountGuesser) SetTransactionHistory(x TransactionHistory) {
+	ag.transactionHistory = x
+}
+
+func (ag *LastTransactionAccountGuesser) Guess() (acc journal.Account, success bool) {
+	historyLen := len(ag.transactionHistory)
+	if historyLen == 0 {
+		return "", false
+	}
+	lastTransaction := ag.transactionHistory[historyLen-1]
+	if len(lastTransaction.Posting) == 0 {
+		return "", false
+	}
+	firstPosting := lastTransaction.Posting[0]
+	return journal.Account(firstPosting.Account), true
+}
+
+func NewLastTransactionAccountGuesser() (*LastTransactionAccountGuesser, error) {
+	return &LastTransactionAccountGuesser{TransactionHistory{}}, nil
+}
+
+// CompositeAccountGuesser composes N different account guessers
+type CompositeAccountGuesser struct {
+	composedGuessers []IAccountGuesser
+}
+
+var _ IAccountGuesser = &CompositeAccountGuesser{}
+
+// Guess implements IAccountGuesser.
+func (ag *CompositeAccountGuesser) Guess() (guess journal.Account, success bool) {
+	for _, composedGuesser := range ag.composedGuessers {
+		if guess, ok := composedGuesser.Guess(); ok {
+			return guess, ok
+		}
+	}
+	return journal.Account(""), false
+}
+
+func NewCompositeAccountGuesser(accGuessers ...IAccountGuesser) (*CompositeAccountGuesser, error) {
+	return &CompositeAccountGuesser{accGuessers}, nil
 }

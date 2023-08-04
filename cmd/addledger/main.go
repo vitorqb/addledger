@@ -75,7 +75,7 @@ func main() {
 	_ = injector.AmmountGuesserEngine(state)
 
 	// Start an account guesser
-	accountGuesser, err := injector.AccountGuesser()
+	accountGuesser, err := injector.AccountGuesser(state)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load account guesser")
 	}

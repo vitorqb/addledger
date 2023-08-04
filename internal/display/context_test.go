@@ -73,10 +73,7 @@ func TestAccountList(t *testing.T) {
 		{
 			name: "Set's default account as first item",
 			setup: func(c *testcontext) {
-				c.accountGuesser.
-					EXPECT().
-					Guess(gomock.Any(), gomock.Any(), gomock.Any()).
-					Return(journal.Account("GUESS"), true)
+				c.accountGuesser.EXPECT().Guess().Return(journal.Account("GUESS"), true)
 			},
 			run: func(c *testcontext, t *testing.T) {
 				assert.Equal(t, "GUESS", c.state.InputMetadata.SelectedPostingAccount())
