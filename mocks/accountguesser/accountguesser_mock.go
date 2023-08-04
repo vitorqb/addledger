@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	accountguesser "github.com/vitorqb/addledger/internal/accountguesser"
 	journal "github.com/vitorqb/addledger/internal/journal"
 )
 
@@ -36,16 +35,16 @@ func (m *MockIAccountGuesser) EXPECT() *MockIAccountGuesserMockRecorder {
 }
 
 // Guess mocks base method.
-func (m *MockIAccountGuesser) Guess(transactionHistory accountguesser.TransactionHistory, inputPostings []journal.Posting, description string) (journal.Account, bool) {
+func (m *MockIAccountGuesser) Guess() (journal.Account, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Guess", transactionHistory, inputPostings, description)
+	ret := m.ctrl.Call(m, "Guess")
 	ret0, _ := ret[0].(journal.Account)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // Guess indicates an expected call of Guess.
-func (mr *MockIAccountGuesserMockRecorder) Guess(transactionHistory, inputPostings, description interface{}) *gomock.Call {
+func (mr *MockIAccountGuesserMockRecorder) Guess() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIAccountGuesser)(nil).Guess), transactionHistory, inputPostings, description)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIAccountGuesser)(nil).Guess))
 }

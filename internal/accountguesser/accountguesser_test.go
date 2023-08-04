@@ -14,7 +14,7 @@ import (
 
 func TestAccountGuesser(t *testing.T) {
 	type testcontext struct {
-		accountguesser *AccountGuesser
+		accountguesser *DescriptionMatchAccountGuesser
 		stringMatcher  *MockIStringMatcher
 	}
 	type testcase struct {
@@ -232,11 +232,14 @@ func TestAccountGuesser(t *testing.T) {
 			} else {
 				defaultSetup(t, c)
 			}
-			c.accountguesser, err = New(Options{StringMatcher: c.stringMatcher})
+			c.accountguesser, err = NewDescriptionMatchAccountGuesser(DescriptionMatchOption{StringMatcher: c.stringMatcher})
 			if err != nil {
 				t.Fatal(err)
 			}
-			actual, success := c.accountguesser.Guess(tc.transactionHistory(), tc.inputPostings(), tc.description)
+			c.accountguesser.SetTransactionHistory(tc.transactionHistory())
+			c.accountguesser.SetInputPostings(tc.inputPostings())
+			c.accountguesser.SetDescription(tc.description)
+			actual, success := c.accountguesser.Guess()
 			assert.Equal(t, tc.success, success)
 			if tc.success {
 				assert.Equal(t, tc.expected, actual)

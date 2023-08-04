@@ -6,6 +6,7 @@ import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/dateguesser"
+	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
@@ -82,7 +83,40 @@ func State(hledgerClient hledger.IClient) (*statemod.State, error) {
 	return state, nil
 }
 
-// AccountGuesser instantiates a new AccountGuesser
-func AccountGuesser() (accountguesser.IAccountGuesser, error) {
-	return accountguesser.New(accountguesser.Options{})
+// AccountGuesser instantiates a new AccountGuesser and syncs it with
+// the state.
+func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
+
+	// Creates a new Description Guesser
+	accountGuesser, err := accountguesser.NewDescriptionMatchAccountGuesser(accountguesser.DescriptionMatchOption{})
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a function that syncs the state with the internal AccountGuesser state.
+	syncWithState := func() {
+		transactionHistory := state.JournalMetadata.Transactions()
+		accountGuesser.SetTransactionHistory(transactionHistory)
+
+		var postings []journal.Posting
+		inputPostings := state.JournalEntryInput.GetPostings()
+		for _, inputPostings := range inputPostings {
+			if inputPostings.IsComplete() {
+				postings = append(postings, inputPostings.ToPosting())
+			}
+		}
+		accountGuesser.SetInputPostings(postings)
+
+		description, _ := state.JournalEntryInput.GetDescription()
+		accountGuesser.SetDescription(description)
+	}
+
+	// Runs a first sync
+	syncWithState()
+
+	// Runs a sync everytime the state changes
+	state.AddOnChangeHook(syncWithState)
+
+	// Returns
+	return accountGuesser, nil
 }

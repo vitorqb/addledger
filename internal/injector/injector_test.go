@@ -52,3 +52,43 @@ func TestState(t *testing.T) {
 	assert.Equal(t, []journal.Account{"FOO"}, state.JournalMetadata.Accounts())
 	assert.Equal(t, transactions, state.JournalMetadata.Transactions())
 }
+
+func TestAccountGuesser(t *testing.T) {
+	state := statemod.InitialState()
+	accountGuesser, err := AccountGuesser(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// At the beggining, no guess
+	_, success := accountGuesser.Guess()
+	assert.False(t, success)
+
+	// Set the transaction history on state
+	state.JournalMetadata.SetTransactions([]journal.Transaction{
+		{
+			Description: "Supermarket",
+			Posting: []journal.Posting{
+				{
+					Account: "bank:currentaccount",
+				},
+				{
+					Account: "expenses:supermarket",
+				},
+			},
+		},
+	})
+
+	// Set a user inputted posting on state
+	posting := state.JournalEntryInput.AddPosting()
+	posting.SetAccount("foo")
+	posting.SetAmmount(journal.Ammount{})
+
+	// Set a user inputted description on state
+	state.JournalEntryInput.SetDescription("Superm")
+
+	// Guess should be right
+	guess, success := accountGuesser.Guess()
+	assert.True(t, success)
+	assert.Equal(t, journal.Account("expenses:supermarket"), guess)
+}
