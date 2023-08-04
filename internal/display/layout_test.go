@@ -8,16 +8,18 @@ import (
 	"github.com/rivo/tview"
 	. "github.com/vitorqb/addledger/internal/display"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	mock_accountguesser "github.com/vitorqb/addledger/mocks/accountguesser"
 	mock_controller "github.com/vitorqb/addledger/mocks/controller"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
 )
 
 func TestNewLayout(t *testing.T) {
 	type testcontext struct {
-		controller *mock_controller.MockIInputController
-		state      *statemod.State
-		eventbus   *mock_eventbus.MockIEventBus
-		layout     *Layout
+		controller     *mock_controller.MockIInputController
+		state          *statemod.State
+		eventbus       *mock_eventbus.MockIEventBus
+		accountGuesser *mock_accountguesser.MockIAccountGuesser
+		layout         *Layout
 	}
 	type testcase struct {
 		name string
@@ -43,13 +45,16 @@ func TestNewLayout(t *testing.T) {
 			c := new(testcontext)
 			c.controller = mock_controller.NewMockIInputController(ctrl)
 			c.eventbus = mock_eventbus.NewMockIEventBus(ctrl)
+			c.accountGuesser = mock_accountguesser.NewMockIAccountGuesser(ctrl)
 			c.state = statemod.InitialState()
 			// Subscribe is called multiple times for each subscription
 			// that happens in the entire layout.
 			c.eventbus.EXPECT().Subscribe(gomock.Any()).AnyTimes()
 			// Some controller methods are called on startup
 			c.controller.EXPECT().OnDateChanged("")
-			c.layout, err = NewLayout(c.controller, c.state, c.eventbus)
+			// AccountGuesser is called on startup
+			c.accountGuesser.EXPECT().Guess(gomock.Any(), gomock.Any(), gomock.Any())
+			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.accountGuesser)
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)
 			}

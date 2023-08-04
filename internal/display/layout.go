@@ -5,6 +5,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/state"
@@ -24,10 +25,11 @@ func NewLayout(
 	controller controller.IInputController,
 	state *state.State,
 	eventBus eventbus.IEventBus,
+	accountGuesser accountguesser.IAccountGuesser,
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)
-	context, err := NewContext(state, eventBus)
+	context, err := NewContext(state, eventBus, accountGuesser)
 	if err != nil {
 		return nil, fmt.Errorf("failed to instatiate context: %w", err)
 	}

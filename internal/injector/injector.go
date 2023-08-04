@@ -2,6 +2,7 @@
 package injector
 
 import (
+	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/dateguesser"
@@ -79,4 +80,9 @@ func State(hledgerClient hledger.IClient) (*statemod.State, error) {
 	state.JournalMetadata.SetTransactions(postings)
 
 	return state, nil
+}
+
+// AccountGuesser instantiates a new AccountGuesser
+func AccountGuesser() (accountguesser.IAccountGuesser, error) {
+	return accountguesser.New(accountguesser.Options{})
 }

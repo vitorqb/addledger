@@ -74,8 +74,14 @@ func main() {
 	// so we don't need it's instance.
 	_ = injector.AmmountGuesserEngine(state)
 
+	// Start an account guesser
+	accountGuesser, err := injector.AccountGuesser()
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load account guesser")
+	}
+
 	// Starts a new layout
-	layout, err := display.NewLayout(controller, state, eventBus)
+	layout, err := display.NewLayout(controller, state, eventBus, accountGuesser)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instatiate layout")
 	}
