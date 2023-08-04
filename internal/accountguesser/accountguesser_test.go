@@ -12,7 +12,7 @@ import (
 	. "github.com/vitorqb/addledger/mocks/stringmatcher"
 )
 
-func TestAccountGuesser(t *testing.T) {
+func TestDescriptionMatchAccountGuesser(t *testing.T) {
 	type testcontext struct {
 		accountguesser *DescriptionMatchAccountGuesser
 		stringMatcher  *MockIStringMatcher
@@ -239,6 +239,68 @@ func TestAccountGuesser(t *testing.T) {
 			c.accountguesser.SetTransactionHistory(tc.transactionHistory())
 			c.accountguesser.SetInputPostings(tc.inputPostings())
 			c.accountguesser.SetDescription(tc.description)
+			actual, success := c.accountguesser.Guess()
+			assert.Equal(t, tc.success, success)
+			if tc.success {
+				assert.Equal(t, tc.expected, actual)
+			}
+		})
+	}
+}
+
+func TestLastTransactionAccountGuesser(t *testing.T) {
+	type testcontext struct {
+		accountguesser *LastTransactionAccountGuesser
+	}
+	type testcase struct {
+		name               string
+		transactionHistory func() TransactionHistory
+		success            bool
+		expected           journal.Account
+	}
+	var testcases = []testcase{
+		{
+			name: "no transaction history",
+			transactionHistory: func() TransactionHistory {
+				return []journal.Transaction{}
+			},
+			success: false,
+		},
+		{
+			name: "uses last transaction first posting",
+			transactionHistory: func() TransactionHistory {
+				return []journal.Transaction{
+					{
+						Posting: []journal.Posting{
+							{
+								Account: "supermarket",
+							},
+						},
+					},
+					{
+						Posting: []journal.Posting{
+							{
+								Account: "savings",
+							},
+						},
+					},
+				}
+			},
+			success:  true,
+			expected: "savings",
+		},
+	}
+
+	// Run test cases
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			c := new(testcontext)
+			c.accountguesser, err = NewLastTransactionAccountGuesser()
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.accountguesser.SetTransactionHistory(tc.transactionHistory())
 			actual, success := c.accountguesser.Guess()
 			assert.Equal(t, tc.success, success)
 			if tc.success {

@@ -105,3 +105,32 @@ func NewDescriptionMatchAccountGuesser(options DescriptionMatchOption) (*Descrip
 		"",
 	}, nil
 }
+
+// LastTransactionAccountGuesser uses the last entered transaction to try
+// to guess an account
+type LastTransactionAccountGuesser struct {
+	transactionHistory TransactionHistory
+}
+
+var _ IAccountGuesser = &LastTransactionAccountGuesser{}
+
+func (ag *LastTransactionAccountGuesser) SetTransactionHistory(x TransactionHistory) {
+	ag.transactionHistory = x
+}
+
+func (ag *LastTransactionAccountGuesser) Guess() (acc journal.Account, success bool) {
+	historyLen := len(ag.transactionHistory)
+	if historyLen == 0 {
+		return "", false
+	}
+	lastTransaction := ag.transactionHistory[historyLen-1]
+	if len(lastTransaction.Posting) == 0 {
+		return "", false
+	}
+	lastPosting := lastTransaction.Posting[len(lastTransaction.Posting)-1]
+	return journal.Account(lastPosting.Account), true
+}
+
+func NewLastTransactionAccountGuesser() (*LastTransactionAccountGuesser, error) {
+	return &LastTransactionAccountGuesser{TransactionHistory{}}, nil
+}
