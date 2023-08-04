@@ -1,7 +1,7 @@
 package stringmatcher
 
 import (
-	"github.com/antzucaro/matchr"
+	"github.com/adrg/strutil/metrics"
 )
 
 //go:generate $MOCKGEN --source=stringmatcher.go --destination=../../mocks/stringmatcher/stringmatcher_mock.go
@@ -54,7 +54,7 @@ func (s *StringMatcher) Distance(a string, b string) int {
 	if distance, ok := s.cache.Get(a, b); ok {
 		return distance
 	}
-	distance := matchr.DamerauLevenshtein(a, b)
+	distance := metrics.NewLevenshtein().Distance(a, b)
 	s.cache.Set(a, b, distance)
 	return distance
 }

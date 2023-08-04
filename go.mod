@@ -3,7 +3,7 @@ module github.com/vitorqb/addledger
 go 1.19
 
 require (
-	github.com/antzucaro/matchr v0.0.0-20221106193745-7bed6ef61ef9
+	github.com/adrg/strutil v0.3.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/golang/mock v1.4.4
 	github.com/lithammer/fuzzysearch v1.1.7
