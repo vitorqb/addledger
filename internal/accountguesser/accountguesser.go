@@ -43,7 +43,7 @@ func (ag *DescriptionMatchAccountGuesser) SetDescription(x string) {
 // Guess implements IAccountGuesser.
 func (ag *DescriptionMatchAccountGuesser) Guess() (guess journal.Account, success bool) {
 	matchedTransaction := journal.Transaction{}
-	minDistance := 15
+	minDistance := 999
 
 	// Finds matching transaction
 	for _, transaction := range ag.transactionHistory {
@@ -57,7 +57,7 @@ func (ag *DescriptionMatchAccountGuesser) Guess() (guess journal.Account, succes
 		}
 
 		// We found a transaction with same score that is more recent.
-		if distance < 20 && distance == minDistance {
+		if distance < 6 && distance == minDistance {
 			if transaction.Date.After(matchedTransaction.Date) {
 				matchedTransaction = transaction
 				continue
@@ -66,7 +66,7 @@ func (ag *DescriptionMatchAccountGuesser) Guess() (guess journal.Account, succes
 	}
 
 	// If we had no match, return
-	if minDistance >= 20 {
+	if minDistance >= 6 {
 		return "", false
 	}
 
@@ -127,10 +127,31 @@ func (ag *LastTransactionAccountGuesser) Guess() (acc journal.Account, success b
 	if len(lastTransaction.Posting) == 0 {
 		return "", false
 	}
-	lastPosting := lastTransaction.Posting[len(lastTransaction.Posting)-1]
-	return journal.Account(lastPosting.Account), true
+	firstPosting := lastTransaction.Posting[0]
+	return journal.Account(firstPosting.Account), true
 }
 
 func NewLastTransactionAccountGuesser() (*LastTransactionAccountGuesser, error) {
 	return &LastTransactionAccountGuesser{TransactionHistory{}}, nil
+}
+
+// CompositeAccountGuesser composes N different account guessers
+type CompositeAccountGuesser struct {
+	composedGuessers []IAccountGuesser
+}
+
+var _ IAccountGuesser = &CompositeAccountGuesser{}
+
+// Guess implements IAccountGuesser.
+func (ag *CompositeAccountGuesser) Guess() (guess journal.Account, success bool) {
+	for _, composedGuesser := range ag.composedGuessers {
+		if guess, ok := composedGuesser.Guess(); ok {
+			return guess, ok
+		}
+	}
+	return journal.Account(""), false
+}
+
+func NewCompositeAccountGuesser(accGuessers ...IAccountGuesser) (*CompositeAccountGuesser, error) {
+	return &CompositeAccountGuesser{accGuessers}, nil
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/stringmatcher"
 	"github.com/vitorqb/addledger/internal/testutils"
+	. "github.com/vitorqb/addledger/mocks/accountguesser"
 	. "github.com/vitorqb/addledger/mocks/stringmatcher"
 )
 
@@ -301,6 +302,100 @@ func TestLastTransactionAccountGuesser(t *testing.T) {
 				t.Fatal(err)
 			}
 			c.accountguesser.SetTransactionHistory(tc.transactionHistory())
+			actual, success := c.accountguesser.Guess()
+			assert.Equal(t, tc.success, success)
+			if tc.success {
+				assert.Equal(t, tc.expected, actual)
+			}
+		})
+	}
+}
+
+func TestCompositeAccountGuesser(t *testing.T) {
+	type testcontext struct {
+		accountguesser *CompositeAccountGuesser
+	}
+	type testcase struct {
+		name             string
+		composedGuessers func(ctrl *gomock.Controller) []IAccountGuesser
+		success          bool
+		expected         journal.Account
+	}
+	var testcases = []testcase{
+		{
+			name: "no composed guessers",
+			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
+				return []IAccountGuesser{}
+			},
+			success: false,
+		},
+		{
+			name: "single composed guesser (succcess)",
+			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
+				accountGuesser := NewMockIAccountGuesser(ctrl)
+				accountGuesser.EXPECT().Guess().Return(journal.Account("savings"), true)
+				return []IAccountGuesser{accountGuesser}
+			},
+			success:  true,
+			expected: "savings",
+		},
+		{
+			name: "single composed guesser (failure)",
+			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
+				accountGuesser := NewMockIAccountGuesser(ctrl)
+				accountGuesser.EXPECT().Guess().Return(journal.Account(""), false)
+				return []IAccountGuesser{accountGuesser}
+			},
+			success: false,
+		},
+		{
+			name: "two composed guesser (first success)",
+			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
+				accountGuesserOne := NewMockIAccountGuesser(ctrl)
+				accountGuesserOne.EXPECT().Guess().Return(journal.Account("savings1"), true)
+				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
+				accountGuesserTwo.EXPECT().Guess().Return(journal.Account("savings2"), true)
+				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
+			},
+			success:  true,
+			expected: "savings1",
+		},
+		{
+			name: "two composed guesser (second success)",
+			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
+				accountGuesserOne := NewMockIAccountGuesser(ctrl)
+				accountGuesserOne.EXPECT().Guess().Return(journal.Account(""), false)
+				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
+				accountGuesserTwo.EXPECT().Guess().Return(journal.Account("savings2"), true)
+				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
+			},
+			success:  true,
+			expected: "savings2",
+		},
+		{
+			name: "two composed guesser (failure)",
+			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
+				accountGuesserOne := NewMockIAccountGuesser(ctrl)
+				accountGuesserOne.EXPECT().Guess().Return(journal.Account(""), false)
+				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
+				accountGuesserTwo.EXPECT().Guess().Return(journal.Account(""), false)
+				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
+			},
+			success: false,
+		},
+	}
+
+	// Run test cases
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			var err error
+			c := new(testcontext)
+			composedGuessers := tc.composedGuessers(ctrl)
+			c.accountguesser, err = NewCompositeAccountGuesser(composedGuessers...)
+			if err != nil {
+				t.Fatal(err)
+			}
 			actual, success := c.accountguesser.Guess()
 			assert.Equal(t, tc.success, success)
 			if tc.success {

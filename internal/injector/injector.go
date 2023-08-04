@@ -83,9 +83,9 @@ func State(hledgerClient hledger.IClient) (*statemod.State, error) {
 	return state, nil
 }
 
-// AccountGuesser instantiates a new AccountGuesser and syncs it with
+// DescriptionMatchAccountGuesser instantiates a new DescriptionMatchAccountGuesser and syncs it with
 // the state.
-func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
+func DescriptionMatchAccountGuesser(state *statemod.State) (*accountguesser.DescriptionMatchAccountGuesser, error) {
 
 	// Creates a new Description Guesser
 	accountGuesser, err := accountguesser.NewDescriptionMatchAccountGuesser(accountguesser.DescriptionMatchOption{})
@@ -93,7 +93,7 @@ func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, erro
 		return nil, err
 	}
 
-	// Create a function that syncs the state with the internal AccountGuesser state.
+	// Function that syncs the state with the internal AccountGuesser state.
 	syncWithState := func() {
 		transactionHistory := state.JournalMetadata.Transactions()
 		accountGuesser.SetTransactionHistory(transactionHistory)
@@ -119,4 +119,39 @@ func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, erro
 
 	// Returns
 	return accountGuesser, nil
+}
+
+func LastTransactionAccountGuesser(state *statemod.State) (*accountguesser.LastTransactionAccountGuesser, error) {
+	// Creates a new LastTransactionAccountGuesser
+	accountGuesser, err := accountguesser.NewLastTransactionAccountGuesser()
+	if err != nil {
+		return nil, err
+	}
+
+	// Function that syncs the state with the internal AccountGuesser state.
+	sync := func() {
+		transactionHistory := state.JournalMetadata.Transactions()
+		accountGuesser.SetTransactionHistory(transactionHistory)
+	}
+
+	// Runs first sync
+	sync()
+
+	// Run sync on state update
+	state.AddOnChangeHook(sync)
+
+	return accountGuesser, nil
+}
+
+func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
+	// Returns a composite of DescriptionMatch and LastTransaction
+	descriptionMatchAccountGuesser, err := DescriptionMatchAccountGuesser(state)
+	if err != nil {
+		return nil, err
+	}
+	lastTransactionAccountGuesser, err := LastTransactionAccountGuesser(state)
+	if err != nil {
+		return nil, err
+	}
+	return accountguesser.NewCompositeAccountGuesser(descriptionMatchAccountGuesser, lastTransactionAccountGuesser)
 }
