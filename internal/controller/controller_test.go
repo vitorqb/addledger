@@ -465,6 +465,9 @@ func TestInputController(t *testing.T) {
 				wrote := c.bytesBuffer.String()
 				assert.Contains(t, wrote, "BAR2")
 				assert.Contains(t, wrote, "EUR -12.2")
+
+				// Must have reset input metadata
+				assert.Equal(t, "", c.state.InputMetadata.DescriptionText())
 			},
 		},
 		{

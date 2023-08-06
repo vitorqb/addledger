@@ -51,7 +51,7 @@ func TestNewLayout(t *testing.T) {
 			// that happens in the entire layout.
 			c.eventbus.EXPECT().Subscribe(gomock.Any()).AnyTimes()
 			// Some controller methods are called on startup
-			c.controller.EXPECT().OnDateChanged("")
+			c.controller.EXPECT().OnDateChanged("").Times(2)
 			// AccountGuesser is called on startup
 			c.accountGuesser.EXPECT().Guess()
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.accountGuesser)
