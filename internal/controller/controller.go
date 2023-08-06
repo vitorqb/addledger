@@ -260,6 +260,7 @@ func (ic *InputController) OnUndo() {
 		if ic.state.JournalEntryInput.CountPostings() == 0 {
 			// We don't have any postings - clear description and go back
 			ic.state.JournalEntryInput.ClearDescription()
+			ic.state.InputMetadata.SetDescriptionText("")
 			ic.state.PrevPhase()
 		} else {
 			// We have a posting to go back to - clear last ammount and go back

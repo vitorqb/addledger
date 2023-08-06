@@ -78,6 +78,9 @@ func (i *Input) refresh() {
 		}
 	case statemod.InputDescription:
 		if i.CurrentPageName() != string(INPUT_DESCRIPTION) {
+			if i.descriptionField.GetText() != "" {
+				i.descriptionField.SetText("")
+			}
 			i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
 		}
 	case statemod.InputPostingAccount:

@@ -343,6 +343,21 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
+			name: "OnUndo cleans up the description",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.NextPhase()
+				c.state.InputMetadata.SetSelectedDescription("FOO")
+				c.controller.OnDescriptionSelectedFromContext()
+				c.controller.OnUndo()
+				_, ok := c.state.JournalEntryInput.GetDescription()
+				assert.False(t, ok)
+				metadataDescription := c.state.InputMetadata.DescriptionText()
+				assert.Equal(t, "", metadataDescription)
+			},
+		},
+		{
 			name: "OnUndo with posting account ",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
