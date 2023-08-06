@@ -72,6 +72,18 @@ func TestContextualList(t *testing.T) {
 			},
 		},
 		{
+			name: "Refresh with empty list sets empty string",
+			run: func(t *testing.T, c *testcontext) {
+				assert.Equal(t, c.contextualList.GetItemCount(), 3)
+				c.contextualList.Refresh()
+				assert.Equal(t, c.contextualList.GetItemCount(), 2)
+				c.input = "adjsalkkjsd"
+				c.contextualList.Refresh()
+				assert.Equal(t, c.contextualList.GetItemCount(), 0)
+				assert.Equal(t, "", c.selected)
+			},
+		},
+		{
 			name: "Refresh preserves order from getItemsFunc",
 			run: func(t *testing.T, c *testcontext) {
 				// Writes something

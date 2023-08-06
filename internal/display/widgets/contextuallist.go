@@ -109,6 +109,13 @@ func (cl *ContextualList) HandleActionFromEvent(e eventbus.Event) {
 func (cl *ContextualList) Refresh() {
 	input := cl.getInputFunc()
 
+	// After we refresh, if we have 0 items, set selected to ""
+	defer func() {
+		if cl.GetItemCount() == 0 {
+			cl.setSelectedFunc("")
+		}
+	}()
+
 	// Cache hits
 	if input == cl.inputCache {
 
