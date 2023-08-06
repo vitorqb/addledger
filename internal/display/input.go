@@ -74,7 +74,11 @@ func (i *Input) refresh() {
 	switch i.state.CurrentPhase() {
 	case statemod.InputDate:
 		if i.CurrentPageName() != string(INPUT_DATE) {
+			if i.dateField.GetText() != "" {
+				i.dateField.SetText("")
+			}
 			i.pages.SwitchToPage(string(INPUT_DATE))
+			i.controller.OnDateChanged("")
 		}
 	case statemod.InputDescription:
 		if i.CurrentPageName() != string(INPUT_DESCRIPTION) {

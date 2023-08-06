@@ -269,6 +269,19 @@ func (im *InputMetadata) SetDescriptionText(x string) {
 	im.NotifyChange()
 }
 
+// Reset resets all user input from the InputMetadata
+func (im *InputMetadata) Reset() {
+	im.postingAccountText = ""
+	im.selectedPostingAccount = ""
+	im.descriptionText = ""
+	im.selectedDescription = ""
+	im.postingAmmountGuess = &MaybeValue[journal.Ammount]{}
+	im.postingAmmountInput = &MaybeValue[journal.Ammount]{}
+	im.postingAmmountText = ""
+	im.dateGuess = &MaybeValue[time.Time]{}
+	im.NotifyChange()
+}
+
 func NewJournalMetadata() *JournalMetadata {
 	return &JournalMetadata{
 		react.New(),

@@ -198,6 +198,7 @@ func (ic *InputController) OnInputConfirmation() {
 		return
 	}
 	ic.state.JournalEntryInput = input.NewJournalEntryInput()
+	ic.state.InputMetadata.Reset()
 	ic.state.SetPhase(statemod.InputDate)
 }
 

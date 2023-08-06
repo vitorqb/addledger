@@ -2,6 +2,7 @@ package state_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
@@ -114,6 +115,40 @@ func TestState(t *testing.T) {
 				text = c.state.InputMetadata.GetPostingAmmountText()
 				assert.Equal(t, "", text)
 				assert.Equal(t, 2, c.hookCallCounter)
+			},
+		},
+		{
+			name: "InputMetadata resets properly",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.InputMetadata.SetPostingAccountText("FOO")
+				c.state.InputMetadata.SetSelectedPostingAccount("BAR")
+				c.state.InputMetadata.SetDescriptionText("FOO")
+				c.state.InputMetadata.SetSelectedDescription("BAR")
+				c.state.InputMetadata.SetPostingAmmountGuess(anAmmount)
+				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
+				c.state.InputMetadata.SetPostingAmmountText("FOO")
+				c.state.InputMetadata.SetDateGuess(time.Time{})
+				assert.Equal(t, 8, c.hookCallCounter)
+
+				c.state.InputMetadata.Reset()
+				assert.Equal(t, 9, c.hookCallCounter)
+
+				postingAccountText := c.state.InputMetadata.PostingAccountText()
+				assert.Equal(t, "", postingAccountText)
+				selectedPostingAccount := c.state.InputMetadata.SelectedPostingAccount()
+				assert.Equal(t, "", selectedPostingAccount)
+				descriptionText := c.state.InputMetadata.DescriptionText()
+				assert.Equal(t, "", descriptionText)
+				selectedDescription := c.state.InputMetadata.SelectedDescription()
+				assert.Equal(t, "", selectedDescription)
+				_, found := c.state.InputMetadata.GetPostingAmmountGuess()
+				assert.False(t, found)
+				_, found = c.state.InputMetadata.GetPostingAmmountInput()
+				assert.False(t, found)
+				postingAmmountText := c.state.InputMetadata.GetPostingAmmountText()
+				assert.Equal(t, "", postingAmmountText)
+				_, found = c.state.InputMetadata.GetDateGuess()
+				assert.False(t, found)
 			},
 		},
 	}
