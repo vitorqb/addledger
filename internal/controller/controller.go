@@ -223,8 +223,12 @@ func (ic *InputController) OnDescriptionListAction(action listaction.ListAction)
 }
 
 func (ic *InputController) OnDescriptionSelectedFromContext() {
-	descriptionFromContext := ic.state.InputMetadata.SelectedDescription()
-	ic.OnDescriptionChanged(descriptionFromContext)
+
+	// If we have a description from context, use it!
+	if descriptionFromContext := ic.state.InputMetadata.SelectedDescription(); descriptionFromContext != "" {
+		ic.OnDescriptionChanged(descriptionFromContext)
+	}
+
 	ic.OnDescriptionDone()
 }
 

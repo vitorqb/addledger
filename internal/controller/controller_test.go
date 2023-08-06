@@ -358,6 +358,34 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
+			name: "OnDescriptionSelectedFromContext ignores context if empty",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.NextPhase()
+				c.state.InputMetadata.SetSelectedDescription("")
+				c.state.InputMetadata.SetDescriptionText("FOO")
+				c.controller.OnDescriptionSelectedFromContext()
+				description, ok := c.state.JournalEntryInput.GetDescription()
+				assert.True(t, ok)
+				assert.Equal(t, "FOO", description)
+			},
+		},
+		{
+			name: "OnDescriptionSelectedFromContext uses context if not empty",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.NextPhase()
+				c.state.InputMetadata.SetSelectedDescription("FOO")
+				c.state.InputMetadata.SetDescriptionText("BAR")
+				c.controller.OnDescriptionSelectedFromContext()
+				description, ok := c.state.JournalEntryInput.GetDescription()
+				assert.True(t, ok)
+				assert.Equal(t, "FOO", description)
+			},
+		},
+		{
 			name: "OnUndo with posting account ",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
