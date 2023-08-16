@@ -10,6 +10,7 @@ import (
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
+	"github.com/vitorqb/addledger/internal/metaloader"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -53,6 +54,7 @@ type InputController struct {
 	output      io.Writer
 	eventBus    eventbus.IEventBus
 	dateGuesser dateguesser.IDateGuesser
+	metaLoader  metaloader.IMetaLoader
 }
 
 var _ IInputController = &InputController{}
@@ -74,11 +76,15 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 	if opts.dateGuesser == nil {
 		return nil, fmt.Errorf("missing DateGuesser")
 	}
+	if opts.metaLoader == nil {
+		return nil, fmt.Errorf("missing IMetaLoader")
+	}
 	return &InputController{
 		state:       state,
 		output:      opts.output,
 		eventBus:    opts.eventBus,
 		dateGuesser: opts.dateGuesser,
+		metaLoader:  opts.metaLoader,
 	}, nil
 }
 
@@ -200,6 +206,14 @@ func (ic *InputController) OnInputConfirmation() {
 	ic.state.JournalEntryInput = input.NewJournalEntryInput()
 	ic.state.InputMetadata.Reset()
 	ic.state.SetPhase(statemod.InputDate)
+	err = ic.metaLoader.LoadAccounts()
+	if err != nil {
+		// TODO Let user know somehow!
+		logrus.WithError(err).Fatal("failed to load accounts")
+		return
+	}
+	// Note: we could call `ic.metaLoader.LoadTransactions here. This is, however,
+	// quite slow for large journals.
 }
 
 func (ic *InputController) OnInputRejection() {

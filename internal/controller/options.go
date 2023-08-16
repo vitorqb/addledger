@@ -5,6 +5,7 @@ import (
 
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/metaloader"
 )
 
 // Opts represents all options for an InputController
@@ -15,6 +16,8 @@ type Opts struct {
 	eventBus eventbus.IEventBus
 	// The instance of DateGuesser to user
 	dateGuesser dateguesser.IDateGuesser
+	// The instance of IMetaLoader to use
+	metaLoader metaloader.IMetaLoader
 }
 
 // Opt configures options for an InputController
@@ -50,6 +53,14 @@ func WithEventBus(eventBus eventbus.IEventBus) Opt {
 func WithDateGuesser(dateGuesser dateguesser.IDateGuesser) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.dateGuesser = dateGuesser
+		return nil
+	})
+}
+
+// WithMetaLoader configures which IMetaLoader to use.
+func WithMetaLoader(metaLoader metaloader.IMetaLoader) Opt {
+	return OptFn(func(opts *Opts) error {
+		opts.metaLoader = metaLoader
 		return nil
 	})
 }

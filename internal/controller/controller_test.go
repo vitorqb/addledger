@@ -17,6 +17,7 @@ import (
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
+	. "github.com/vitorqb/addledger/mocks/metaloader"
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
@@ -50,6 +51,7 @@ func TestInputController(t *testing.T) {
 		bytesBuffer *bytes.Buffer
 		eventBus    *MockIEventBus
 		dateGuesser *MockIDateGuesser
+		metaLoader  *MockIMetaLoader
 	}
 
 	type testcase struct {
@@ -63,6 +65,7 @@ func TestInputController(t *testing.T) {
 			WithOutput(c.bytesBuffer),
 			WithEventBus(c.eventBus),
 			WithDateGuesser(c.dateGuesser),
+			WithMetaLoader(c.metaLoader),
 		}
 	}
 
@@ -70,7 +73,11 @@ func TestInputController(t *testing.T) {
 		{
 			name: "NewController missing output causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{}
+				return []Opt{
+					WithEventBus(c.eventBus),
+					WithDateGuesser(c.dateGuesser),
+					WithMetaLoader(c.metaLoader),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing output")
@@ -79,22 +86,40 @@ func TestInputController(t *testing.T) {
 		{
 			name: "NewController missing eventBus causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithDateGuesser(c.dateGuesser),
+					WithMetaLoader(c.metaLoader),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing Event Bus")
 			},
 		},
 		{
-			name: "NewController missing eventGuesser causes error",
+			name: "NewController missing dateGuesser causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{
 					WithOutput(c.bytesBuffer),
 					WithEventBus(c.eventBus),
+					WithMetaLoader(c.metaLoader),
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing DateGuesser")
+			},
+		},
+		{
+			name: "NewController missing metaLoader causes error",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+					WithDateGuesser(c.dateGuesser),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.ErrorContains(t, c.initError, "missing IMetaLoader")
 			},
 		},
 		{
@@ -222,6 +247,8 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput = testutils.JournalEntryInput1(t)
+				c.metaLoader.EXPECT().LoadAccounts().Times(1)
+				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.controller.OnInputConfirmation()
 				expected := "\n\n" + testutils.JournalEntryInput1(t).Repr()
 				assert.Equal(t, expected, c.bytesBuffer.String())
@@ -463,6 +490,8 @@ func TestInputController(t *testing.T) {
 			name: "Must write to ",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
+				c.metaLoader.EXPECT().LoadAccounts().Times(1)
+				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
@@ -610,6 +639,7 @@ func TestInputController(t *testing.T) {
 			c.state = statemod.InitialState()
 			c.eventBus = NewMockIEventBus(ctrl)
 			c.dateGuesser = NewMockIDateGuesser(ctrl)
+			c.metaLoader = NewMockIMetaLoader(ctrl)
 			opts := tc.opts(t, c)
 			c.controller, c.initError = NewController(c.state, opts...)
 			tc.run(t, c)

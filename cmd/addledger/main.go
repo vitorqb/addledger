@@ -43,6 +43,20 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load state")
 	}
 
+	// Loads metadata
+	metaLoader, err := injector.MetaLoader(state, hledgerClient)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load metadata loader")
+	}
+	err = metaLoader.LoadAccounts()
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load accounts")
+	}
+	err = metaLoader.LoadTransactions()
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load transactions")
+	}
+
 	// Opens the destination file
 	destFile, err := os.OpenFile(config.DestFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -65,6 +79,7 @@ func main() {
 		controller.WithOutput(destFile),
 		controller.WithEventBus(eventBus),
 		controller.WithDateGuesser(dateGuesser),
+		controller.WithMetaLoader(metaLoader),
 	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")

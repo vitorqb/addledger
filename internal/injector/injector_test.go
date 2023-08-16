@@ -39,7 +39,7 @@ func TestAmmountGuesserEngine(t *testing.T) {
 	assert.Equal(t, ammountguesser.DefaultGuess, guess)
 }
 
-func TestState(t *testing.T) {
+func TestStateAndMetaLoader(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	transactions := []journal.Transaction{{Description: "FOO"}, {Description: "Bar"}}
@@ -48,6 +48,13 @@ func TestState(t *testing.T) {
 	hledgerClient.EXPECT().Transactions().Return(transactions, nil)
 
 	state, err := State(hledgerClient)
+	assert.Nil(t, err)
+
+	metaLoader, err := MetaLoader(state, hledgerClient)
+	assert.Nil(t, err)
+	err = metaLoader.LoadAccounts()
+	assert.Nil(t, err)
+	err = metaLoader.LoadTransactions()
 	assert.Nil(t, err)
 	assert.Equal(t, []journal.Account{"FOO"}, state.JournalMetadata.Accounts())
 	assert.Equal(t, transactions, state.JournalMetadata.Transactions())
