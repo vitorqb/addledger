@@ -246,11 +246,11 @@ func TestInputController(t *testing.T) {
 			name: "OnInputConfirmation",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput = testutils.JournalEntryInput1(t)
+				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.controller.OnInputConfirmation()
-				expected := "\n\n" + testutils.JournalEntryInput1(t).Repr()
+				expected := "\n\n" + testutils.JournalEntryInput_1(t).Repr()
 				assert.Equal(t, expected, c.bytesBuffer.String())
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
 				_, dateFound := c.state.JournalEntryInput.GetDate()

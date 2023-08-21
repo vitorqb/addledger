@@ -32,23 +32,74 @@ func Date2(t *testing.T) time.Time {
 	return out
 }
 
-func JournalEntryInput1(t *testing.T) *input.JournalEntryInput {
-	journalEntryInput := input.NewJournalEntryInput()
-	journalEntryInput.SetDate(Date1(t))
-	journalEntryInput.SetDescription("Description1")
-	posting1 := journalEntryInput.AddPosting()
-	posting1.SetAccount("ACC1")
-	posting1.SetAmmount(journal.Ammount{
+func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {
+	posting.SetAccount("ACC1")
+	posting.SetAmmount(journal.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(1220, -2),
 	})
-	posting2 := journalEntryInput.AddPosting()
-	posting2.SetAccount("ACC2")
-	posting2.SetAmmount(journal.Ammount{
+}
+
+func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {
+	posting.SetAccount("ACC2")
+	posting.SetAmmount(journal.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(-1220, -2),
 	})
+}
+
+func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {
+	posting.SetAccount("ACC3")
+	posting.SetAmmount(journal.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(999, -1),
+	})
+}
+
+func JournalEntryInput_1(t *testing.T) *input.JournalEntryInput {
+	journalEntryInput := input.NewJournalEntryInput()
+	journalEntryInput.SetDate(Date1(t))
+	journalEntryInput.SetDescription("Description1")
+	posting_1 := journalEntryInput.AddPosting()
+	FillPostingInput_1(t, posting_1)
+	posting_2 := journalEntryInput.AddPosting()
+	FillPostingInput_2(t, posting_2)
 	return journalEntryInput
+}
+
+func Decimal_1(t *testing.T) decimal.Decimal {
+	out, err := decimal.NewFromString("2.20")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+func Ammount_1(t *testing.T) *journal.Ammount {
+	return &journal.Ammount{Commodity: "EUR", Quantity: Decimal_1(t)}
+}
+
+func Transaction_1(t *testing.T) *journal.Transaction {
+	return &journal.Transaction{
+		Description: "Description1",
+		Date:        Date1(t),
+		Posting: []journal.Posting{
+			{
+				Account: "ACC1",
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(1220, -2),
+				},
+			},
+			{
+				Account: "ACC2",
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(-1220, -2),
+				},
+			},
+		},
+	}
 }
 
 //
