@@ -492,7 +492,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.dateGuesser.EXPECT().Guess(gomock.Any()).Return(aTime, true)
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")

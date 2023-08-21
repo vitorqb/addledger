@@ -6,29 +6,21 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/printer"
+	. "github.com/vitorqb/addledger/internal/printer"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
-
-func ToString(t *testing.T, transaction journal.Transaction) string {
-	var buf bytes.Buffer
-	printerInstance := printer.Printer{}
-	err := printerInstance.Print(&buf, transaction)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return buf.String()
-}
 
 func RunTest(
 	t *testing.T,
 	name string,
 	transaction journal.Transaction,
+	numLineBreaksBefore int,
+	numLineBreaksAfter int,
 	expectedOutput string,
 ) {
 	t.Run(name, func(t *testing.T) {
 		var buf bytes.Buffer
-		printerInstance := printer.Printer{}
+		printerInstance := New(numLineBreaksBefore, numLineBreaksAfter)
 		err := printerInstance.Print(&buf, transaction)
 		if err != nil {
 			t.Fatal(err)
@@ -45,7 +37,18 @@ func TestPrinter_Print(t *testing.T) {
 		t,
 		"Simple",
 		simpleTransaction,
-		"1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n",
+		0,
+		0,
+		"1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
+	)
+
+	RunTest(
+		t,
+		"Simple (with empty lines)",
+		simpleTransaction,
+		2,
+		1,
+		"\n\n1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n",
 	)
 
 	noCommodityTransaction := *tu.Transaction_1(t)
@@ -54,7 +57,9 @@ func TestPrinter_Print(t *testing.T) {
 		t,
 		"No commodity",
 		noCommodityTransaction,
-		"1993-11-23 Description1\n    ACC1    12.2\n    ACC2    EUR -12.2\n",
+		0,
+		0,
+		"1993-11-23 Description1\n    ACC1    12.2\n    ACC2    EUR -12.2",
 	)
 
 	fourPostingsTransaction := *tu.Transaction_1(t)
@@ -63,7 +68,9 @@ func TestPrinter_Print(t *testing.T) {
 		t,
 		"Four postings",
 		fourPostingsTransaction,
-		"1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n",
+		0,
+		0,
+		"1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
 	)
 
 }
