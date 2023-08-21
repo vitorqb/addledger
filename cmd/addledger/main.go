@@ -74,12 +74,19 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load date guesser")
 	}
 
+	// Starts a Printer
+	printer, printerErr := injector.Printer(config.PrinterConfig)
+	if printerErr != nil {
+		logrus.WithError(err).Fatal("Failed to load printer")
+	}
+
 	// Starts a new controller
 	controller, err := controller.NewController(state,
 		controller.WithOutput(destFile),
 		controller.WithEventBus(eventBus),
 		controller.WithDateGuesser(dateGuesser),
 		controller.WithMetaLoader(metaLoader),
+		controller.WithPrinter(printer),
 	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")

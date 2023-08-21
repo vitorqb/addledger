@@ -9,14 +9,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-// ConfigValue represents a value for the configuration
-type ConfigValue struct {
-	flagName     string
-	shorthand    string
-	defaultValue string
-	usage        string
+// PrinterConfig represents the value for configuring a printer.Printer.
+type PrinterConfig struct {
+	NumLineBreaksBefore int // Number of empty lines to print before a transaction.
+	NumLineBreaksAfter  int // Number of empty lines to print after a transaction.
 }
 
+// Config is the root configuration for the entire app.
 type Config struct {
 	// File to where we will write Journal Entries.
 	DestFile string
@@ -28,25 +27,18 @@ type Config struct {
 	LogFile string
 	// Level for logging
 	LogLevel string
+	// Configures the transaction printer
+	PrinterConfig PrinterConfig
 }
 
-// ConfigValues has all known config values
-var ConfigValues = []ConfigValue{
-	{"destfile", "d", "", "Destination file (where we will write)"},
-	{"hledger-executable", "", "hledger", "Executable to use for HLedger"},
-	{"ledger-file", "", "", "Ledger File to pass to HLedger commands"},
-	{"logfile", "", "", "File where to send log output. Empty for stderr."},
-	{"loglevel", "", "WARN", "Level of logger. Defaults to warning."},
-}
-
-func Setup(flagSet *pflag.FlagSet) {
-	for _, configValue := range ConfigValues {
-		if configValue.shorthand == "" {
-			flagSet.String(configValue.flagName, configValue.defaultValue, configValue.usage)
-		} else {
-			flagSet.StringP(configValue.flagName, configValue.shorthand, configValue.defaultValue, configValue.usage)
-		}
-	}
+func SetupFlags(flagSet *pflag.FlagSet) {
+	flagSet.StringP("destfile", "d", "", "Destination file (where we will write)")
+	flagSet.String("hledger-executable", "hledger", "Executable to use for HLedger")
+	flagSet.String("ledger-file", "", "Ledger File to pass to HLedger commands")
+	flagSet.String("logfile", "", "File where to send log output. Empty for stderr.")
+	flagSet.String("loglevel", "WARN", "Level of logger. Defaults to warning.")
+	flagSet.Int("printer-line-break-before", 1, "Number of line breaks to print before a transaction.")
+	flagSet.Int("printer-line-break-after", 1, "Number of line breaks to print after a transaction.")
 }
 
 func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
@@ -65,11 +57,14 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 	// Set reading from env
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.SetEnvPrefix("ADDLEDGER")
-	for _, x := range ConfigValues {
-		err := viper.BindEnv(x.flagName)
+	flagSet.VisitAll(func(f *pflag.Flag) {
 		if err != nil {
-			return &Config{}, fmt.Errorf("failed to bind env: %w", err)
+			return
 		}
+		err = viper.BindEnv(f.Name)
+	})
+	if err != nil {
+		return &Config{}, fmt.Errorf("failed to bind env: %w", err)
 	}
 
 	// Unpack
@@ -79,6 +74,10 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 		LedgerFile:        viper.GetString("ledger-file"),
 		LogFile:           viper.GetString("logfile"),
 		LogLevel:          viper.GetString("loglevel"),
+		PrinterConfig: PrinterConfig{
+			NumLineBreaksBefore: viper.GetInt("printer-line-break-before"),
+			NumLineBreaksAfter:  viper.GetInt("printer-line-break-after"),
+		},
 	}
 
 	// Validate
@@ -90,6 +89,6 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 }
 
 func LoadFromCommandLine() (*Config, error) {
-	Setup(pflag.CommandLine)
+	SetupFlags(pflag.CommandLine)
 	return Load(pflag.CommandLine, os.Args)
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	"github.com/vitorqb/addledger/internal/metaloader"
-	"github.com/vitorqb/addledger/internal/printer"
+	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -56,6 +56,7 @@ type InputController struct {
 	eventBus    eventbus.IEventBus
 	dateGuesser dateguesser.IDateGuesser
 	metaLoader  metaloader.IMetaLoader
+	printer     printermod.IPrinter
 }
 
 var _ IInputController = &InputController{}
@@ -80,12 +81,16 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 	if opts.metaLoader == nil {
 		return nil, fmt.Errorf("missing IMetaLoader")
 	}
+	if opts.printer == nil {
+		return nil, fmt.Errorf("missing printer")
+	}
 	return &InputController{
 		state:       state,
 		output:      opts.output,
 		eventBus:    opts.eventBus,
 		dateGuesser: opts.dateGuesser,
 		metaLoader:  opts.metaLoader,
+		printer:     opts.printer,
 	}, nil
 }
 
@@ -206,7 +211,7 @@ func (ic *InputController) OnInputConfirmation() {
 	}
 
 	// TODO Inject the printer instead of hardcoding
-	printErr := printer.New(2, 0).Print(ic.output, transaction)
+	printErr := printermod.New(2, 0).Print(ic.output, transaction)
 	if printErr != nil {
 		// TODO Let the user know somehow!
 		logrus.WithError(printErr).Fatal("failed to write to file")

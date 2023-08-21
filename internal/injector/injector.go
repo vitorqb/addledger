@@ -8,6 +8,7 @@ import (
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/metaloader"
+	"github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
@@ -142,4 +143,8 @@ func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, erro
 		return nil, err
 	}
 	return accountguesser.NewCompositeAccountGuesser(descriptionMatchAccountGuesser, lastTransactionAccountGuesser)
+}
+
+func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
+	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }

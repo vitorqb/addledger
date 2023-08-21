@@ -6,6 +6,7 @@ import (
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/metaloader"
+	printermod "github.com/vitorqb/addledger/internal/printer"
 )
 
 // Opts represents all options for an InputController
@@ -18,6 +19,8 @@ type Opts struct {
 	dateGuesser dateguesser.IDateGuesser
 	// The instance of IMetaLoader to use
 	metaLoader metaloader.IMetaLoader
+	// The instance of IPrinter to use
+	printer printermod.IPrinter
 }
 
 // Opt configures options for an InputController
@@ -61,6 +64,14 @@ func WithDateGuesser(dateGuesser dateguesser.IDateGuesser) Opt {
 func WithMetaLoader(metaLoader metaloader.IMetaLoader) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.metaLoader = metaLoader
+		return nil
+	})
+}
+
+// WithPrinter configures which IMetaLoader to use.
+func WithPrinter(printer printermod.IPrinter) Opt {
+	return OptFn(func(opts *Opts) error {
+		opts.printer = printer
 		return nil
 	})
 }

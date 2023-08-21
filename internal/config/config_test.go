@@ -51,15 +51,20 @@ func TestLoad(t *testing.T) {
 		{
 			name: "Full working example",
 			run: func(t *testing.T, c *testcontext) {
+				cleanup := testutils.Setenv(t, "ADDLEDGER_PRINTER_LINE_BREAK_AFTER", "4")
+				defer cleanup()
 				config, err := Load(c.flagSet, []string{
 					"-dfoo",
 					"--ledger-file=bar",
 					"--hledger-executable=baz",
+					"--printer-line-break-before=3",
 				})
 				assert.Nil(t, err)
 				assert.Equal(t, config.DestFile, "foo")
 				assert.Equal(t, config.HLedgerExecutable, "baz")
 				assert.Equal(t, config.LedgerFile, "bar")
+				assert.Equal(t, 3, config.PrinterConfig.NumLineBreaksBefore)
+				assert.Equal(t, 4, config.PrinterConfig.NumLineBreaksAfter)
 			},
 		},
 		{
@@ -90,7 +95,7 @@ func TestLoad(t *testing.T) {
 			)
 			defer cleanup()
 			c.flagSet = pflag.NewFlagSet("foo", pflag.ContinueOnError)
-			Setup(c.flagSet)
+			SetupFlags(c.flagSet)
 			testcase.run(t, c)
 		})
 	}

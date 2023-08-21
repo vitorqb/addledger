@@ -13,6 +13,7 @@ import (
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
+	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
@@ -52,6 +53,8 @@ func TestInputController(t *testing.T) {
 		eventBus    *MockIEventBus
 		dateGuesser *MockIDateGuesser
 		metaLoader  *MockIMetaLoader
+		// Printer is simple enough for us to avoid using a mock.
+		printer printermod.IPrinter
 	}
 
 	type testcase struct {
@@ -66,6 +69,7 @@ func TestInputController(t *testing.T) {
 			WithEventBus(c.eventBus),
 			WithDateGuesser(c.dateGuesser),
 			WithMetaLoader(c.metaLoader),
+			WithPrinter(c.printer),
 		}
 	}
 
@@ -77,6 +81,7 @@ func TestInputController(t *testing.T) {
 					WithEventBus(c.eventBus),
 					WithDateGuesser(c.dateGuesser),
 					WithMetaLoader(c.metaLoader),
+					WithPrinter(c.printer),
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
@@ -90,6 +95,7 @@ func TestInputController(t *testing.T) {
 					WithOutput(c.bytesBuffer),
 					WithDateGuesser(c.dateGuesser),
 					WithMetaLoader(c.metaLoader),
+					WithPrinter(c.printer),
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
@@ -103,6 +109,7 @@ func TestInputController(t *testing.T) {
 					WithOutput(c.bytesBuffer),
 					WithEventBus(c.eventBus),
 					WithMetaLoader(c.metaLoader),
+					WithPrinter(c.printer),
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
@@ -116,10 +123,25 @@ func TestInputController(t *testing.T) {
 					WithOutput(c.bytesBuffer),
 					WithEventBus(c.eventBus),
 					WithDateGuesser(c.dateGuesser),
+					WithPrinter(c.printer),
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing IMetaLoader")
+			},
+		},
+		{
+			name: "NewController missing printer causes error",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+					WithDateGuesser(c.dateGuesser),
+					WithMetaLoader(c.metaLoader),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.ErrorContains(t, c.initError, "missing printer")
 			},
 		},
 		{
@@ -644,6 +666,8 @@ func TestInputController(t *testing.T) {
 			c.eventBus = NewMockIEventBus(ctrl)
 			c.dateGuesser = NewMockIDateGuesser(ctrl)
 			c.metaLoader = NewMockIMetaLoader(ctrl)
+			// Printer is simple enough for us to avoid using a mock.
+			c.printer = printermod.New(2, 2)
 			opts := tc.opts(t, c)
 			c.controller, c.initError = NewController(c.state, opts...)
 			tc.run(t, c)
