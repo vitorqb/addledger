@@ -246,6 +246,7 @@ func TestInputController(t *testing.T) {
 			name: "OnInputConfirmation",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
+				countTransactionsBefore := len(c.state.JournalMetadata.Transactions())
 				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
@@ -255,6 +256,9 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
 				_, dateFound := c.state.JournalEntryInput.GetDate()
 				assert.False(t, dateFound)
+
+				// Must have added the transaction to the state
+				assert.Equal(t, len(c.state.JournalMetadata.Transactions()), countTransactionsBefore+1)
 			},
 		},
 		{

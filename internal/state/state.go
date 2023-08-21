@@ -299,6 +299,12 @@ func (jm *JournalMetadata) SetTransactions(x []journal.Transaction) {
 	jm.NotifyChange()
 }
 
+// AppendTransaction appends a transaction to the JournalMetadata.
+func (jm *JournalMetadata) AppendTransaction(x journal.Transaction) {
+	jm.transactions = append(jm.transactions, x)
+	jm.NotifyChange()
+}
+
 // Accounts returns all known postings for the journal
 func (jm *JournalMetadata) Accounts() []journal.Account { return jm.accounts }
 

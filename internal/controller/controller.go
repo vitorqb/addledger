@@ -223,6 +223,7 @@ func (ic *InputController) OnInputConfirmation() {
 	}
 	// Note: we could call `ic.metaLoader.LoadTransactions` here. This is, however,
 	// quite slow for large journals.
+	ic.state.JournalMetadata.AppendTransaction(transaction)
 }
 
 func (ic *InputController) OnInputRejection() {
