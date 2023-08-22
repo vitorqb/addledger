@@ -1,0 +1,4 @@
+{{.Date.Format "2006-01-02"}} {{.Description}}
+{{- range .Posting}}
+    {{.Account}}    {{if ne .Ammount.Commodity ""}}{{.Ammount.Commodity}} {{end}}{{.Ammount.Quantity.String}}
+{{- end -}}

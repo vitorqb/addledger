@@ -13,10 +13,12 @@ import (
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
+	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
+	. "github.com/vitorqb/addledger/mocks/metaloader"
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
@@ -50,6 +52,9 @@ func TestInputController(t *testing.T) {
 		bytesBuffer *bytes.Buffer
 		eventBus    *MockIEventBus
 		dateGuesser *MockIDateGuesser
+		metaLoader  *MockIMetaLoader
+		// Printer is simple enough for us to avoid using a mock.
+		printer printermod.IPrinter
 	}
 
 	type testcase struct {
@@ -63,6 +68,8 @@ func TestInputController(t *testing.T) {
 			WithOutput(c.bytesBuffer),
 			WithEventBus(c.eventBus),
 			WithDateGuesser(c.dateGuesser),
+			WithMetaLoader(c.metaLoader),
+			WithPrinter(c.printer),
 		}
 	}
 
@@ -70,7 +77,12 @@ func TestInputController(t *testing.T) {
 		{
 			name: "NewController missing output causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{}
+				return []Opt{
+					WithEventBus(c.eventBus),
+					WithDateGuesser(c.dateGuesser),
+					WithMetaLoader(c.metaLoader),
+					WithPrinter(c.printer),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing output")
@@ -79,22 +91,57 @@ func TestInputController(t *testing.T) {
 		{
 			name: "NewController missing eventBus causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
-				return []Opt{WithOutput(c.bytesBuffer)}
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithDateGuesser(c.dateGuesser),
+					WithMetaLoader(c.metaLoader),
+					WithPrinter(c.printer),
+				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing Event Bus")
 			},
 		},
 		{
-			name: "NewController missing eventGuesser causes error",
+			name: "NewController missing dateGuesser causes error",
 			opts: func(t *testing.T, c *testcontext) []Opt {
 				return []Opt{
 					WithOutput(c.bytesBuffer),
 					WithEventBus(c.eventBus),
+					WithMetaLoader(c.metaLoader),
+					WithPrinter(c.printer),
 				}
 			},
 			run: func(t *testing.T, c *testcontext) {
 				assert.ErrorContains(t, c.initError, "missing DateGuesser")
+			},
+		},
+		{
+			name: "NewController missing metaLoader causes error",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+					WithDateGuesser(c.dateGuesser),
+					WithPrinter(c.printer),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.ErrorContains(t, c.initError, "missing IMetaLoader")
+			},
+		},
+		{
+			name: "NewController missing printer causes error",
+			opts: func(t *testing.T, c *testcontext) []Opt {
+				return []Opt{
+					WithOutput(c.bytesBuffer),
+					WithEventBus(c.eventBus),
+					WithDateGuesser(c.dateGuesser),
+					WithMetaLoader(c.metaLoader),
+				}
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.ErrorContains(t, c.initError, "missing printer")
 			},
 		},
 		{
@@ -221,13 +268,19 @@ func TestInputController(t *testing.T) {
 			name: "OnInputConfirmation",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput = testutils.JournalEntryInput1(t)
+				countTransactionsBefore := len(c.state.JournalMetadata.Transactions())
+				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.metaLoader.EXPECT().LoadAccounts().Times(1)
+				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.controller.OnInputConfirmation()
-				expected := "\n\n" + testutils.JournalEntryInput1(t).Repr()
+				expected := "\n\n" + testutils.JournalEntryInput_1(t).Repr()
 				assert.Equal(t, expected, c.bytesBuffer.String())
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
 				_, dateFound := c.state.JournalEntryInput.GetDate()
 				assert.False(t, dateFound)
+
+				// Must have added the transaction to the state
+				assert.Equal(t, len(c.state.JournalMetadata.Transactions()), countTransactionsBefore+1)
 			},
 		},
 		{
@@ -463,7 +516,9 @@ func TestInputController(t *testing.T) {
 			name: "Must write to ",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.metaLoader.EXPECT().LoadAccounts().Times(1)
+				c.metaLoader.EXPECT().LoadTransactions().Times(0)
+				c.dateGuesser.EXPECT().Guess(gomock.Any()).Return(aTime, true)
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
@@ -610,6 +665,9 @@ func TestInputController(t *testing.T) {
 			c.state = statemod.InitialState()
 			c.eventBus = NewMockIEventBus(ctrl)
 			c.dateGuesser = NewMockIDateGuesser(ctrl)
+			c.metaLoader = NewMockIMetaLoader(ctrl)
+			// Printer is simple enough for us to avoid using a mock.
+			c.printer = printermod.New(2, 2)
 			opts := tc.opts(t, c)
 			c.controller, c.initError = NewController(c.state, opts...)
 			tc.run(t, c)

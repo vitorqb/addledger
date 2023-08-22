@@ -7,6 +7,8 @@ import (
 	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/metaloader"
+	"github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
@@ -63,24 +65,11 @@ func DateGuesser() (dateguesser.IDateGuesser, error) {
 }
 
 func State(hledgerClient hledger.IClient) (*statemod.State, error) {
-	// Initializes a new state
-	state := statemod.InitialState()
+	return statemod.InitialState(), nil
+}
 
-	// load accounts
-	accounts, err := hledgerClient.Accounts()
-	if err != nil {
-		return &statemod.State{}, err
-	}
-	state.JournalMetadata.SetAccounts(accounts)
-
-	// load transactions
-	postings, err := hledgerClient.Transactions()
-	if err != nil {
-		return &statemod.State{}, err
-	}
-	state.JournalMetadata.SetTransactions(postings)
-
-	return state, nil
+func MetaLoader(state *statemod.State, hledgerClient hledger.IClient) (*metaloader.MetaLoader, error) {
+	return metaloader.New(state, hledgerClient)
 }
 
 // DescriptionMatchAccountGuesser instantiates a new DescriptionMatchAccountGuesser and syncs it with
@@ -154,4 +143,8 @@ func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, erro
 		return nil, err
 	}
 	return accountguesser.NewCompositeAccountGuesser(descriptionMatchAccountGuesser, lastTransactionAccountGuesser)
+}
+
+func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
+	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }

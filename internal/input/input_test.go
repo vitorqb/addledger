@@ -321,3 +321,83 @@ func TestTextToAmmount(t *testing.T) {
 		})
 	}
 }
+
+func TestTextToPosting(t *testing.T) {
+	type testcase struct {
+		name                string
+		input               func(t *testing.T) *JournalEntryInput
+		expectedTransaction func(t *testing.T) *journal.Transaction
+		errorMsg            string
+	}
+	var testcases = []testcase{
+		{
+			name: "Simple transaction",
+			input: func(t *testing.T) *JournalEntryInput {
+				return tu.JournalEntryInput_1(t)
+			},
+			expectedTransaction: func(t *testing.T) *journal.Transaction {
+				return tu.Transaction_1(t)
+			},
+		},
+		{
+			name: "Missing description",
+			input: func(t *testing.T) *JournalEntryInput {
+				out := tu.JournalEntryInput_1(t)
+				out.ClearDescription()
+				return out
+			},
+			errorMsg: "missing description",
+		},
+		{
+			name: "Missing date",
+			input: func(t *testing.T) *JournalEntryInput {
+				out := tu.JournalEntryInput_1(t)
+				out.ClearDate()
+				return out
+			},
+			errorMsg: "missing date",
+		},
+		{
+			name: "Unbalanced posting",
+			input: func(t *testing.T) *JournalEntryInput {
+				out := tu.JournalEntryInput_1(t)
+				posting_3 := out.AddPosting()
+				tu.FillPostingInput_3(t, posting_3)
+				return out
+			},
+			errorMsg: "postings are not balanced",
+		},
+		{
+			name: "Posting missing ammount",
+			input: func(t *testing.T) *JournalEntryInput {
+				out := tu.JournalEntryInput_1(t)
+				posting := out.AddPosting()
+				posting.SetAccount("FOO")
+				return out
+			},
+			errorMsg: "one of the postings is missing the amount",
+		},
+		{
+			name: "Posting missing account",
+			input: func(t *testing.T) *JournalEntryInput {
+				out := tu.JournalEntryInput_1(t)
+				posting, _ := out.GetPosting(0)
+				posting.ClearAccount()
+				return out
+			},
+			errorMsg: "one of the postings is missing the account",
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			input := tc.input(t)
+			result, err := input.ToTransaction()
+			if tc.errorMsg == "" {
+				assert.Nil(t, err)
+				assert.Equal(t, *tc.expectedTransaction(t), result)
+			} else {
+				assert.ErrorContains(t, err, tc.errorMsg)
+			}
+		})
+	}
+}

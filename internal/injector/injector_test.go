@@ -1,15 +1,19 @@
 package injector_test
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
+	"github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/injector"
 	. "github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/testutils"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
 
@@ -39,7 +43,7 @@ func TestAmmountGuesserEngine(t *testing.T) {
 	assert.Equal(t, ammountguesser.DefaultGuess, guess)
 }
 
-func TestState(t *testing.T) {
+func TestStateAndMetaLoader(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	transactions := []journal.Transaction{{Description: "FOO"}, {Description: "Bar"}}
@@ -48,6 +52,13 @@ func TestState(t *testing.T) {
 	hledgerClient.EXPECT().Transactions().Return(transactions, nil)
 
 	state, err := State(hledgerClient)
+	assert.Nil(t, err)
+
+	metaLoader, err := MetaLoader(state, hledgerClient)
+	assert.Nil(t, err)
+	err = metaLoader.LoadAccounts()
+	assert.Nil(t, err)
+	err = metaLoader.LoadTransactions()
 	assert.Nil(t, err)
 	assert.Equal(t, []journal.Account{"FOO"}, state.JournalMetadata.Accounts())
 	assert.Equal(t, transactions, state.JournalMetadata.Transactions())
@@ -123,4 +134,16 @@ func TestLastTransactionAccountGuesser(t *testing.T) {
 	guess, success := accountGuesser.Guess()
 	assert.True(t, success)
 	assert.Equal(t, journal.Account("bank:currentaccount"), guess)
+}
+
+func TestPrinter(t *testing.T) {
+	config := config.PrinterConfig{NumLineBreaksBefore: 2, NumLineBreaksAfter: 3}
+	printer, err := injector.Printer(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	printer.Print(&buf, *testutils.Transaction_1(t))
+	expectedPrint := "\n\n1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n\n\n"
+	assert.Equal(t, expectedPrint, buf.String())
 }
