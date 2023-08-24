@@ -10,6 +10,8 @@ import (
 	"github.com/vitorqb/addledger/internal/metaloader"
 	"github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/stringmatcher"
+	"github.com/vitorqb/addledger/internal/transactionmatcher"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
 
@@ -147,4 +149,34 @@ func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, erro
 
 func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
 	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
+}
+
+func TransactionMatcher(state *statemod.State) (transactionmatcher.ITransactionMatcher, error) {
+	// We could inject a stringmatcher here if we ever want to make it configurable.
+	stringMatcher, err := stringmatcher.New(&stringmatcher.Options{})
+	if err != nil {
+		return nil, err
+	}
+
+	transactionMatcher := transactionmatcher.New(stringMatcher)
+
+	// Ensure the state is updated when the matched transaction changes.
+	busy := false
+	state.AddOnChangeHook(func() {
+		if !busy {
+			busy = true
+			defer func() { busy = false }()
+			descriptionInput, found := state.JournalEntryInput.GetDescription()
+			if !found {
+				return
+			}
+			transactionMatcher.SetDescriptionInput(descriptionInput)
+			transactionHistory := state.JournalMetadata.Transactions()
+			transactionMatcher.SetTransactionHistory(transactionHistory)
+			matchingTransactions := transactionMatcher.Match()
+			state.InputMetadata.SetMatchingTransactions(matchingTransactions)
+		}
+	})
+
+	return transactionMatcher, nil
 }

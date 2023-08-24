@@ -147,3 +147,18 @@ func TestPrinter(t *testing.T) {
 	expectedPrint := "\n\n1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n\n\n"
 	assert.Equal(t, expectedPrint, buf.String())
 }
+
+func TestTransactionMatcher(t *testing.T) {
+	state := statemod.InitialState()
+	_, err := injector.TransactionMatcher(state)
+	assert.Nil(t, err)
+	transactions := []journal.Transaction{{Description: "test"}, {Description: "INVALID"}}
+	expectedMatchedTransactions := []journal.Transaction{{Description: "test"}}
+
+	// Updates the state
+	state.JournalMetadata.SetTransactions(transactions)
+	state.JournalEntryInput.SetDescription("test")
+
+	// Ensure that the matched transactions are on the state.
+	assert.Equal(t, expectedMatchedTransactions, state.InputMetadata.MatchingTransactions())
+}

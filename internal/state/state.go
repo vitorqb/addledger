@@ -35,6 +35,9 @@ type (
 
 		// Controls date
 		dateGuess *MaybeValue[time.Time]
+
+		// The transactions that match the current input
+		matchingTransactions []journal.Transaction
 	}
 
 	// State is the top-level app state
@@ -82,6 +85,7 @@ func InitialState() *State {
 		postingAmmountInput:    &MaybeValue[journal.Ammount]{},
 		postingAmmountText:     "",
 		dateGuess:              &MaybeValue[time.Time]{},
+		matchingTransactions:   []journal.Transaction{},
 	}
 	journalMetadata := NewJournalMetadata()
 	state := &State{
@@ -266,6 +270,17 @@ func (im *InputMetadata) DescriptionText() string { return im.descriptionText }
 // the context.
 func (im *InputMetadata) SetDescriptionText(x string) {
 	im.descriptionText = x
+	im.NotifyChange()
+}
+
+// MatchingTransactions returns the current matching transactions
+func (im *InputMetadata) MatchingTransactions() []journal.Transaction {
+	return im.matchingTransactions
+}
+
+// SetMatchingTransactions sets the current matching transactions
+func (im *InputMetadata) SetMatchingTransactions(x []journal.Transaction) {
+	im.matchingTransactions = x
 	im.NotifyChange()
 }
 
