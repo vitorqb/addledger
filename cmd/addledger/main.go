@@ -80,6 +80,13 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load printer")
 	}
 
+	// Loads a TransactionMatcher. We don't need the reference since it's
+	// linked to the state.
+	_, err = injector.TransactionMatcher(state)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load transaction matcher")
+	}
+
 	// Starts a new controller
 	controller, err := controller.NewController(state,
 		controller.WithOutput(destFile),

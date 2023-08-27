@@ -102,6 +102,29 @@ func Transaction_1(t *testing.T) *journal.Transaction {
 	}
 }
 
+func Transaction_2(t *testing.T) *journal.Transaction {
+	return &journal.Transaction{
+		Description: "Description2",
+		Date:        Date2(t),
+		Posting: []journal.Posting{
+			{
+				Account: "ACC3",
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(2000, -2),
+				},
+			},
+			{
+				Account: "ACC4",
+				Ammount: journal.Ammount{
+					Commodity: "EUR",
+					Quantity:  decimal.New(-2000, -2),
+				},
+			},
+		},
+	}
+}
+
 //
 // Helpers
 

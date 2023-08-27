@@ -76,18 +76,18 @@ func MetaLoader(state *statemod.State, hledgerClient hledger.IClient) (*metaload
 
 // DescriptionMatchAccountGuesser instantiates a new DescriptionMatchAccountGuesser and syncs it with
 // the state.
-func DescriptionMatchAccountGuesser(state *statemod.State) (*accountguesser.DescriptionMatchAccountGuesser, error) {
+func DescriptionMatchAccountGuesser(state *statemod.State) (*accountguesser.MatchedTransactionsGuesser, error) {
 
 	// Creates a new Description Guesser
-	accountGuesser, err := accountguesser.NewDescriptionMatchAccountGuesser(accountguesser.DescriptionMatchOption{})
+	accountGuesser, err := accountguesser.NewMatchedTransactionsAccountGuesser()
 	if err != nil {
 		return nil, err
 	}
 
 	// Function that syncs the state with the internal AccountGuesser state.
 	syncWithState := func() {
-		transactionHistory := state.JournalMetadata.Transactions()
-		accountGuesser.SetTransactionHistory(transactionHistory)
+		matchedTransactions := state.InputMetadata.MatchingTransactions()
+		accountGuesser.SetMatchedTransactions(matchedTransactions)
 
 		var postings []journal.Posting
 		inputPostings := state.JournalEntryInput.GetPostings()
@@ -97,9 +97,6 @@ func DescriptionMatchAccountGuesser(state *statemod.State) (*accountguesser.Desc
 			}
 		}
 		accountGuesser.SetInputPostings(postings)
-
-		description, _ := state.JournalEntryInput.GetDescription()
-		accountGuesser.SetDescription(description)
 	}
 
 	// Runs a first sync

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/stringmatcher"
+	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/internal/transactionmatcher"
 )
 
@@ -65,6 +66,23 @@ func TestTransactionMatcher(t *testing.T) {
 					{Description: "test120"}, // distance 1
 					{Description: "test100"}, // distance 2
 					{Description: "test000"}, // distance 3
+				}
+				ctx.transactionMatcher.SetTransactionHistory(transactions)
+				matches := ctx.transactionMatcher.Match()
+				assert.Equal(t, sortedTransactions, matches)
+			},
+		},
+		{
+			name: "Order matches by date if distance is equal",
+			run: func(t *testing.T, ctx *testcontext) {
+				ctx.transactionMatcher.SetDescriptionInput("test123")
+				transactions := []journal.Transaction{
+					{Description: "test123", Date: tu.Date1(t)}, // distance 0
+					{Description: "test123", Date: tu.Date2(t)}, // distance 0, more recent
+				}
+				sortedTransactions := []journal.Transaction{
+					{Description: "test123", Date: tu.Date2(t)}, // distance 0, more recent
+					{Description: "test123", Date: tu.Date1(t)}, // distance 0
 				}
 				ctx.transactionMatcher.SetTransactionHistory(transactions)
 				matches := ctx.transactionMatcher.Match()

@@ -17,9 +17,16 @@ type match struct {
 type matchList []match
 
 // Implement sort.Interface for matchList
-func (ml matchList) Len() int           { return len(ml) }
-func (ml matchList) Less(i, j int) bool { return ml[i].distance < ml[j].distance }
-func (ml matchList) Swap(i, j int)      { ml[i], ml[j] = ml[j], ml[i] }
+func (ml matchList) Len() int {
+	return len(ml)
+}
+func (ml matchList) Less(i, j int) bool {
+	if ml[i].distance == ml[j].distance {
+		return ml[j].transaction.Date.Before(ml[i].transaction.Date)
+	}
+	return ml[i].distance < ml[j].distance
+}
+func (ml matchList) Swap(i, j int) { ml[i], ml[j] = ml[j], ml[i] }
 
 // ITransactionMatcher implements the logic to match transactions
 // based on user input and a transaction history.

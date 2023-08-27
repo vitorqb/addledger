@@ -75,6 +75,12 @@ func TestDescriptionMatchAccountGuesser(t *testing.T) {
 	_, success := accountGuesser.Guess()
 	assert.False(t, success)
 
+	// Add a TransactionMatcher to state
+	_, err = TransactionMatcher(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Set the transaction history on state
 	state.JournalMetadata.SetTransactions([]journal.Transaction{
 		{
