@@ -33,8 +33,18 @@ func AmmountGuesserEngine(state *statemod.State) ammountguesser.IEngine {
 		state.InputMetadata.SetPostingAmmountGuess(guess)
 	}
 
+	busy := false
 	// subscribes to changes
 	state.AddOnChangeHook(func() {
+		if busy {
+			return
+		}
+		busy = true
+		defer func() { busy = false }()
+
+		// sync matching transactions
+		matchingTransactions := state.InputMetadata.MatchingTransactions()
+		ammountGuesserEngine.SetMatchingTransactions(matchingTransactions)
 
 		// sync input text
 		newText := state.InputMetadata.GetPostingAmmountText()

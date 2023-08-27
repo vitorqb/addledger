@@ -13,8 +13,12 @@ type IEngine interface {
 	// has inputted.
 	SetUserInputText(x string)
 
-	// Set set's all posting inputs that have been inputted so far.
+	// SetPostingInputs set's all posting inputs that have been inputted so far.
 	SetPostingInputs(x []*input.PostingInput)
+
+	// SetMatchingTransactions set's all transactions that match the current
+	// user input.
+	SetMatchingTransactions(x []journal.Transaction)
 
 	// Guess returns the guess for the current state. If can't
 	// guess, success is false.
@@ -30,8 +34,9 @@ var DefaultGuess = journal.Ammount{
 }
 
 type Engine struct {
-	userInput     string
-	postingInputs []*input.PostingInput
+	userInput            string
+	postingInputs        []*input.PostingInput
+	matchingTransactions []journal.Transaction
 }
 
 var _ IEngine = &Engine{}
@@ -87,8 +92,15 @@ func (e *Engine) Guess() (guess journal.Ammount, success bool) {
 		}
 	}
 
+	// If we have a matching transaction, use it.
+	if len(e.matchingTransactions) > 0 {
+		transaction := e.matchingTransactions[0]
+		return transaction.Posting[0].Ammount, true
+	}
+
 	return DefaultGuess, true
 }
 
-func (e *Engine) SetUserInputText(x string)                { e.userInput = x }
-func (e *Engine) SetPostingInputs(x []*input.PostingInput) { e.postingInputs = x }
+func (e *Engine) SetUserInputText(x string)                       { e.userInput = x }
+func (e *Engine) SetPostingInputs(x []*input.PostingInput)        { e.postingInputs = x }
+func (e *Engine) SetMatchingTransactions(x []journal.Transaction) { e.matchingTransactions = x }

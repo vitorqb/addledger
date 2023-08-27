@@ -50,6 +50,18 @@ func (mr *MockIEngineMockRecorder) Guess() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIEngine)(nil).Guess))
 }
 
+// SetMatchingTransactions mocks base method.
+func (m *MockIEngine) SetMatchingTransactions(x []journal.Transaction) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetMatchingTransactions", x)
+}
+
+// SetMatchingTransactions indicates an expected call of SetMatchingTransactions.
+func (mr *MockIEngineMockRecorder) SetMatchingTransactions(x interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMatchingTransactions", reflect.TypeOf((*MockIEngine)(nil).SetMatchingTransactions), x)
+}
+
 // SetPostingInputs mocks base method.
 func (m *MockIEngine) SetPostingInputs(x []*input.PostingInput) {
 	m.ctrl.T.Helper()
