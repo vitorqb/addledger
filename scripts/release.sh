@@ -22,12 +22,6 @@ if [ -n "$(git status --porcelain)" ]; then
 fi
 msg "Working directory is clean :check:"
 
-# Checks the type of version bump is given
-if [ -z "$BUMPTYPE" ]
-then
-    err "You must specify the type of version bump"
-fi
-
 # Checks if the version bump is valid
 BUMPTYPE="$1"
 if [ "$BUMPTYPE" != "major" ] && [ "$BUMPTYPE" != "minor" ] && [ "$BUMPTYPE" != "patch" ]
