@@ -62,6 +62,10 @@ debug-init: install-delve
 debug-connect:
     {{DELVE}} connect :4040
 
+# Builds the app
+build:
+    {{GO}} build -o out/addledger cmd/addledger/main.go
+
 #
 # Installers
 #
