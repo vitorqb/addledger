@@ -63,6 +63,15 @@ jobs:
           name: "Run formatter"
           command: just format && git diff --exit-code
 
+  build:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - setup
+      - run:
+          name: "Build"
+          command: just build
+
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
@@ -72,3 +81,4 @@ workflows:
       - mocks
       - lint
       - format
+      - build
