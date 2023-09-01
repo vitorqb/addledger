@@ -5,57 +5,51 @@ import (
 
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/accountguesser"
-	contextmod "github.com/vitorqb/addledger/internal/display/context"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
+
+type Refreshable interface {
+	Refresh()
+}
 
 type Context struct {
 	state *statemod.State
 	pages *tview.Pages
 }
 
-func NewContext(
-	state *statemod.State,
-	eventbus eventbusmod.IEventBus,
-	accountGuesser accountguesser.IAccountGuesser,
-) (*Context, error) {
-	// Creates an AccountList widget
-	accountList, err := NewAccountList(state, eventbus, accountGuesser)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create account list: %w", err)
-	}
+// ContextEntry represents a widget inside the context
+type ContextWidget struct {
+	// The name of the page where the widget is located
+	PageName string
+	// The widget itself
+	Widget tview.Primitive
+}
 
-	// Creates an DescriptionPicker widget
-	descriptionPicker, err := contextmod.NewDescriptionPicker(state, eventbus)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create description picker: %w", err)
-	}
-
-	// Creates a Ammount Guesser
-	ammountGuesser, err := contextmod.NewAmmountGuesser(state)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create ammount guesser: %w", err)
-	}
-
-	// Creates a date guesser
-	dateGuesser, err := NewDateGuesser(state)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create date guesser: %w", err)
-	}
-
+func NewContext(state *statemod.State, widgets []ContextWidget) (*Context, error) {
 	// Creates Context
 	context := new(Context)
 	context.state = state
+
+	// Add all pages to the context
 	context.pages = tview.NewPages()
 	context.pages.SetBorder(true)
-	context.pages.AddPage("accountList", accountList, true, false)
-	context.pages.AddPage("descriptionPicker", descriptionPicker, true, false)
-	context.pages.AddPage("ammountGuesser", ammountGuesser, true, false)
-	context.pages.AddPage("dateGuesser", dateGuesser, true, false)
-	context.pages.AddPage("empty", tview.NewBox(), true, false)
+	for _, widget := range widgets {
+		context.pages.AddPage(widget.PageName, widget.Widget, true, false)
+	}
+
+	// Switch to the initial page
 	context.pages.SwitchToPage("dateGuesser")
+
+	// Add a hook to refresh the widgets when the current page changes.
+	context.pages.SetChangedFunc(func() {
+		_, page := context.pages.GetFrontPage()
+		if refreshablePage, ok := page.(Refreshable); ok {
+			refreshablePage.Refresh()
+		}
+	})
+
 	context.Refresh()
 	state.AddOnChangeHook(context.Refresh)
 

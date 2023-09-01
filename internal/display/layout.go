@@ -7,6 +7,7 @@ import (
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/controller"
+	contextmod "github.com/vitorqb/addledger/internal/display/context"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/state"
 )
@@ -29,7 +30,33 @@ func NewLayout(
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)
-	context, err := NewContext(state, eventBus, accountGuesser)
+
+	// Creates a Context
+	accountList, err := NewAccountList(state, eventBus, accountGuesser)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create account list: %w", err)
+	}
+	descriptionPicker, err := contextmod.NewDescriptionPicker(state, eventBus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create description picker: %w", err)
+	}
+	ammountGuesser, err := contextmod.NewAmmountGuesser(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create ammount guesser: %w", err)
+	}
+	dateGuesser, err := NewDateGuesser(state)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create date guesser: %w", err)
+	}
+	contextWidgets := []ContextWidget{
+		{PageName: "accountList", Widget: accountList},
+		{PageName: "descriptionPicker", Widget: descriptionPicker},
+		{PageName: "ammountGuesser", Widget: ammountGuesser},
+		{PageName: "dateGuesser", Widget: dateGuesser},
+		{PageName: "empty", Widget: tview.NewBox()},
+	}
+
+	context, err := NewContext(state, contextWidgets)
 	if err != nil {
 		return nil, fmt.Errorf("failed to instatiate context: %w", err)
 	}

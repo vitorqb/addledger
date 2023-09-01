@@ -139,6 +139,18 @@ func TestContextualList(t *testing.T) {
 				assert.Equal(t, "FOO", firstItem)
 			},
 		},
+		{
+			name: "Sets selected item on Refresh",
+			run: func(t *testing.T, c *testcontext) {
+				c.selected = ""
+				c.contextualList.Refresh()
+				assert.Equal(t, "TWO", c.selected)
+				// Note: run again because of cache
+				c.selected = ""
+				c.contextualList.Refresh()
+				assert.Equal(t, "TWO", c.selected)
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
