@@ -1,6 +1,38 @@
 # HledgerAdd
 
-A helper tool to enter HLedger journal entries.
+HledgerAdd is a Terminal User Interface (TUI) to help you add new
+entries on [hledger](https://hledger.org/). It's inspired in the
+amazing [hledger-iadd](https://github.com/hpdeifel/hledger-iadd).
+
+## Mandatory Gif
+
+![](./docs/mandatory.gif)
+
+Result:
+
+```
+2023-08-30 Gift to Mother
+    assets:bank-account    EUR -22
+    expenses:gifts    EUR 22
+
+2023-08-30 Restaurant
+    assets:bank-account    EUR -50
+    expenses:leisure:restaurants    EUR 50
+
+2022-01-01 Plane tickets to Brasil
+    assets:bank-account    BRL -2000
+    expenses:trips    BRL 2000
+
+2022-12-31 Gift to Mother
+    assets:bank-account    EUR -22
+    expenses:gifts    EUR 22
+```
+
+## Installing
+
+You can get the latest binary for your platform from our [releases
+page](https://github.com/vitorqb/addledger/releases). Copy it on your
+path and run it.
 
 ## Development
 
