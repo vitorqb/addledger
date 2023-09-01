@@ -30,8 +30,8 @@ setup:
     touch out/destfile
 
 # Runs the app
-run:
-    {{GO}} run cmd/addledger/main.go
+run args="":
+    {{GO}} run cmd/addledger/main.go {{args}}
 
 # Runs all tests
 test target="./...": mocks
