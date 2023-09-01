@@ -40,6 +40,7 @@ msg "Bumping version from $CURRENT_VERSION to $NEW_VERSION"
 
 # Loads GITHUB_TOKEN for goreleaser
 if [ -z "$GITHUB_TOKEN" ]
+then
    if ! [ -f ./secrets/GITHUB_TOKEN ]
    then
        err "You must have a GITHUB_TOKEN environment variable or a secrets/GITHUB_TOKEN file"
