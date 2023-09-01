@@ -73,6 +73,16 @@ func TestPostingAccountField(t *testing.T) {
 				assert.Equal(t, "FOO", c.postingAccount.GetText())
 			},
 		},
+		{
+			name: "Calls OnPostingAccountDone on Ctrl+J",
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.EXPECT().OnPostingAccountChanged("FOO").Times(2)
+				c.controller.EXPECT().OnPostingAccountDone(input.Input)
+				c.postingAccount.SetText("FOO")
+				event := tcell.NewEventKey(tcell.KeyCtrlJ, ' ', tcell.ModNone)
+				c.postingAccount.InputHandler()(event, func(tview.Primitive) {})
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {

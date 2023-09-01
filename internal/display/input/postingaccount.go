@@ -41,7 +41,7 @@ func NewPostingAccount(
 		// if Ctrl+J, use input as it is
 		case tcell.KeyCtrlJ:
 			field.controller.OnPostingAccountChanged(field.GetText())
-			field.controller.OnPostingAccountDone(input.Context)
+			field.controller.OnPostingAccountDone(input.Input)
 			return nil
 		// if Tab then autocompletes
 		case tcell.KeyTab:
