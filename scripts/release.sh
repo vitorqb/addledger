@@ -28,7 +28,7 @@ if [ "$BUMPTYPE" != "major" ] && [ "$BUMPTYPE" != "minor" ] && [ "$BUMPTYPE" != 
 then
     err "You must specify a valid version bump (major, minor, patch)"
 fi
-msg "Version bump is valid :check:"
+msg "Bump type $BUMPTYPE is valid :check:"
 
 # Gets the current version
 CURRENT_VERSION=$(git describe --abbrev=0 --tags)
