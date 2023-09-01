@@ -6,7 +6,7 @@ GO := env_var_or_default("GO", "go")
 BIN := join(justfile_directory(), "bin")
 
 # Delve executable
-DELVE_VERSION := env_var_or_default("DELVE_VERSION", "1.20.2")
+DELVE_VERSION := env_var_or_default("DELVE_VERSION", "1.21.0")
 DELVE := env_var_or_default("DELVE", join(BIN, "dlv-" + DELVE_VERSION))
 
 # Mockgen

@@ -75,6 +75,12 @@ func TestDescriptionMatchAccountGuesser(t *testing.T) {
 	_, success := accountGuesser.Guess()
 	assert.False(t, success)
 
+	// Add a TransactionMatcher to state
+	_, err = TransactionMatcher(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Set the transaction history on state
 	state.JournalMetadata.SetTransactions([]journal.Transaction{
 		{
@@ -146,4 +152,19 @@ func TestPrinter(t *testing.T) {
 	printer.Print(&buf, *testutils.Transaction_1(t))
 	expectedPrint := "\n\n1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n\n\n"
 	assert.Equal(t, expectedPrint, buf.String())
+}
+
+func TestTransactionMatcher(t *testing.T) {
+	state := statemod.InitialState()
+	_, err := injector.TransactionMatcher(state)
+	assert.Nil(t, err)
+	transactions := []journal.Transaction{{Description: "test"}, {Description: "INVALID"}}
+	expectedMatchedTransactions := []journal.Transaction{{Description: "test"}}
+
+	// Updates the state
+	state.JournalMetadata.SetTransactions(transactions)
+	state.JournalEntryInput.SetDescription("test")
+
+	// Ensure that the matched transactions are on the state.
+	assert.Equal(t, expectedMatchedTransactions, state.InputMetadata.MatchingTransactions())
 }

@@ -7,218 +7,69 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/stringmatcher"
-	"github.com/vitorqb/addledger/internal/testutils"
+	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/accountguesser"
-	. "github.com/vitorqb/addledger/mocks/stringmatcher"
 )
 
-func TestDescriptionMatchAccountGuesser(t *testing.T) {
+func TestMatchedTransactionsGuesser(t *testing.T) {
 	type testcontext struct {
-		accountguesser *DescriptionMatchAccountGuesser
-		stringMatcher  *MockIStringMatcher
+		accountguesser *MatchedTransactionsGuesser
 	}
 	type testcase struct {
-		name               string
-		setup              func(*testing.T, *testcontext)
-		transactionHistory func() TransactionHistory
-		inputPostings      func() []journal.Posting
-		description        string
-		success            bool
-		expected           journal.Account
+		name                string
+		setup               func(*testing.T, *testcontext)
+		matchedTransactions func(*testing.T) MatchedTransactions
+		inputPostings       func() []journal.Posting
+		success             bool
+		expected            journal.Account
 	}
 	var testcases = []testcase{
 		{
-			name: "no transaction history",
-			transactionHistory: func() TransactionHistory {
+			name: "no matched transactions",
+			matchedTransactions: func(t *testing.T) MatchedTransactions {
 				return []journal.Transaction{}
 			},
 			inputPostings: func() []journal.Posting { return []journal.Posting{} },
-			description:   "Supermarket",
 			success:       false,
 		},
 		{
-			name: "perfect match",
-			transactionHistory: func() TransactionHistory {
-				return []journal.Transaction{
-					{
-						Description: "Supermarket",
-						Date:        testutils.Date1(t),
-						Posting: []journal.Posting{
-							{
-								Account: "expenses:supermarket",
-								Ammount: journal.Ammount{},
-							},
-						},
-					},
-				}
+			name: "one single matched transaction",
+			matchedTransactions: func(*testing.T) MatchedTransactions {
+				return []journal.Transaction{*tu.Transaction_1(t)}
 			},
 			inputPostings: func() []journal.Posting { return []journal.Posting{} },
-			description:   "Supermarket",
 			success:       true,
-			expected:      "expenses:supermarket",
+			expected:      "ACC1",
 		},
 		{
-			name: "distance higher than 15 (from cache)",
-			transactionHistory: func() TransactionHistory {
-				return []journal.Transaction{
-					{
-						Description: "BA",
-						Date:        testutils.Date1(t),
-						Posting: []journal.Posting{
-							{
-								Account: "expenses:supermarket",
-								Ammount: journal.Ammount{},
-							},
-						},
-					},
-				}
-			},
-			setup: func(t1 *testing.T, t2 *testcontext) {
-				t2.stringMatcher.EXPECT().Distance("AB", "BA").Return(999)
+			name: "two matched transactions",
+			matchedTransactions: func(*testing.T) MatchedTransactions {
+				return []journal.Transaction{*tu.Transaction_1(t), *tu.Transaction_2(t)}
 			},
 			inputPostings: func() []journal.Posting { return []journal.Posting{} },
-			description:   "AB",
-			success:       false,
-		},
-		{
-			name: "close match",
-			transactionHistory: func() TransactionHistory {
-				return []journal.Transaction{
-					{
-						Description: "Supermarkaa",
-						Date:        testutils.Date1(t),
-						Posting: []journal.Posting{
-							{
-								Account: "expenses:supermarket",
-								Ammount: journal.Ammount{},
-							},
-						},
-					},
-				}
-			},
-			inputPostings: func() []journal.Posting {
-				return []journal.Posting{}
-			},
-			description: "Supermarket",
-			success:     true,
-			expected:    "expenses:supermarket",
+			success:       true,
+			expected:      "ACC1",
 		},
 		{
 			name: "with previous input posting",
-			transactionHistory: func() TransactionHistory {
-				return []journal.Transaction{
-					{
-						Description: "Supermarket",
-						Date:        testutils.Date1(t),
-						Posting: []journal.Posting{
-							{
-								Account: "expenses:supermarket",
-								Ammount: journal.Ammount{},
-							},
-							{
-								Account: "assets:current-account",
-								Ammount: journal.Ammount{},
-							},
-						},
-					},
-				}
+			matchedTransactions: func(*testing.T) MatchedTransactions {
+				return []journal.Transaction{*tu.Transaction_1(t)}
 			},
 			inputPostings: func() []journal.Posting {
 				return []journal.Posting{
 					{
-						Account: "expenses:supermarket",
+						Account: "ACC1",
 						Ammount: journal.Ammount{},
 					},
 				}
 			},
-			description: "Supermarket",
-			success:     true,
-			expected:    "assets:current-account",
-		},
-		{
-			name: "gets perfect match over close match",
-			transactionHistory: func() TransactionHistory {
-				return []journal.Transaction{
-					{
-						Description: "Supermarke",
-						Date:        testutils.Date1(t),
-						Posting: []journal.Posting{
-							{
-								Account: "foo",
-								Ammount: journal.Ammount{},
-							},
-							{
-								Account: "bar",
-								Ammount: journal.Ammount{},
-							},
-						},
-					},
-					{
-						Description: "Supermarket",
-						Date:        testutils.Date1(t),
-						Posting: []journal.Posting{
-							{
-								Account: "expenses:supermarket",
-								Ammount: journal.Ammount{},
-							},
-							{
-								Account: "assets:current-account",
-								Ammount: journal.Ammount{},
-							},
-						},
-					},
-				}
-			},
-			inputPostings: func() []journal.Posting {
-				return []journal.Posting{}
-			},
-			description: "Supermarket",
-			success:     true,
-			expected:    "expenses:supermarket",
-		},
-		{
-			name: "if two matches get most recent one",
-			transactionHistory: func() TransactionHistory {
-				oldTransaction := journal.Transaction{
-					Description: "Supermarket",
-					Date:        testutils.Date1(t),
-					Posting: []journal.Posting{
-						{
-							Account: "foo",
-							Ammount: journal.Ammount{},
-						},
-						{
-							Account: "bar",
-							Ammount: journal.Ammount{},
-						},
-					},
-				}
-				recentTransaction := oldTransaction
-				recentTransaction.Date = testutils.Date2(t)
-				recentTransaction.Posting[0].Account = "expenses:supermarket"
-				return []journal.Transaction{oldTransaction, recentTransaction}
-			},
-			inputPostings: func() []journal.Posting {
-				return []journal.Posting{}
-			},
-			description: "Supermarket",
-			success:     true,
-			expected:    "expenses:supermarket",
+			success:  true,
+			expected: "ACC2",
 		},
 	}
 
 	// Default setup if test does not define one
-	defaultSetup := func(t *testing.T, c *testcontext) {
-		// Ensure stringMatcher.Distance return real distance
-		realMacher, err := stringmatcher.New(&stringmatcher.Options{})
-		if err != nil {
-			t.Fatal(err)
-		}
-		c.stringMatcher.EXPECT().Distance(gomock.Any(), gomock.Any()).AnyTimes().DoAndReturn(func(a string, b string) int {
-			return realMacher.Distance(a, b)
-		})
-	}
+	defaultSetup := func(t *testing.T, c *testcontext) {}
 
 	// Run test cases
 	for _, tc := range testcases {
@@ -227,19 +78,17 @@ func TestDescriptionMatchAccountGuesser(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			c := new(testcontext)
-			c.stringMatcher = NewMockIStringMatcher(ctrl)
 			if tc.setup != nil {
 				tc.setup(t, c)
 			} else {
 				defaultSetup(t, c)
 			}
-			c.accountguesser, err = NewDescriptionMatchAccountGuesser(DescriptionMatchOption{StringMatcher: c.stringMatcher})
+			c.accountguesser, err = NewMatchedTransactionsAccountGuesser()
 			if err != nil {
 				t.Fatal(err)
 			}
-			c.accountguesser.SetTransactionHistory(tc.transactionHistory())
+			c.accountguesser.SetMatchedTransactions(tc.matchedTransactions(t))
 			c.accountguesser.SetInputPostings(tc.inputPostings())
-			c.accountguesser.SetDescription(tc.description)
 			actual, success := c.accountguesser.Guess()
 			assert.Equal(t, tc.success, success)
 			if tc.success {
@@ -255,21 +104,21 @@ func TestLastTransactionAccountGuesser(t *testing.T) {
 	}
 	type testcase struct {
 		name               string
-		transactionHistory func() TransactionHistory
+		transactionHistory func() MatchedTransactions
 		success            bool
 		expected           journal.Account
 	}
 	var testcases = []testcase{
 		{
-			name: "no transaction history",
-			transactionHistory: func() TransactionHistory {
+			name: "no matched transactions",
+			transactionHistory: func() MatchedTransactions {
 				return []journal.Transaction{}
 			},
 			success: false,
 		},
 		{
 			name: "uses last transaction first posting",
-			transactionHistory: func() TransactionHistory {
+			transactionHistory: func() MatchedTransactions {
 				return []journal.Transaction{
 					{
 						Posting: []journal.Posting{
