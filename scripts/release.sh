@@ -45,7 +45,7 @@ if [ -z "$GITHUB_TOKEN" ]
        err "You must have a GITHUB_TOKEN environment variable or a secrets/GITHUB_TOKEN file"
    fi
    GITHUB_TOKEN=$(cat ./secrets/GITHUB_TOKEN)
-then
+fi
 export GITHUB_TOKEN
 
 # Creates and pushes a new tag
