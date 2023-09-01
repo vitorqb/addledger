@@ -65,7 +65,7 @@ func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
 	}
 	list.ShowSecondaryText(false)
 	list.SetChangedFunc(func(_ int, mainText, _ string, _ rune) {
-		logrus.WithField("text", mainText).Debug("AccountList changed")
+		logrus.WithField("text", mainText).Debug("ContextualList changed")
 		list.setSelectedFunc(mainText)
 	})
 	if list.getDefaultFunc != nil {
@@ -113,6 +113,15 @@ func (cl *ContextualList) Refresh() {
 	defer func() {
 		if cl.GetItemCount() == 0 {
 			cl.setSelectedFunc("")
+		}
+	}()
+
+	// Ensure that after we refresh the state is up-to-date with
+	// the selected item
+	defer func() {
+		if cl.GetItemCount() > 0 {
+			text, _ := cl.GetItemText(cl.GetCurrentItem())
+			cl.setSelectedFunc(text)
 		}
 	}()
 
