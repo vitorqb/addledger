@@ -1,6 +1,6 @@
 .vicommands
 /out/
 /.env
-/bin/dlv-*
-/bin/mockgen-*
 /__debug_bin
+
+dist/

@@ -13,6 +13,14 @@ DELVE := env_var_or_default("DELVE", join(BIN, "dlv-" + DELVE_VERSION))
 MOCKGEN_VERSION := env_var_or_default("MOCKGEN_VERSION", "1.6.0")
 MOCKGEN := env_var_or_default("MOCKGEN", join(BIN, "mockgen-" + MOCKGEN_VERSION))
 
+# goreleaser
+GORELEASER_VERSION := env_var_or_default("GORELEASER_VERSION", "1.20.0")
+GORELEASER := env_var_or_default("GORELEASER", join(BIN, "goreleaser-" + GORELEASER_VERSION))
+
+# semver
+SEMVER_VERSION := env_var_or_default("SEMVER_VERSION", "3c76a6f9d113f4045f693845131185611a62162e")
+SEMVER := env_var_or_default("SEMVER", join(BIN, "semver-" + SEMVER_VERSION + ".sh"))
+
 PATH := env_var("PATH")
 
 #
@@ -21,13 +29,10 @@ PATH := env_var("PATH")
 
 # Set's up developer workspace
 setup:
-    mkdir -p out
-    mkdir -p bin
+    mkdir -p out bin    
+    touch out/destfile
     ./scripts/setup-asdf.sh
     ./scripts/setup-envfile.sh
-    just install-delve
-    just install-mockgen
-    touch out/destfile
 
 # Runs the app
 run args="":
@@ -38,7 +43,7 @@ test target="./...": mocks
     {{GO}} test {{target}}
 
 # Creates all mocks
-mocks:
+mocks: install-mockgen
     MOCKGEN={{MOCKGEN}} {{GO}} generate --run=MOCKGEN -x ./...
 
 # Lints the code
@@ -59,12 +64,24 @@ debug-init: install-delve
     {{DELVE}} debug --headless --listen localhost:4040 ./cmd/addledger/
 
 # Attaches to started delve
-debug-connect:
+debug-connect: install-delve
     {{DELVE}} connect :4040
 
 # Builds the app
-build:
-    {{GO}} build -o out/addledger cmd/addledger/main.go
+build args="": install-goreleaser
+    {{GORELEASER}} build {{args}}
+
+# Releases a new version
+_release bumpType="": install-semver install-goreleaser setup-github-token
+    SEMVER={{SEMVER}} GORELEASER={{GORELEASER}} ./scripts/release.sh {{bumpType}}
+
+release-patch: (_release "patch")
+release-minor: (_release "minor")
+release-major: (_release "major")
+
+# Sets up the github token
+setup-github-token:
+    ./scripts/setup-github-token.sh
 
 #
 # Installers
@@ -74,3 +91,9 @@ install-delve:
 
 install-mockgen:
     GO={{GO}} BIN={{BIN}} MOCKGEN={{MOCKGEN}} MOCKGEN_VERSION={{MOCKGEN_VERSION}} ./scripts/install-mockgen.sh
+
+install-goreleaser:
+    GO={{GO}} BIN={{BIN}} GORELEASER={{GORELEASER}} GORELEASER_VERSION={{GORELEASER_VERSION}} ./scripts/install-goreleaser.sh
+
+install-semver:
+    SEMVER={{SEMVER}} SEMVER_VERSION={{SEMVER_VERSION}} ./scripts/install-semver.sh

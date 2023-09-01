@@ -70,7 +70,7 @@ jobs:
       - setup
       - run:
           name: "Build"
-          command: just build
+          command: just build '--snapshot'
 
 # Orchestrate jobs using workflows
 # See: https://circleci.com/docs/configuration-reference/#workflows
