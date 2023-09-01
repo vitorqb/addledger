@@ -55,5 +55,5 @@ git push origin "v${NEW_VERSION}"
 msg "Pushed tag v${NEW_VERSION} :check:"
 
 # Creates a new release
-${GORELEASER} release
+${GORELEASER} release --clean
 
