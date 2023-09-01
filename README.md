@@ -34,6 +34,37 @@ You can get the latest binary for your platform from our [releases
 page](https://github.com/vitorqb/addledger/releases). Copy it on your
 path and run it.
 
+## Usage
+
+```
+$ addledger --help
+Usage of addledger:
+  -d, --destfile string                 Destination file (where we will write)
+      --hledger-executable string       Executable to use for HLedger (default "hledger")
+      --ledger-file string              Ledger File to pass to HLedger commands
+      --logfile string                  File where to send log output. Empty for stderr.
+      --loglevel string                 Level of logger. Defaults to warning. (default "WARN")
+      --printer-line-break-after int    Number of line breaks to print after a transaction. (default 1)
+      --printer-line-break-before int   Number of line breaks to print before a transaction. (default 1)
+```
+
+A typical usage would be
+
+```
+# With normal ~/.hledger.journal file
+$ addledger -d ~/.hledger.journal
+
+# With a custom file
+$ addledger -d ~/my-custom-hledger.journal --ledger-file ~/my-custom-hledger.journal
+
+# Or with env vars
+$ export ADDLEDGER_DESTFILE=~/journal
+$ export LEDGER_FILE=~/journal
+$ addledger
+```
+
+Note that the file must exist.
+
 ## Development
 
 ### Setup
