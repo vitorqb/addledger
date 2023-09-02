@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/adrg/strutil v0.3.0
 	github.com/gdamore/tcell/v2 v2.6.0
-	github.com/golang/mock v1.4.4
+	github.com/golang/mock v1.6.0
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/rivo/tview v0.0.0-20230330183452-5796b0cd5c1f
 	github.com/shopspring/decimal v1.3.1
