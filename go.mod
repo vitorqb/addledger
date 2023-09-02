@@ -9,7 +9,7 @@ require (
 	github.com/lithammer/fuzzysearch v1.1.7
 	github.com/rivo/tview v0.0.0-20230330183452-5796b0cd5c1f
 	github.com/shopspring/decimal v1.3.1
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
