@@ -157,3 +157,62 @@ func TestAccountList(t *testing.T) {
 		})
 	}
 }
+
+func TestTagsPicker(t *testing.T) {
+	type testcontext struct {
+		state    *statemod.State
+		eventBus *mock_eventbus.MockIEventBus
+	}
+	type testcase struct {
+		name string
+		run  func(c *testcontext, t *testing.T)
+	}
+	var testcases = []testcase{
+		{
+			name: "Displays all tags",
+			run: func(c *testcontext, t *testing.T) {
+				transaction := testutils.Transaction_3(t)
+				c.state.JournalMetadata.AppendTransaction(*transaction)
+				tagsPicker, err := NewTagsPicker(c.state, c.eventBus)
+				if err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, 1, tagsPicker.GetItemCount())
+				displayedTag, _ := tagsPicker.GetItemText(0)
+				assert.Equal(t, "trip:brazil", displayedTag)
+			},
+		},
+		{
+			name: "Sets selected tag after user input",
+			run: func(c *testcontext, t *testing.T) {
+				transaction := testutils.Transaction_3(t)
+				transaction.Tags = []journal.Tag{
+					{Name: "aaaa", Value: "bbbb"},
+					{Name: "cccc", Value: "dddd"},
+				}
+				c.state.JournalMetadata.AppendTransaction(*transaction)
+				tagsPicker, err := NewTagsPicker(c.state, c.eventBus)
+				if err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, 2, tagsPicker.GetItemCount())
+
+				c.state.InputMetadata.SetTagText("cccc:d")
+				assert.Equal(t, 1, tagsPicker.GetItemCount())
+				displayedTag, _ := tagsPicker.GetItemText(0)
+				assert.Equal(t, "cccc:dddd", displayedTag)
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			c := new(testcontext)
+			c.state = statemod.InitialState()
+			c.eventBus = mock_eventbus.NewMockIEventBus(ctrl)
+			c.eventBus.EXPECT().Subscribe(gomock.Any())
+			tc.run(c, t)
+		})
+	}
+}

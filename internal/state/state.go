@@ -5,6 +5,7 @@ import (
 
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
 
@@ -32,6 +33,10 @@ type (
 		postingAmmountGuess *MaybeValue[journal.Ammount]
 		postingAmmountInput *MaybeValue[journal.Ammount]
 		postingAmmountText  string
+
+		// Controls tags
+		tagsText    string
+		selectedTag journal.Tag
 
 		// Controls date
 		dateGuess *MaybeValue[time.Time]
@@ -68,6 +73,7 @@ func (mv *MaybeValue[T]) Clear() {
 const (
 	InputDate           Phase = "INPUT_DATE"
 	InputDescription    Phase = "INPUT_DESCRIPTION"
+	InputTags           Phase = "INPUT_TAGS"
 	InputPostingAccount Phase = "INPUT_POSTING_ACCOUNT"
 	InputPostingAmmount Phase = "INPUT_POSTING_AMMOUNT"
 	Confirmation        Phase = "CONFIRMATION"
@@ -115,6 +121,8 @@ func (s *State) NextPhase() {
 	case InputDate:
 		s.currentPhase = InputDescription
 	case InputDescription:
+		s.currentPhase = InputTags
+	case InputTags:
 		s.currentPhase = InputPostingAccount
 	case InputPostingAccount:
 		s.currentPhase = InputPostingAmmount
@@ -129,8 +137,10 @@ func (s *State) PrevPhase() {
 	switch s.currentPhase {
 	case InputDescription:
 		s.currentPhase = InputDate
-	case InputPostingAccount:
+	case InputTags:
 		s.currentPhase = InputDescription
+	case InputPostingAccount:
+		s.currentPhase = InputTags
 	case InputPostingAmmount:
 		s.currentPhase = InputPostingAccount
 	case Confirmation:
@@ -284,6 +294,30 @@ func (im *InputMetadata) SetMatchingTransactions(x []journal.Transaction) {
 	im.NotifyChange()
 }
 
+// TagText returns the current text for the Tags input
+func (im *InputMetadata) TagText() string { return im.tagsText }
+
+// SetTagText sets the current text for the Tags input
+func (im *InputMetadata) SetTagText(x string) {
+	im.tagsText = x
+	im.NotifyChange()
+}
+
+// SetSelectedTag sets the current text for the selected tag in the
+// context's TagList.
+func (im *InputMetadata) SetSelectedTag(x journal.Tag) {
+	if im.selectedTag != x {
+		im.selectedTag = x
+		im.NotifyChange()
+	}
+}
+
+// SelectedTag returns the current text for the selected tag in the
+// context's TagList.
+func (im *InputMetadata) SelectedTag() journal.Tag {
+	return im.selectedTag
+}
+
 // Reset resets all user input from the InputMetadata
 func (im *InputMetadata) Reset() {
 	im.postingAccountText = ""
@@ -327,4 +361,13 @@ func (jm *JournalMetadata) Accounts() []journal.Account { return jm.accounts }
 func (jm *JournalMetadata) SetAccounts(x []journal.Account) {
 	jm.accounts = x
 	jm.NotifyChange()
+}
+
+// Tags returns all known tags for the journal
+func (jm *JournalMetadata) Tags() []journal.Tag {
+	tags := []journal.Tag{}
+	for _, transaction := range jm.transactions {
+		tags = append(tags, transaction.Tags...)
+	}
+	return utils.Unique(tags)
 }

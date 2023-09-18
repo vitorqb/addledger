@@ -47,6 +47,12 @@ type IInputController interface {
 	OnDescriptionInsertFromContext()
 	OnDescriptionListAction(action listaction.ListAction)
 	OnDescriptionSelectedFromContext()
+
+	// Controls the Tags input
+	OnTagChanged(newText string)
+	OnTagDone(source input.DoneSource)
+	OnTagInsertFromContext()
+	OnTagListAction(action listaction.ListAction)
 }
 
 // InputController implements IInputController.
@@ -282,6 +288,67 @@ func (ic *InputController) OnDescriptionInsertFromContext() {
 	}
 }
 
+func (ic *InputController) OnTagChanged(newText string) {
+	ic.state.InputMetadata.SetTagText(newText)
+}
+
+func (ic *InputController) OnTagDone(source input.DoneSource) {
+	var tag journal.Tag
+
+	// If empty input, move to next phase
+	if ic.state.InputMetadata.TagText() == "" {
+		ic.state.NextPhase()
+		return
+	}
+
+	// Get tag value
+	if source == input.Context {
+		tag = ic.state.InputMetadata.SelectedTag()
+	}
+	if tag.Name == "" {
+		tag, _ = input.TextToTag(ic.state.InputMetadata.TagText())
+	}
+
+	// Skip if no tag - user entered invalid input
+	if tag.Name == "" {
+		return
+	}
+
+	// We have tag - move on to next tag
+	ic.state.JournalEntryInput.AppendTag(tag)
+	ic.state.InputMetadata.SetTagText("")
+	err := ic.eventBus.Send(eventbus.Event{
+		Topic: "input.tag.settext",
+		Data:  "",
+	})
+	if err != nil {
+		logrus.WithError(err).Error("Failed to send event")
+	}
+}
+
+func (ic *InputController) OnTagInsertFromContext() {
+	textFromContext := ic.state.InputMetadata.SelectedTag()
+	event := eventbus.Event{
+		Topic: "input.tag.settext",
+		Data:  textFromContext,
+	}
+	err := ic.eventBus.Send(event)
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
+}
+
+func (ic *InputController) OnTagListAction(action listaction.ListAction) {
+	event := eventbus.Event{
+		Topic: "input.tag.listaction",
+		Data:  action,
+	}
+	err := ic.eventBus.Send(event)
+	if err != nil {
+		logrus.WithError(err).Warn("Failed to send event")
+	}
+}
+
 func (ic *InputController) OnUndo() {
 	switch ic.state.CurrentPhase() {
 	case statemod.InputDate:
@@ -289,12 +356,15 @@ func (ic *InputController) OnUndo() {
 	case statemod.InputDescription:
 		ic.state.JournalEntryInput.ClearDate()
 		ic.state.PrevPhase()
+	case statemod.InputTags:
+		// Clear description and go back
+		ic.state.JournalEntryInput.ClearDescription()
+		ic.state.InputMetadata.SetDescriptionText("")
+		ic.state.PrevPhase()
 	case statemod.InputPostingAccount:
 		ic.state.JournalEntryInput.DeleteCurrentPosting()
 		if ic.state.JournalEntryInput.CountPostings() == 0 {
-			// We don't have any postings - clear description and go back
-			ic.state.JournalEntryInput.ClearDescription()
-			ic.state.InputMetadata.SetDescriptionText("")
+			// We don't have any postings - go back to tags
 			ic.state.PrevPhase()
 		} else {
 			// We have a posting to go back to - clear last ammount and go back

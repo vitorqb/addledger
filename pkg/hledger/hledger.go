@@ -23,6 +23,12 @@ type IClient interface {
 
 var _ IClient = &Client{}
 
+// Client is the default implementation for IClient.
+type Client struct {
+	executable string
+	ledgerFile string
+}
+
 func (c *Client) Accounts() (accounts []journal.Account, err error) {
 	cmdArgs := []string{"accounts"}
 	if c.ledgerFile != "" {
@@ -67,8 +73,14 @@ func (c *Client) Transactions() ([]journal.Transaction, error) {
 		if err != nil {
 			logrus.Warn("Failed to parse postings: %w", err)
 		}
+		tags := []journal.Tag{}
+		for _, tag := range jsontransaction.Tags {
+			tags = append(tags, journal.Tag{Name: tag.Name, Value: tag.Value})
+		}
 		transaction := journal.Transaction{
+			Comment:     jsontransaction.Comment,
 			Description: jsontransaction.Description,
+			Tags:        tags,
 			Date:        date,
 			Posting:     postings,
 		}

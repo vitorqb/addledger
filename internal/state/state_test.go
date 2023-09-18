@@ -40,13 +40,37 @@ func TestState(t *testing.T) {
 			name: "NextPhase",
 			run: func(t *testing.T, c *testcontext) {
 				assert.Equal(t, c.state.CurrentPhase(), InputDate)
+
 				c.state.NextPhase()
 				assert.Equal(t, c.state.CurrentPhase(), InputDescription)
 				assert.Equal(t, 1, c.hookCallCounter)
+
 				c.state.NextPhase()
-				assert.Equal(t, c.state.CurrentPhase(), InputPostingAccount)
+				assert.Equal(t, c.state.CurrentPhase(), InputTags)
 				assert.Equal(t, 2, c.hookCallCounter)
 
+				c.state.NextPhase()
+				assert.Equal(t, c.state.CurrentPhase(), InputPostingAccount)
+				assert.Equal(t, 3, c.hookCallCounter)
+			},
+		},
+		{
+			name: "PrevPhase",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(Confirmation)
+				assert.Equal(t, c.state.CurrentPhase(), Confirmation)
+
+				c.state.PrevPhase()
+				assert.Equal(t, c.state.CurrentPhase(), InputPostingAmmount)
+				assert.Equal(t, 2, c.hookCallCounter)
+
+				c.state.PrevPhase()
+				assert.Equal(t, c.state.CurrentPhase(), InputPostingAccount)
+				assert.Equal(t, 3, c.hookCallCounter)
+
+				c.state.PrevPhase()
+				assert.Equal(t, c.state.CurrentPhase(), InputTags)
+				assert.Equal(t, 4, c.hookCallCounter)
 			},
 		},
 		{
@@ -118,6 +142,16 @@ func TestState(t *testing.T) {
 			},
 		},
 		{
+			name: "Manipulates selected tag",
+			run: func(t *testing.T, c *testcontext) {
+				tag := journal.Tag{Name: "FOO", Value: "BAR"}
+				assert.Empty(t, c.state.InputMetadata.SelectedTag())
+				c.state.InputMetadata.SetSelectedTag(tag)
+				assert.Equal(t, tag, c.state.InputMetadata.SelectedTag())
+				assert.Equal(t, 1, c.hookCallCounter)
+			},
+		},
+		{
 			name: "InputMetadata resets properly",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAccountText("FOO")
@@ -183,6 +217,29 @@ func TestJournalMetadata(t *testing.T) {
 				accs := []journal.Account{"FOO", "BAR"}
 				c.journalMetadata.SetAccounts(accs)
 				assert.Equal(t, accs, c.journalMetadata.Accounts())
+				assert.Equal(t, 1, c.hookCallCounter)
+			},
+		},
+		{
+			name: "Manipulate tags",
+			run: func(t *testing.T, c *testcontext) {
+				assert.Empty(t, c.journalMetadata.Tags())
+				tags := []journal.Tag{{Name: "FOO", Value: "BAR"}}
+				c.journalMetadata.SetTransactions([]journal.Transaction{{Tags: tags}})
+				assert.Equal(t, tags, c.journalMetadata.Tags())
+				assert.Equal(t, 1, c.hookCallCounter)
+			},
+		},
+		{
+			name: "Remove duplicat tags",
+			run: func(t *testing.T, c *testcontext) {
+				assert.Empty(t, c.journalMetadata.Tags())
+				tags := []journal.Tag{{Name: "FOO", Value: "BAR"}}
+				transaction1 := journal.Transaction{Tags: tags}
+				transaction2 := journal.Transaction{Tags: tags}
+				transactions := []journal.Transaction{transaction1, transaction2}
+				c.journalMetadata.SetTransactions(transactions)
+				assert.Equal(t, tags, c.journalMetadata.Tags())
 				assert.Equal(t, 1, c.hookCallCounter)
 			},
 		},

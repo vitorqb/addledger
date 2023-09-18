@@ -4,7 +4,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
-	"github.com/vitorqb/addledger/internal/controller"
+	controllermod "github.com/vitorqb/addledger/internal/controller"
 	display_input "github.com/vitorqb/addledger/internal/display/input"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
@@ -16,7 +16,7 @@ import (
 type (
 	PageName string
 	Input    struct {
-		controller          controller.IInputController
+		controller          controllermod.IInputController
 		state               *statemod.State
 		pages               *tview.Pages
 		dateField           *tview.InputField
@@ -30,18 +30,20 @@ type (
 const (
 	INPUT_DATE            PageName = "INPUT_DATE"
 	INPUT_DESCRIPTION     PageName = "INPUT_DESCRIPTION"
+	INPUT_TAGS            PageName = "INPUT_TAGS"
 	INPUT_POSTING_ACCOUNT PageName = "INPUT_POSTING_ACCOUNT"
 	INPUT_POSTING_AMMOUNT PageName = "INPUT_POSTING_AMMOUNT"
 	INPUT_CONFIRMATION    PageName = "INPUT_CONFIRMATION"
 )
 
 func NewInput(
-	controller controller.IInputController,
+	controller controllermod.IInputController,
 	state *statemod.State,
 	eventbus eventbusmod.IEventBus,
 ) *Input {
 	dateField := DateField(controller)
 	descriptionField := DescriptionField(controller, eventbus)
+	tagsField := NewTagsField(controller, eventbus)
 	postingAccountField := display_input.NewPostingAccount(controller, eventbus)
 	postingAmmountField := PostingAmmountField(controller)
 	inputConfirmationField := inputConfirmationField(controller)
@@ -53,6 +55,7 @@ func NewInput(
 	pages.AddPage(string(INPUT_POSTING_ACCOUNT), postingAccountField, true, false)
 	pages.AddPage(string(INPUT_POSTING_AMMOUNT), postingAmmountField, true, false)
 	pages.AddPage(string(INPUT_CONFIRMATION), inputConfirmationField, true, false)
+	pages.AddPage(string(INPUT_TAGS), tagsField, true, false)
 
 	inputBox := &Input{
 		controller:          controller,
@@ -87,6 +90,10 @@ func (i *Input) refresh() {
 			}
 			i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
 		}
+	case statemod.InputTags:
+		if i.CurrentPageName() != string(INPUT_TAGS) {
+			i.pages.SwitchToPage(string(INPUT_TAGS))
+		}
 	case statemod.InputPostingAccount:
 		if i.CurrentPageName() != string(INPUT_POSTING_ACCOUNT) {
 			i.postingAccountField.SetText("")
@@ -106,7 +113,7 @@ func (i *Input) refresh() {
 }
 
 func DescriptionField(
-	controller controller.IInputController,
+	controller controllermod.IInputController,
 	eventbus eventbus.IEventBus,
 ) *tview.InputField {
 	inputField := tview.NewInputField()
@@ -153,7 +160,7 @@ func DescriptionField(
 	return inputField
 }
 
-func DateField(controller controller.IInputController) *tview.InputField {
+func DateField(controller controllermod.IInputController) *tview.InputField {
 	inputField := tview.NewInputField()
 	inputField.SetLabel("Date: ")
 	inputField.SetChangedFunc(controller.OnDateChanged)
@@ -164,7 +171,7 @@ func DateField(controller controller.IInputController) *tview.InputField {
 	return inputField
 }
 
-func PostingAmmountField(controller controller.IInputController) *tview.InputField {
+func PostingAmmountField(controller controllermod.IInputController) *tview.InputField {
 	postingAmmountField := tview.NewInputField()
 	postingAmmountField.SetLabel("Ammount: ")
 	postingAmmountField.SetChangedFunc(func(text string) {
@@ -184,7 +191,7 @@ func PostingAmmountField(controller controller.IInputController) *tview.InputFie
 	return postingAmmountField
 }
 
-func inputConfirmationField(controller controller.IInputController) *tview.TextView {
+func inputConfirmationField(controller controllermod.IInputController) *tview.TextView {
 	field := tview.NewTextView()
 	field.SetText("Do you want to commit the transaction? [Y/n]")
 	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -214,4 +221,57 @@ func (i *Input) CurrentPageName() string {
 
 func (i *Input) GetContent() tview.Primitive {
 	return i.pages
+}
+
+type TagsField struct {
+	*tview.InputField
+}
+
+func NewTagsField(
+	controller controllermod.IInputController,
+	eventbus eventbus.IEventBus,
+) *TagsField {
+	field := &TagsField{tview.NewInputField()}
+	field.SetLabel("Tags: ")
+	field.SetChangedFunc(controller.OnTagChanged)
+	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		// Arrow down -> move contextual list down
+		case tcell.KeyDown, tcell.KeyCtrlN:
+			controller.OnTagListAction(listaction.NEXT)
+			return nil
+		// Arrow up -> move contextual list up
+		case tcell.KeyUp, tcell.KeyCtrlP:
+			controller.OnTagListAction(listaction.PREV)
+			return nil
+		// If user hit enter, select from context
+		case tcell.KeyEnter:
+			controller.OnTagDone(input.Context)
+			return nil
+		// if Ctrl+J, use input as it is
+		case tcell.KeyCtrlJ:
+			controller.OnTagDone(input.Input)
+			return nil
+		// if Tab then autocompletes
+		case tcell.KeyTab:
+			controller.OnTagInsertFromContext()
+			return nil
+		}
+		return event
+	})
+	err := eventbus.Subscribe(eventbusmod.Subscription{
+		Topic: "input.tag.settext",
+		Handler: func(e eventbusmod.Event) {
+			text, ok := e.Data.(string)
+			if !ok {
+				logrus.WithField("event", e).Error("Received invalid event")
+				return
+			}
+			field.SetText(text)
+		},
+	})
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to subscribe to Topic")
+	}
+	return field
 }

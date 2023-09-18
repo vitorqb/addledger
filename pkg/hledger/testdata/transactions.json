@@ -96,7 +96,7 @@
   },
   {
     "tcode": "",
-    "tcomment": "",
+    "tcomment": "trip:brazil bizum:true",
     "tdate": "2018-12-22",
     "tdate2": null,
     "tdescription": "Bar",
@@ -187,6 +187,15 @@
       }
     ],
     "tstatus": "Unmarked",
-    "ttags": []
+    "ttags": [
+      [
+        "trip",
+        "brazil"
+      ],
+      [
+        "bizum",
+        "true"
+      ]
+    ]
   }
 ]

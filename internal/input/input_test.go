@@ -1,6 +1,7 @@
 package input_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -173,6 +174,30 @@ func TestJournalEntryInput(t *testing.T) {
 				assert.Equal(t, expected, c.input.PostingBalance())
 			},
 		},
+		{
+			"Manipulate tags",
+			func(t *testing.T, c *context) {
+				assert.Equal(t, []journal.Tag{}, c.input.GetTags())
+				tag1 := journal.Tag{Name: "foo", Value: "bar"}
+				tag2 := journal.Tag{Name: "foo2", Value: "bar2"}
+				c.input.AppendTag(tag1)
+				assert.Equal(t, 1, c.onChangeCallCount)
+				tags := c.input.GetTags()
+				assert.Equal(t, []journal.Tag{tag1}, tags)
+				c.input.AppendTag(tag2)
+				assert.Equal(t, 2, c.onChangeCallCount)
+				tags = c.input.GetTags()
+				assert.Equal(t, []journal.Tag{tag1, tag2}, tags)
+				c.input.PopTag()
+				assert.Equal(t, 3, c.onChangeCallCount)
+				tags = c.input.GetTags()
+				assert.Equal(t, []journal.Tag{tag1}, tags)
+				c.input.ClearTags()
+				assert.Equal(t, 4, c.onChangeCallCount)
+				tags = c.input.GetTags()
+				assert.Equal(t, []journal.Tag{}, tags)
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -340,6 +365,20 @@ func TestTextToPosting(t *testing.T) {
 			},
 		},
 		{
+			name: "Simple transaction with tags",
+			input: func(t *testing.T) *JournalEntryInput {
+				out := tu.JournalEntryInput_1(t)
+				tag := journal.Tag{Name: "foo", Value: "bar"}
+				out.AppendTag(tag)
+				return out
+			},
+			expectedTransaction: func(t *testing.T) *journal.Transaction {
+				out := tu.Transaction_1(t)
+				out.Comment = "foo:bar"
+				return out
+			},
+		},
+		{
 			name: "Missing description",
 			input: func(t *testing.T) *JournalEntryInput {
 				out := tu.JournalEntryInput_1(t)
@@ -399,5 +438,81 @@ func TestTextToPosting(t *testing.T) {
 				assert.ErrorContains(t, err, tc.errorMsg)
 			}
 		})
+	}
+}
+
+func TestTagTagToText(t *testing.T) {
+	tag := journal.Tag{
+		Name:  "foo",
+		Value: "bar",
+	}
+	expected := "foo:bar"
+	actual := TagToText(tag)
+	if actual != expected {
+		t.Errorf("Expected %s, got %s", expected, actual)
+	}
+}
+
+func TestTagTextToTag__Good(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected journal.Tag
+	}
+	for _, tc := range []testCase{
+		{
+			input:    "foo:bar",
+			expected: journal.Tag{Name: "foo", Value: "bar"},
+		},
+		{
+			input:    " foo:bar ",
+			expected: journal.Tag{Name: "foo", Value: "bar"},
+		},
+		{
+			input:    "foo-bar:baz",
+			expected: journal.Tag{Name: "foo-bar", Value: "baz"},
+		},
+		{
+			input:    "foo_bar:baz",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz"},
+		},
+		{
+			input:    "foo_bar:baz_123",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz_123"},
+		},
+		{
+			input:    "foo_bar:baz-123",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz-123"},
+		},
+		{
+			input:    "foo_bar:baz-123_abc",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz-123_abc"},
+		},
+	} {
+		tag, err := TextToTag(tc.input)
+		if err != nil {
+			t.Errorf("Expected no error, got %s", err)
+		}
+		if tag != tc.expected {
+			t.Errorf("Expected %s, got %s", tc.expected, tag)
+		}
+	}
+}
+
+func TestTagTextToTag__Bad(t *testing.T) {
+	for _, input := range []string{
+		"foo",
+		"foo:",
+		"foo:bar:baz",
+		"",
+		"foo bar:baz",
+		"foo:bar baz",
+		"some word",
+		"some word:foo",
+	} {
+		_, err := TextToTag(input)
+		if err == nil {
+			t.Errorf(fmt.Sprintf("Expected error, got none: %s", input))
+		}
+
 	}
 }

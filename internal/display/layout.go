@@ -48,11 +48,16 @@ func NewLayout(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create date guesser: %w", err)
 	}
+	tagsPicker, err := NewTagsPicker(state, eventBus)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tags picker: %w", err)
+	}
 	contextWidgets := []ContextWidget{
 		{PageName: "accountList", Widget: accountList},
 		{PageName: "descriptionPicker", Widget: descriptionPicker},
 		{PageName: "ammountGuesser", Widget: ammountGuesser},
 		{PageName: "dateGuesser", Widget: dateGuesser},
+		{PageName: "tagsPicker", Widget: tagsPicker},
 		{PageName: "empty", Widget: tview.NewBox()},
 	}
 

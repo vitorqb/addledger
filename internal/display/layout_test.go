@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
+	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	mock_accountguesser "github.com/vitorqb/addledger/mocks/accountguesser"
@@ -36,6 +37,15 @@ func TestNewLayout(t *testing.T) {
 				c.layout.GetContent().InputHandler()(event, setFocus)
 			},
 		},
+		{
+			name: "Displays the tag picker",
+			run: func(c *testcontext, t *testing.T) {
+				c.state.SetPhase(statemod.InputTags)
+				flex := c.layout.GetContent().(*tview.Flex)
+				_, page := flex.GetItem(2).(*tview.Pages).GetFrontPage()
+				assert.IsType(t, &TagsPicker{}, page)
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -53,7 +63,7 @@ func TestNewLayout(t *testing.T) {
 			// Some controller methods are called on startup
 			c.controller.EXPECT().OnDateChanged("").Times(2)
 			// AccountGuesser is called on startup
-			c.accountGuesser.EXPECT().Guess()
+			c.accountGuesser.EXPECT().Guess().AnyTimes()
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.accountGuesser)
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)
