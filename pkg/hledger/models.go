@@ -1,16 +1,18 @@
 package hledger
 
-// Client is the default implementation for IClient.
-type Client struct {
-	executable string
-	ledgerFile string
+// JSONTag represents a tag in JSON
+type JSONTag struct {
+	Name  string
+	Value string
 }
 
 // JSONTransaction represents a transaction in JSON
 type JSONTransaction struct {
 	Date        string        `json:"tdate"`
 	Description string        `json:"tdescription"`
+	Comment     string        `json:"tcomment"`
 	Postings    []JSONPosting `json:"tpostings"`
+	Tags        []JSONTag     `json:"ttags"`
 }
 
 // JSONPosting represents a posting in JSON

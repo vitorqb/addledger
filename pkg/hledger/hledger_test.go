@@ -34,6 +34,7 @@ var expectedTransactions = []journal.Transaction{
 	{
 		Description: "Supermarket",
 		Date:        time.Date(2018, 12, 1, 0, 0, 0, 0, time.UTC),
+		Tags:        []journal.Tag{},
 		Posting: []journal.Posting{
 			{
 				Account: "liabilities:other",
@@ -54,6 +55,8 @@ var expectedTransactions = []journal.Transaction{
 	{
 		Description: "Bar",
 		Date:        time.Date(2018, 12, 22, 0, 0, 0, 0, time.UTC),
+		Comment:     "trip:brazil bizum:true",
+		Tags:        []journal.Tag{{Name: "trip", Value: "brazil"}, {Name: "bizum", Value: "true"}},
 		Posting: []journal.Posting{
 			{
 				Account: "revenues:salary",

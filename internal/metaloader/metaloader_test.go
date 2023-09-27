@@ -34,6 +34,7 @@ var transactions = []journal.Transaction{
 				},
 			},
 		},
+		Tags: []journal.Tag{{Name: "tag1", Value: "value1"}, {Name: "tag2", Value: "value2"}},
 	},
 }
 
@@ -52,4 +53,5 @@ func TestMetaLoader(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, state.JournalMetadata.Accounts(), accounts)
 	assert.Equal(t, state.JournalMetadata.Transactions(), transactions)
+	assert.Equal(t, state.JournalMetadata.Tags(), transactions[0].Tags)
 }

@@ -73,4 +73,14 @@ func TestPrinter_Print(t *testing.T) {
 		"1993-11-23 Description1\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
 	)
 
+	withCommentTransaction := *tu.Transaction_1(t)
+	withCommentTransaction.Comment = "trip:brazil"
+	RunTest(
+		t,
+		"With comment",
+		withCommentTransaction,
+		0,
+		0,
+		"1993-11-23 Description1  ; trip:brazil\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
+	)
 }

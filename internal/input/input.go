@@ -2,6 +2,7 @@ package input
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -54,6 +55,34 @@ func (i *JournalEntryInput) GetDescription() (string, bool) {
 		}
 	}
 	return "", false
+}
+
+func (i *JournalEntryInput) GetTags() []journal.Tag {
+	if rawValue, found := i.inputs["tags"]; found {
+		if value, ok := rawValue.([]journal.Tag); ok {
+			return value
+		}
+	}
+	return []journal.Tag{}
+}
+
+func (i *JournalEntryInput) AppendTag(x journal.Tag) {
+	tags := i.GetTags()
+	i.inputs["tags"] = append(tags, x)
+	i.NotifyChange()
+}
+
+func (i *JournalEntryInput) PopTag() {
+	tags := i.GetTags()
+	if len(tags) > 0 {
+		i.inputs["tags"] = tags[:len(tags)-1]
+		i.NotifyChange()
+	}
+}
+
+func (i *JournalEntryInput) ClearTags() {
+	delete(i.inputs, "tags")
+	i.NotifyChange()
 }
 
 func (i *JournalEntryInput) ClearDescription() {
@@ -176,6 +205,13 @@ func (jei *JournalEntryInput) Repr() string {
 	if description, found := jei.GetDescription(); found {
 		text += " " + description
 	}
+	tagTexts := []string{}
+	for _, tag := range jei.GetTags() {
+		tagTexts = append(tagTexts, TagToText(tag))
+	}
+	if len(tagTexts) > 0 {
+		text += "  ; " + strings.Join(tagTexts, " ")
+	}
 	i := -1
 	for {
 		i++
@@ -209,6 +245,11 @@ func (jei *JournalEntryInput) ToTransaction() (journal.Transaction, error) {
 		return journal.Transaction{}, fmt.Errorf("missing description")
 	}
 
+	var tagsStr []string
+	for _, tag := range jei.GetTags() {
+		tagsStr = append(tagsStr, TagToText(tag))
+	}
+
 	date, foundDate := jei.GetDate()
 	if !foundDate {
 		return journal.Transaction{}, fmt.Errorf("missing date")
@@ -232,6 +273,7 @@ func (jei *JournalEntryInput) ToTransaction() (journal.Transaction, error) {
 	}
 
 	return journal.Transaction{
+		Comment:     strings.Join(tagsStr, " "),
 		Description: description,
 		Date:        date,
 		Posting:     postings,
@@ -255,6 +297,23 @@ func TextToAmmount(x string) (journal.Ammount, error) {
 		return journal.Ammount{}, fmt.Errorf("invalid format: %w", err)
 	}
 	return journal.Ammount{Commodity: commodity, Quantity: quantity}, nil
+}
+
+var TagRegex = regexp.MustCompile(`^(?P<name>[a-zA-Z0-9\-\_]+):(?P<value>[a-zA-Z0-9\-\_]+)$`)
+
+func TextToTag(s string) (journal.Tag, error) {
+	match := TagRegex.FindStringSubmatch(strings.TrimSpace(s))
+	if len(match) != 3 {
+		return journal.Tag{}, fmt.Errorf("invalid tag: %s", s)
+	}
+	return journal.Tag{
+		Name:  match[1],
+		Value: match[2],
+	}, nil
+}
+
+func TagToText(t journal.Tag) string {
+	return fmt.Sprintf("%s:%s", t.Name, t.Value)
 }
 
 // DoneSource represents the possible sources of value when an user is done entering

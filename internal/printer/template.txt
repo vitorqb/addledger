@@ -1,4 +1,4 @@
-{{.Date.Format "2006-01-02"}} {{.Description}}
+{{.Date.Format "2006-01-02"}} {{.Description}}{{ if ne .Comment ""}}  ; {{.Comment}}{{- end -}}
 {{- range .Posting}}
     {{.Account}}    {{if ne .Ammount.Commodity ""}}{{.Ammount.Commodity}} {{end}}{{.Ammount.Quantity.String}}
 {{- end -}}

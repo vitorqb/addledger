@@ -7,6 +7,8 @@ import (
 	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/input"
+	inputmod "github.com/vitorqb/addledger/internal/input"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -68,6 +70,8 @@ func (c Context) Refresh() {
 		c.pages.SwitchToPage("descriptionPicker")
 	case statemod.InputPostingAmmount:
 		c.pages.SwitchToPage("ammountGuesser")
+	case statemod.InputTags:
+		c.pages.SwitchToPage("tagsPicker")
 	default:
 		c.pages.SwitchToPage("empty")
 	}
@@ -123,4 +127,42 @@ func NewDateGuesser(state *statemod.State) (*tview.TextView, error) {
 	refresh()
 	state.AddOnChangeHook(refresh)
 	return guesser, nil
+}
+
+type TagsPicker struct{ *widgets.ContextualList }
+
+// TagsPicker presents a list of tags to the user, and allows they to select one.
+func NewTagsPicker(
+	state *statemod.State,
+	eventbus eventbusmod.IEventBus,
+) (*TagsPicker, error) {
+	contextListOpts := widgets.ContextualListOptions{
+		GetItemsFunc: func() []string {
+			tagsStr := []string{}
+			for _, tag := range state.JournalMetadata.Tags() {
+				tagsStr = append(tagsStr, input.TagToText(tag))
+			}
+			return tagsStr
+		},
+		SetSelectedFunc: func(x string) {
+			tag, _ := inputmod.TextToTag(x)
+			state.InputMetadata.SetSelectedTag(tag)
+		},
+		GetInputFunc: func() string {
+			return state.InputMetadata.TagText()
+		},
+	}
+	contextualList, err := widgets.NewContextualList(contextListOpts)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create contextual list: %w", err)
+	}
+	state.AddOnChangeHook(func() { contextualList.Refresh() })
+	err = eventbus.Subscribe(eventbusmod.Subscription{
+		Topic:   "input.tag.listaction",
+		Handler: contextualList.HandleActionFromEvent,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to subscribe to eventBus: %w", err)
+	}
+	return &TagsPicker{contextualList}, nil
 }

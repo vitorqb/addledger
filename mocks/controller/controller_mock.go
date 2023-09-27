@@ -215,6 +215,54 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAmmountDone(arg0 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAmmountDone", reflect.TypeOf((*MockIInputController)(nil).OnPostingAmmountDone), arg0)
 }
 
+// OnTagChanged mocks base method.
+func (m *MockIInputController) OnTagChanged(newText string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnTagChanged", newText)
+}
+
+// OnTagChanged indicates an expected call of OnTagChanged.
+func (mr *MockIInputControllerMockRecorder) OnTagChanged(newText interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnTagChanged", reflect.TypeOf((*MockIInputController)(nil).OnTagChanged), newText)
+}
+
+// OnTagDone mocks base method.
+func (m *MockIInputController) OnTagDone(source input.DoneSource) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnTagDone", source)
+}
+
+// OnTagDone indicates an expected call of OnTagDone.
+func (mr *MockIInputControllerMockRecorder) OnTagDone(source interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnTagDone", reflect.TypeOf((*MockIInputController)(nil).OnTagDone), source)
+}
+
+// OnTagInsertFromContext mocks base method.
+func (m *MockIInputController) OnTagInsertFromContext() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnTagInsertFromContext")
+}
+
+// OnTagInsertFromContext indicates an expected call of OnTagInsertFromContext.
+func (mr *MockIInputControllerMockRecorder) OnTagInsertFromContext() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnTagInsertFromContext", reflect.TypeOf((*MockIInputController)(nil).OnTagInsertFromContext))
+}
+
+// OnTagListAction mocks base method.
+func (m *MockIInputController) OnTagListAction(action listaction.ListAction) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnTagListAction", action)
+}
+
+// OnTagListAction indicates an expected call of OnTagListAction.
+func (mr *MockIInputControllerMockRecorder) OnTagListAction(action interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnTagListAction", reflect.TypeOf((*MockIInputController)(nil).OnTagListAction), action)
+}
+
 // OnUndo mocks base method.
 func (m *MockIInputController) OnUndo() {
 	m.ctrl.T.Helper()

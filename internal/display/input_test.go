@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
+	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
@@ -204,6 +205,151 @@ func TestDateField(t *testing.T) {
 			c := new(testcontext)
 			c.controller = mock_controller.NewMockIInputController(ctrl)
 			c.state = statemod.InitialState()
+			tc.run(c, t)
+		})
+	}
+}
+
+func TestInput(t *testing.T) {
+	type testcontext struct {
+		controller *mock_controller.MockIInputController
+		eventbus   *mock_eventbus.MockIEventBus
+		state      *statemod.State
+		input      *Input
+	}
+	type testcase struct {
+		name  string
+		setup func(c *testcontext, t *testing.T)
+		run   func(c *testcontext, t *testing.T)
+	}
+	var testcases = []testcase{
+		{
+			name: "Set up a page for Tags",
+			run: func(c *testcontext, t *testing.T) {
+				c.state.SetPhase(statemod.InputTags)
+				_, page := c.input.GetContent().(*tview.Pages).GetFrontPage()
+				assert.IsType(t, &TagsField{}, page)
+			},
+		},
+		{
+			name: "Tags come after description",
+			run: func(c *testcontext, t *testing.T) {
+				c.state.SetPhase(statemod.InputDescription)
+				c.state.NextPhase()
+				_, page := c.input.GetContent().(*tview.Pages).GetFrontPage()
+				assert.IsType(t, &TagsField{}, page)
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			c := new(testcontext)
+			c.controller = mock_controller.NewMockIInputController(ctrl)
+			c.eventbus = mock_eventbus.NewMockIEventBus(ctrl)
+			c.state = statemod.InitialState()
+
+			// Called during init
+			c.controller.EXPECT().OnDateChanged(gomock.Any()).AnyTimes()
+			c.eventbus.EXPECT().Subscribe(gomock.Any()).AnyTimes()
+
+			if tc.setup != nil {
+				tc.setup(c, t)
+			}
+
+			c.input = NewInput(c.controller, c.state, c.eventbus)
+
+			tc.run(c, t)
+		})
+	}
+}
+
+func TestTagsField(t *testing.T) {
+	type testcontext struct {
+		controller *mock_controller.MockIInputController
+		eventbus   *mock_eventbus.MockIEventBus
+	}
+	type testcase struct {
+		name string
+		run  func(c *testcontext, t *testing.T)
+	}
+	var testcases = []testcase{
+		{
+			name: "Moves contextual list down",
+			run: func(c *testcontext, t *testing.T) {
+				c.eventbus.EXPECT().Subscribe(gomock.Any())
+				c.controller.EXPECT().OnTagListAction(listaction.NEXT)
+				field := NewTagsField(c.controller, c.eventbus)
+				event := tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone)
+				field.InputHandler()(event, fakeSetFocus)
+			},
+		},
+		{
+			name: "Moves contextual list up",
+			run: func(c *testcontext, t *testing.T) {
+				c.eventbus.EXPECT().Subscribe(gomock.Any())
+				c.controller.EXPECT().OnTagListAction(listaction.PREV)
+				field := NewTagsField(c.controller, c.eventbus)
+				event := tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone)
+				field.InputHandler()(event, fakeSetFocus)
+			},
+		},
+		{
+			name: "Calls controller when done (enter)",
+			run: func(c *testcontext, t *testing.T) {
+				c.eventbus.EXPECT().Subscribe(gomock.Any())
+				c.controller.EXPECT().OnTagDone(input.Context)
+				field := NewTagsField(c.controller, c.eventbus)
+				event := tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone)
+				field.InputHandler()(event, fakeSetFocus)
+			},
+		},
+		{
+			name: "Calls controller when done (ctrl+j)",
+			run: func(c *testcontext, t *testing.T) {
+				c.eventbus.EXPECT().Subscribe(gomock.Any())
+				c.controller.EXPECT().OnTagDone(input.Input)
+				field := NewTagsField(c.controller, c.eventbus)
+				event := tcell.NewEventKey(tcell.KeyCtrlJ, ' ', tcell.ModNone)
+				field.InputHandler()(event, fakeSetFocus)
+			},
+		},
+		{
+			name: "Calls controller when insert from context",
+			run: func(c *testcontext, t *testing.T) {
+				c.eventbus.EXPECT().Subscribe(gomock.Any())
+				c.controller.EXPECT().OnTagInsertFromContext()
+				field := NewTagsField(c.controller, c.eventbus)
+				event := tcell.NewEventKey(tcell.KeyTAB, ' ', tcell.ModNone)
+				field.InputHandler()(event, fakeSetFocus)
+			},
+		},
+		{
+			name: "Set text from event",
+			run: func(c *testcontext, t *testing.T) {
+				c.controller.EXPECT().OnTagChanged("FOO")
+				var subscription eventbusmod.Subscription
+				c.eventbus.
+					EXPECT().
+					Subscribe(gomock.Any()).
+					Do(func(s eventbusmod.Subscription) {
+						subscription = s
+					})
+				field := NewTagsField(c.controller, c.eventbus)
+				event := eventbusmod.Event{Topic: "foo", Data: "FOO"}
+				subscription.Handler(event)
+				assert.Equal(t, "FOO", field.GetText())
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			c := new(testcontext)
+			c.controller = mock_controller.NewMockIInputController(ctrl)
+			c.eventbus = mock_eventbus.NewMockIEventBus(ctrl)
 			tc.run(c, t)
 		})
 	}

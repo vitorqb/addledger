@@ -192,7 +192,7 @@ func TestInputController(t *testing.T) {
 				c.state.SetPhase(statemod.InputDescription)
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone()
-				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				foundDescription, _ := c.state.JournalEntryInput.GetDescription()
 				assert.Equal(t, "FOO", foundDescription)
 			},
@@ -382,6 +382,16 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
 				c.controller.OnUndo()
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
+			},
+		},
+		{
+			name: "OnUndo moves the state page back if tags input",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputTags)
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputTags)
+				c.controller.OnUndo()
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
 			},
 		},
 		{
@@ -651,6 +661,69 @@ func TestInputController(t *testing.T) {
 
 				// A new empty posting is there
 				assert.Equal(t, 2, c.state.JournalEntryInput.CountPostings())
+			},
+		},
+		{
+			name: "OnTagsChanged updates input metadata",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnTagChanged("FOO:BAR")
+				assert.Equal(t, "FOO:BAR", c.state.InputMetadata.TagText())
+			},
+		},
+		{
+			name: "OnTagsDone input with valid tag asks for next tag",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.eventBus.EXPECT().Send(eventbus.Event{
+					Topic: "input.tag.settext",
+					Data:  "",
+				})
+				c.state.SetPhase(statemod.InputTags)
+				c.controller.OnTagChanged("FOO:BAR")
+				c.controller.OnTagDone(input.Input)
+				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
+				assert.Equal(t, "", c.state.InputMetadata.TagText())
+				assert.Equal(t, []journal.Tag{journal.Tag{Name: "FOO", Value: "BAR"}}, c.state.JournalEntryInput.GetTags())
+			},
+		},
+		{
+			name: "OnTagsDone context with valid tag asks for next tag",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.eventBus.EXPECT().Send(eventbus.Event{
+					Topic: "input.tag.settext",
+					Data:  "",
+				})
+				c.state.SetPhase(statemod.InputTags)
+				tag := journal.Tag{Name: "FOO", Value: "BAR"}
+				c.state.InputMetadata.SetTagText("F")
+				c.state.InputMetadata.SetSelectedTag(tag)
+				c.controller.OnTagDone(input.Context)
+				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
+				assert.Equal(t, "", c.state.InputMetadata.TagText())
+				assert.Equal(t, []journal.Tag{tag}, c.state.JournalEntryInput.GetTags())
+			},
+		},
+		{
+			name: "OnTagsDone with empty tags go to next phase",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputTags)
+				c.controller.OnTagDone(input.Input)
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+			},
+		},
+		{
+			name: "OnTagsDone with invalid tag does not advance",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputTags)
+				c.controller.OnTagChanged("INVALID_TAG")
+				c.controller.OnTagDone(input.Input)
+				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
+				assert.Equal(t, "INVALID_TAG", c.state.InputMetadata.TagText())
+				assert.Equal(t, []journal.Tag{}, c.state.JournalEntryInput.GetTags())
 			},
 		},
 	}
