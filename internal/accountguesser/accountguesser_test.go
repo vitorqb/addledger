@@ -203,7 +203,6 @@ func TestCompositeAccountGuesser(t *testing.T) {
 				accountGuesserOne := NewMockIAccountGuesser(ctrl)
 				accountGuesserOne.EXPECT().Guess().Return(journal.Account("savings1"), true)
 				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
-				accountGuesserTwo.EXPECT().Guess().Return(journal.Account("savings2"), true)
 				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
 			},
 			success:  true,
@@ -238,6 +237,7 @@ func TestCompositeAccountGuesser(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			var err error
 			c := new(testcontext)
 			composedGuessers := tc.composedGuessers(ctrl)
