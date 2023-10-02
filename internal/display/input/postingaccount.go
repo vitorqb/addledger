@@ -21,7 +21,7 @@ func NewPostingAccount(
 ) *PostingAccountField {
 	field := &PostingAccountField{tview.NewInputField(), controller}
 	field.SetLabel("Account: ")
-
+	field.SetChangedFunc(field.controller.OnPostingAccountChanged)
 	// Custom handling of user input
 	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 
@@ -49,12 +49,6 @@ func NewPostingAccount(
 		}
 		// Else delegates to default
 		return event
-	})
-
-	// When current text changes make sure controller is aware.
-	field.SetChangedFunc(func(text string) {
-		logrus.WithField("text", text).Debug("PostingAccount input change")
-		field.controller.OnPostingAccountChanged(text)
 	})
 
 	// Subscribes to eventbus
