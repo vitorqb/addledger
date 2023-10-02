@@ -76,7 +76,7 @@ func TestPostingAccountField(t *testing.T) {
 		{
 			name: "Calls OnPostingAccountDone on Ctrl+J",
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.EXPECT().OnPostingAccountChanged("FOO").Times(2)
+				c.controller.EXPECT().OnPostingAccountChanged("FOO")
 				c.controller.EXPECT().OnPostingAccountDone(input.Input)
 				c.postingAccount.SetText("FOO")
 				event := tcell.NewEventKey(tcell.KeyCtrlJ, ' ', tcell.ModNone)
