@@ -8,15 +8,16 @@ import (
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display/input"
+	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
 	. "github.com/vitorqb/addledger/mocks/controller"
 )
 
-func TestPostingAccountField(t *testing.T) {
+func TestNewPostingAccountField(t *testing.T) {
 	type testcontext struct {
-		postingAccount *PostingAccountField
+		postingAccount *widgets.InputField
 		controller     *MockIInputController
 		eventbus       eventbusmod.IEventBus
 	}
@@ -76,7 +77,7 @@ func TestPostingAccountField(t *testing.T) {
 		{
 			name: "Calls OnPostingAccountDone on Ctrl+J",
 			run: func(t *testing.T, c *testcontext) {
-				c.controller.EXPECT().OnPostingAccountChanged("FOO").Times(2)
+				c.controller.EXPECT().OnPostingAccountChanged("FOO")
 				c.controller.EXPECT().OnPostingAccountDone(input.Input)
 				c.postingAccount.SetText("FOO")
 				event := tcell.NewEventKey(tcell.KeyCtrlJ, ' ', tcell.ModNone)

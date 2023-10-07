@@ -3,13 +3,12 @@ package display
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/sirupsen/logrus"
 	controllermod "github.com/vitorqb/addledger/internal/controller"
 	display_input "github.com/vitorqb/addledger/internal/display/input"
+	"github.com/vitorqb/addledger/internal/display/widgets"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
-	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -20,8 +19,8 @@ type (
 		state               *statemod.State
 		pages               *tview.Pages
 		dateField           *tview.InputField
-		descriptionField    *tview.InputField
-		postingAccountField *display_input.PostingAccountField
+		descriptionField    *widgets.InputField
+		postingAccountField *widgets.InputField
 		postingAmmountField *tview.InputField
 	}
 )
@@ -115,48 +114,16 @@ func (i *Input) refresh() {
 func DescriptionField(
 	controller controllermod.IInputController,
 	eventbus eventbus.IEventBus,
-) *tview.InputField {
-	inputField := tview.NewInputField()
+) *widgets.InputField {
+	inputField := widgets.NewInputField()
 	inputField.SetLabel("Description: ")
 	inputField.SetChangedFunc(controller.OnDescriptionChanged)
-	inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch key := event.Key(); key {
-		case tcell.KeyDown, tcell.KeyCtrlN:
-			controller.OnDescriptionListAction(listaction.NEXT)
-			return nil
-		// Arrow up -> move contextual list up
-		case tcell.KeyUp, tcell.KeyCtrlP:
-			controller.OnDescriptionListAction(listaction.PREV)
-			return nil
-		// If user hit enter...
-		case tcell.KeyEnter:
-			controller.OnDescriptionSelectedFromContext()
-			return nil
-		// if Ctrl+J, use input as it is
-		case tcell.KeyCtrlJ:
-			controller.OnDescriptionDone()
-			return nil
-		// if Tab then autocompletes
-		case tcell.KeyTab:
-			controller.OnDescriptionInsertFromContext()
-			return nil
-		}
-		return event
+	inputField.LinkContextualList(eventbus, widgets.ContextualListLinkOpts{
+		InputName:           "description",
+		OnListAction:        controller.OnDescriptionListAction,
+		OnDone:              controller.OnDescriptionDone,
+		OnInsertFromContext: controller.OnDescriptionInsertFromContext,
 	})
-	err := eventbus.Subscribe(eventbusmod.Subscription{
-		Topic: "input.description.settext",
-		Handler: func(e eventbusmod.Event) {
-			text, ok := e.Data.(string)
-			if !ok {
-				logrus.WithField("event", e).Error("Received invalid event")
-				return
-			}
-			inputField.SetText(text)
-		},
-	})
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to subscribe to Topic")
-	}
 	return inputField
 }
 
@@ -223,55 +190,18 @@ func (i *Input) GetContent() tview.Primitive {
 	return i.pages
 }
 
-type TagsField struct {
-	*tview.InputField
-}
-
 func NewTagsField(
 	controller controllermod.IInputController,
 	eventbus eventbus.IEventBus,
-) *TagsField {
-	field := &TagsField{tview.NewInputField()}
+) *widgets.InputField {
+	field := widgets.NewInputField()
 	field.SetLabel("Tags: ")
 	field.SetChangedFunc(controller.OnTagChanged)
-	field.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch event.Key() {
-		// Arrow down -> move contextual list down
-		case tcell.KeyDown, tcell.KeyCtrlN:
-			controller.OnTagListAction(listaction.NEXT)
-			return nil
-		// Arrow up -> move contextual list up
-		case tcell.KeyUp, tcell.KeyCtrlP:
-			controller.OnTagListAction(listaction.PREV)
-			return nil
-		// If user hit enter, select from context
-		case tcell.KeyEnter:
-			controller.OnTagDone(input.Context)
-			return nil
-		// if Ctrl+J, use input as it is
-		case tcell.KeyCtrlJ:
-			controller.OnTagDone(input.Input)
-			return nil
-		// if Tab then autocompletes
-		case tcell.KeyTab:
-			controller.OnTagInsertFromContext()
-			return nil
-		}
-		return event
+	field.LinkContextualList(eventbus, widgets.ContextualListLinkOpts{
+		InputName:           "tag",
+		OnListAction:        controller.OnTagListAction,
+		OnDone:              controller.OnTagDone,
+		OnInsertFromContext: controller.OnTagInsertFromContext,
 	})
-	err := eventbus.Subscribe(eventbusmod.Subscription{
-		Topic: "input.tag.settext",
-		Handler: func(e eventbusmod.Event) {
-			text, ok := e.Data.(string)
-			if !ok {
-				logrus.WithField("event", e).Error("Received invalid event")
-				return
-			}
-			field.SetText(text)
-		},
-	})
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to subscribe to Topic")
-	}
 	return field
 }

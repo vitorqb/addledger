@@ -8,6 +8,7 @@ import (
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display"
+	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
@@ -64,7 +65,7 @@ func TestDescriptionField(t *testing.T) {
 		{
 			name: "Dispatches select from context to controller",
 			run: func(c *testcontext, t *testing.T) {
-				c.controller.EXPECT().OnDescriptionSelectedFromContext()
+				c.controller.EXPECT().OnDescriptionDone(input.Context)
 				c.eventbus.EXPECT().Subscribe(gomock.Any())
 				field := DescriptionField(c.controller, c.eventbus)
 
@@ -86,7 +87,7 @@ func TestDescriptionField(t *testing.T) {
 		{
 			name: "Dispatches done to controller",
 			run: func(c *testcontext, t *testing.T) {
-				c.controller.EXPECT().OnDescriptionDone()
+				c.controller.EXPECT().OnDescriptionDone(input.Input)
 				c.eventbus.EXPECT().Subscribe(gomock.Any())
 				field := DescriptionField(c.controller, c.eventbus)
 
@@ -228,7 +229,9 @@ func TestInput(t *testing.T) {
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputTags)
 				_, page := c.input.GetContent().(*tview.Pages).GetFrontPage()
-				assert.IsType(t, &TagsField{}, page)
+				field, ok := page.(*widgets.InputField)
+				assert.True(t, ok)
+				assert.Equal(t, "Tags: ", field.GetLabel())
 			},
 		},
 		{
@@ -237,7 +240,9 @@ func TestInput(t *testing.T) {
 				c.state.SetPhase(statemod.InputDescription)
 				c.state.NextPhase()
 				_, page := c.input.GetContent().(*tview.Pages).GetFrontPage()
-				assert.IsType(t, &TagsField{}, page)
+				field, ok := page.(*widgets.InputField)
+				assert.True(t, ok)
+				assert.Equal(t, "Tags: ", field.GetLabel())
 			},
 		},
 	}
