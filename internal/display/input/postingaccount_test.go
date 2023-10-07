@@ -8,15 +8,16 @@ import (
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display/input"
+	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
 	. "github.com/vitorqb/addledger/mocks/controller"
 )
 
-func TestPostingAccountField(t *testing.T) {
+func TestNewPostingAccountField(t *testing.T) {
 	type testcontext struct {
-		postingAccount *PostingAccountField
+		postingAccount *widgets.InputField
 		controller     *MockIInputController
 		eventbus       eventbusmod.IEventBus
 	}

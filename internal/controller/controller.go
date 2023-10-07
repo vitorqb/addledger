@@ -43,10 +43,9 @@ type IInputController interface {
 
 	// Controls the Description input
 	OnDescriptionChanged(newText string)
-	OnDescriptionDone()
+	OnDescriptionDone(source input.DoneSource)
 	OnDescriptionInsertFromContext()
 	OnDescriptionListAction(action listaction.ListAction)
-	OnDescriptionSelectedFromContext()
 
 	// Controls the Tags input
 	OnTagChanged(newText string)
@@ -257,17 +256,14 @@ func (ic *InputController) OnDescriptionListAction(action listaction.ListAction)
 	}
 }
 
-func (ic *InputController) OnDescriptionSelectedFromContext() {
-
-	// If we have a description from context, use it!
-	if descriptionFromContext := ic.state.InputMetadata.SelectedDescription(); descriptionFromContext != "" {
-		ic.OnDescriptionChanged(descriptionFromContext)
+func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
+	if source == input.Context {
+		// If we have a description from context, use it!
+		if descriptionFromContext := ic.state.InputMetadata.SelectedDescription(); descriptionFromContext != "" {
+			ic.OnDescriptionChanged(descriptionFromContext)
+		}
 	}
 
-	ic.OnDescriptionDone()
-}
-
-func (ic *InputController) OnDescriptionDone() {
 	description := ic.state.InputMetadata.DescriptionText()
 	ic.state.JournalEntryInput.SetDescription(description)
 	if ic.state.JournalEntryInput.CountPostings() == 0 {
@@ -327,7 +323,8 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 }
 
 func (ic *InputController) OnTagInsertFromContext() {
-	textFromContext := ic.state.InputMetadata.SelectedTag()
+	tagFromContext := ic.state.InputMetadata.SelectedTag()
+	textFromContext := input.TagToText(tagFromContext)
 	event := eventbus.Event{
 		Topic: "input.tag.settext",
 		Data:  textFromContext,

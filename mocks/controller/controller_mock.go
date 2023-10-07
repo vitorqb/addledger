@@ -72,15 +72,15 @@ func (mr *MockIInputControllerMockRecorder) OnDescriptionChanged(newText interfa
 }
 
 // OnDescriptionDone mocks base method.
-func (m *MockIInputController) OnDescriptionDone() {
+func (m *MockIInputController) OnDescriptionDone(source input.DoneSource) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnDescriptionDone")
+	m.ctrl.Call(m, "OnDescriptionDone", source)
 }
 
 // OnDescriptionDone indicates an expected call of OnDescriptionDone.
-func (mr *MockIInputControllerMockRecorder) OnDescriptionDone() *gomock.Call {
+func (mr *MockIInputControllerMockRecorder) OnDescriptionDone(source interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionDone", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionDone))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionDone", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionDone), source)
 }
 
 // OnDescriptionInsertFromContext mocks base method.
@@ -105,18 +105,6 @@ func (m *MockIInputController) OnDescriptionListAction(action listaction.ListAct
 func (mr *MockIInputControllerMockRecorder) OnDescriptionListAction(action interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionListAction", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionListAction), action)
-}
-
-// OnDescriptionSelectedFromContext mocks base method.
-func (m *MockIInputController) OnDescriptionSelectedFromContext() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnDescriptionSelectedFromContext")
-}
-
-// OnDescriptionSelectedFromContext indicates an expected call of OnDescriptionSelectedFromContext.
-func (mr *MockIInputControllerMockRecorder) OnDescriptionSelectedFromContext() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionSelectedFromContext", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionSelectedFromContext))
 }
 
 // OnInputConfirmation mocks base method.
