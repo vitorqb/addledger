@@ -151,6 +151,7 @@ func NewTagsPicker(
 		GetInputFunc: func() string {
 			return state.InputMetadata.TagText()
 		},
+		EmptyInputAction: widgets.EmptyInputHideItems,
 	}
 	contextualList, err := widgets.NewContextualList(contextListOpts)
 	if err != nil {
