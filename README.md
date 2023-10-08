@@ -1,6 +1,6 @@
-# HledgerAdd
+# AddLedger
 
-HledgerAdd is a Terminal User Interface (TUI) to help you add new
+AddLedger is a Terminal User Interface (TUI) to help you add new
 entries on [hledger](https://hledger.org/). It's inspired in the
 amazing [hledger-iadd](https://github.com/hpdeifel/hledger-iadd).
 
