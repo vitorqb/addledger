@@ -22,18 +22,42 @@ type ContextualListOptions struct {
 	GetInputFunc func() string
 	// GetDefaultFunc is a function that returns the default value.
 	GetDefaultFunc func() (defaultValue string, success bool)
+	// EmptyInputAction is the action to be taken when the input is empty.
+	EmptyInputAction EmptyInputAction
+}
+
+// EmptyInputAction represents the action to be taken when the input is empty.
+type EmptyInputAction func(c *ContextualList)
+
+// EmptyInputActionHideAll hides all items when input is empty.
+var EmptyInputHideItems EmptyInputAction = func(cl *ContextualList) {
+	cl.Clear()
+}
+
+// EmptyInputActionShowAll shows all items when input is empty.
+var EmptyInputActionShowAll EmptyInputAction = func(cl *ContextualList) {
+	cl.Clear()
+	defaultValue, hasDefault := cl.getDefaultFunc()
+	if hasDefault {
+		cl.AddItem(defaultValue, "", 0, nil)
+	}
+	for _, item := range cl.getItemsFunc() {
+		cl.AddItem(item, "", 0, nil)
+	}
 }
 
 // ContextualList is a List widget for the context that allows the user to
 // select an entry from it for an input.
 type ContextualList struct {
 	*tview.List
-	inputCache      string
-	defaultCache    string
-	getItemsFunc    func() []string
-	getInputFunc    func() string
-	setSelectedFunc func(string)
-	getDefaultFunc  func() (defaultValue string, success bool)
+	inputCache       string
+	defaultCache     string
+	getItemsFunc     func() []string
+	getInputFunc     func() string
+	setSelectedFunc  func(string)
+	getDefaultFunc   func() (defaultValue string, success bool)
+	emptyInputAction EmptyInputAction
+	initialized      bool
 }
 
 // NewContextualList creates a new ContextualList. `getItemsFunc` is a
@@ -52,30 +76,28 @@ func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
 	if options.GetDefaultFunc == nil {
 		options.GetDefaultFunc = func() (string, bool) { return "", false }
 	}
+	if options.EmptyInputAction == nil {
+		options.EmptyInputAction = EmptyInputActionShowAll
+	}
 
 	// Builds list
 	list := &ContextualList{
-		List:            tview.NewList(),
-		inputCache:      "",
-		defaultCache:    "",
-		getItemsFunc:    options.GetItemsFunc,
-		getInputFunc:    options.GetInputFunc,
-		setSelectedFunc: options.SetSelectedFunc,
-		getDefaultFunc:  options.GetDefaultFunc,
+		List:             tview.NewList(),
+		inputCache:       "",
+		defaultCache:     "",
+		getItemsFunc:     options.GetItemsFunc,
+		getInputFunc:     options.GetInputFunc,
+		setSelectedFunc:  options.SetSelectedFunc,
+		getDefaultFunc:   options.GetDefaultFunc,
+		emptyInputAction: options.EmptyInputAction,
+		initialized:      false,
 	}
 	list.ShowSecondaryText(false)
 	list.SetChangedFunc(func(_ int, mainText, _ string, _ rune) {
 		logrus.WithField("text", mainText).Debug("ContextualList changed")
 		list.setSelectedFunc(mainText)
 	})
-	if list.getDefaultFunc != nil {
-		if defaultValue, success := list.getDefaultFunc(); success {
-			list.AddItem(defaultValue, "", 0, nil)
-		}
-	}
-	for _, item := range list.getItemsFunc() {
-		list.AddItem(item, "", 0, nil)
-	}
+	list.Refresh()
 	return list, nil
 }
 
@@ -125,8 +147,13 @@ func (cl *ContextualList) Refresh() {
 		}
 	}()
 
+	// Always mark as initialized after the first refresh
+	defer func() {
+		cl.initialized = true
+	}()
+
 	// Cache hits
-	if input == cl.inputCache {
+	if cl.initialized && input == cl.inputCache {
 
 		// If input is empty, we need to check whether the default changed!
 		if input == "" {
@@ -139,7 +166,7 @@ func (cl *ContextualList) Refresh() {
 
 			// Default changed, so we need to print items again.
 			cl.defaultCache = defaultValue
-			cl.printItemsEmptyInput()
+			cl.emptyInputAction(cl)
 			return
 		}
 
@@ -150,9 +177,9 @@ func (cl *ContextualList) Refresh() {
 	// No cache hit - new input!
 	cl.inputCache = input
 
-	// If the input is empty, handle default and don't do any match.
+	// If the input is empty, dispatch to the empty input action
 	if input == "" {
-		cl.printItemsEmptyInput()
+		cl.emptyInputAction(cl)
 		return
 	}
 
@@ -162,16 +189,5 @@ func (cl *ContextualList) Refresh() {
 	sort.Sort(matches)
 	for _, match := range matches {
 		cl.AddItem(match.Target, "", 0, nil)
-	}
-}
-
-func (cl *ContextualList) printItemsEmptyInput() {
-	cl.Clear()
-	defaultValue, hasDefault := cl.getDefaultFunc()
-	if hasDefault {
-		cl.AddItem(defaultValue, "", 0, nil)
-	}
-	for _, item := range cl.getItemsFunc() {
-		cl.AddItem(item, "", 0, nil)
 	}
 }

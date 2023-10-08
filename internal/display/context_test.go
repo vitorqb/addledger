@@ -169,10 +169,23 @@ func TestTagsPicker(t *testing.T) {
 	}
 	var testcases = []testcase{
 		{
-			name: "Displays all tags",
+			name: "Displays no tags when input is empty",
 			run: func(c *testcontext, t *testing.T) {
 				transaction := testutils.Transaction_3(t)
 				c.state.JournalMetadata.AppendTransaction(*transaction)
+				tagsPicker, err := NewTagsPicker(c.state, c.eventBus)
+				if err != nil {
+					t.Fatal(err)
+				}
+				assert.Equal(t, 0, tagsPicker.GetItemCount())
+			},
+		},
+		{
+			name: "Displays matching tags when has input",
+			run: func(c *testcontext, t *testing.T) {
+				transaction := testutils.Transaction_3(t)
+				c.state.JournalMetadata.AppendTransaction(*transaction)
+				c.state.InputMetadata.SetTagText("trip:")
 				tagsPicker, err := NewTagsPicker(c.state, c.eventBus)
 				if err != nil {
 					t.Fatal(err)
@@ -195,7 +208,6 @@ func TestTagsPicker(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				assert.Equal(t, 2, tagsPicker.GetItemCount())
 
 				c.state.InputMetadata.SetTagText("cccc:d")
 				assert.Equal(t, 1, tagsPicker.GetItemCount())

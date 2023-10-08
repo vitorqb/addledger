@@ -63,6 +63,7 @@ func TestContextualList(t *testing.T) {
 			name: "Refresh",
 			run: func(t *testing.T, c *testcontext) {
 				assert.Equal(t, c.contextualList.GetItemCount(), 3)
+				c.input = "T"
 				c.contextualList.Refresh()
 				assert.Equal(t, c.contextualList.GetItemCount(), 2)
 				c.input = "THREE"
@@ -75,6 +76,7 @@ func TestContextualList(t *testing.T) {
 			name: "Refresh with empty list sets empty string",
 			run: func(t *testing.T, c *testcontext) {
 				assert.Equal(t, c.contextualList.GetItemCount(), 3)
+				c.input = "T"
 				c.contextualList.Refresh()
 				assert.Equal(t, c.contextualList.GetItemCount(), 2)
 				c.input = "adjsalkkjsd"
@@ -143,6 +145,7 @@ func TestContextualList(t *testing.T) {
 			name: "Sets selected item on Refresh",
 			run: func(t *testing.T, c *testcontext) {
 				c.selected = ""
+				c.input = "TWO"
 				c.contextualList.Refresh()
 				assert.Equal(t, "TWO", c.selected)
 				// Note: run again because of cache
@@ -151,12 +154,30 @@ func TestContextualList(t *testing.T) {
 				assert.Equal(t, "TWO", c.selected)
 			},
 		},
+		{
+			name: "Should hide items on empty input if set",
+			setupOptions: func(o *ContextualListOptions) {
+				o.EmptyInputAction = EmptyInputHideItems
+			},
+			run: func(t *testing.T, c *testcontext) {
+				assert.Equal(t, 0, c.contextualList.GetItemCount())
+				c.input = "T"
+				c.contextualList.Refresh()
+				assert.Equal(t, 2, c.contextualList.GetItemCount())
+				c.input = "TWO"
+				c.contextualList.Refresh()
+				assert.Equal(t, 1, c.contextualList.GetItemCount())
+				c.input = ""
+				c.contextualList.Refresh()
+				assert.Equal(t, 0, c.contextualList.GetItemCount())
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			var err error
 			c := new(testcontext)
-			c.input = "T"
+			c.input = ""
 			c.options = &ContextualListOptions{
 				GetItemsFunc: func() []string {
 					return []string{"THREE", "TWO", "ONE"}
