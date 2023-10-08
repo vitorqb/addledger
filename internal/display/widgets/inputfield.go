@@ -36,6 +36,8 @@ type ContextualListLinkOpts struct {
 
 // ConnectContextualList connects the input field to a contextual list.
 func (i *InputField) LinkContextualList(eventbus eventbusmod.IEventBus, options ContextualListLinkOpts) {
+	// Get the default input capture
+	defaultInputCapture := i.InputField.GetInputCapture()
 	// Handle input and dispatches to proper handlers
 	i.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -46,8 +48,10 @@ func (i *InputField) LinkContextualList(eventbus eventbusmod.IEventBus, options 
 			options.OnListAction(listaction.PREV)
 			return nil
 		case tcell.KeyEnter:
-			options.OnDone(input.Context)
-			return nil
+			if event.Modifiers() == tcell.ModNone {
+				options.OnDone(input.Context)
+				return nil
+			}
 		case tcell.KeyCtrlJ:
 			options.OnDone(input.Input)
 			return nil
@@ -55,7 +59,7 @@ func (i *InputField) LinkContextualList(eventbus eventbusmod.IEventBus, options 
 			options.OnInsertFromContext()
 			return nil
 		}
-		return event
+		return defaultInputCapture(event)
 	})
 
 	// Subscribes to eventbus

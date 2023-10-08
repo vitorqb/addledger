@@ -84,6 +84,14 @@ func TestNewPostingAccountField(t *testing.T) {
 				c.postingAccount.InputHandler()(event, func(tview.Primitive) {})
 			},
 		},
+		{
+			name: "Dispatches to OnFinishPosting on ctrl+Enter",
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.EXPECT().OnFinishPosting()
+				event := tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModAlt)
+				c.postingAccount.InputHandler()(event, func(tview.Primitive) {})
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {

@@ -107,6 +107,18 @@ func (mr *MockIInputControllerMockRecorder) OnDescriptionListAction(action inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionListAction", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionListAction), action)
 }
 
+// OnFinishPosting mocks base method.
+func (m *MockIInputController) OnFinishPosting() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnFinishPosting")
+}
+
+// OnFinishPosting indicates an expected call of OnFinishPosting.
+func (mr *MockIInputControllerMockRecorder) OnFinishPosting() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnFinishPosting", reflect.TypeOf((*MockIInputController)(nil).OnFinishPosting))
+}
+
 // OnInputConfirmation mocks base method.
 func (m *MockIInputController) OnInputConfirmation() {
 	m.ctrl.T.Helper()

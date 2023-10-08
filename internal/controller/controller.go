@@ -40,6 +40,7 @@ type IInputController interface {
 	OnPostingAccountDone(source input.DoneSource)
 	OnPostingAccountInsertFromContext()
 	OnPostingAccountListAcction(action listaction.ListAction)
+	OnFinishPosting()
 
 	// Controls the Description input
 	OnDescriptionChanged(newText string)
@@ -135,6 +136,23 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 
 	// Go to ammount
 	ic.state.NextPhase()
+}
+
+// OnFinishPosting may be called by the user to signal it is done entering
+// postings. This is useful when the user is entering a transaction with
+// multiple commodities, since we can't know when the user is done entering
+// based on the pending balance.
+func (ic *InputController) OnFinishPosting() {
+	if ic.state.JournalEntryInput.CountPostings() == 0 {
+		return
+	}
+	singleCurrency := ic.state.JournalEntryInput.HasSingleCurrency()
+	zeroBalance := ic.state.JournalEntryInput.PostingHasZeroBalance()
+	if (singleCurrency && zeroBalance) || !singleCurrency {
+		// Need to clear the last posting, since it's empty
+		ic.state.JournalEntryInput.DeleteCurrentPosting()
+		ic.state.SetPhase(statemod.Confirmation)
+	}
 }
 
 // OnPostingAccountInsertFromContext inserts the text from the context to the
