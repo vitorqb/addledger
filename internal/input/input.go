@@ -146,6 +146,11 @@ func (i *JournalEntryInput) PostingHasZeroBalance() bool {
 	return true
 }
 
+// HasSingleCurrency returns true if all postings have the same currency
+func (i *JournalEntryInput) HasSingleCurrency() bool {
+	return len(i.PostingBalance()) <= 1
+}
+
 func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
 	if postingsInputs, found := i.inputs["postings"]; found {
 		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
@@ -236,7 +241,7 @@ func (jei *JournalEntryInput) Repr() string {
 
 // ToTransaction transforms a JournalEntryInput into a journal.Transaction.
 func (jei *JournalEntryInput) ToTransaction() (journal.Transaction, error) {
-	if !jei.PostingHasZeroBalance() {
+	if jei.HasSingleCurrency() && !jei.PostingHasZeroBalance() {
 		return journal.Transaction{}, fmt.Errorf("postings are not balanced")
 	}
 

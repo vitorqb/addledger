@@ -726,6 +726,68 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, []journal.Tag{}, c.state.JournalEntryInput.GetTags())
 			},
 		},
+		{
+			name: "OnFinishPosting with valid multi currency",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputPostingAccount)
+
+				// First posting
+				firstAmmount := anAmmount
+				firstAmmount.Commodity = "EUR"
+				c.state.InputMetadata.SetPostingAccountText("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Second posting
+				secondAmmount := anAmmount
+				secondAmmount.Commodity = "USD"
+				c.state.InputMetadata.SetPostingAccountText("BAR2")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.state.InputMetadata.SetPostingAmmountInput(secondAmmount)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Because of multi-currencies, should not advance to next phase
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+
+				// The user should be able to force the next phase
+				c.controller.OnFinishPosting()
+				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
+				assert.Equal(t, 2, c.state.JournalEntryInput.CountPostings())
+			},
+		},
+		{
+			name: "OnFinishPosting ignores if pending balance",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputPostingAccount)
+
+				// First posting
+				firstAmmount := anAmmount
+				firstAmmount.Commodity = "EUR"
+				c.state.InputMetadata.SetPostingAccountText("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Second posting
+				secondAmmount := anAmmount
+				secondAmmount.Quantity.Add(decimal.NewFromFloat(1))
+				c.state.InputMetadata.SetPostingAccountText("BAR2")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.state.InputMetadata.SetPostingAmmountInput(secondAmmount)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Because of pending balance, should not advance to next phase
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+
+				// The user should NOT be able to force the next phase
+				c.controller.OnFinishPosting()
+				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
+				assert.Equal(t, 3, c.state.JournalEntryInput.CountPostings()) // 2 + 1 incomplete
+			},
+		},
 	}
 
 	for _, tc := range testcases {

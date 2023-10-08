@@ -65,6 +65,11 @@ $ addledger
 
 Note that the file must exist.
 
+### Entering transactions with multiple commodities
+
+If you want to enter a transaction with many commodities, in order to
+finish entering posting accounts, press `ALT+Enter`.
+
 ## Development
 
 ### Setup
