@@ -119,6 +119,30 @@ func TestLinkContextualList(t *testing.T) {
 				assert.Equal(c.t, "FOO", c.inputField.GetText())
 			},
 		},
+		{
+			name: "should call default input capture when the user presses a key that is not handled",
+			run: func(c *testcontext) {
+				listLinkOpts := c.contextualLinkMock.GetLinkOpts()
+				var defaultInputCaptureCalled bool
+				c.inputField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+					defaultInputCaptureCalled = true
+					return event
+				})
+				c.inputField.LinkContextualList(c.eventbus, listLinkOpts)
+				c.inputField.InputHandler()(tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModNone), fakeSetFocus)
+				assert.True(c.t, defaultInputCaptureCalled)
+			},
+		},
+		{
+			name: "should not call default input capture if it is nil",
+			run: func(c *testcontext) {
+				listLinkOpts := c.contextualLinkMock.GetLinkOpts()
+				c.inputField.SetInputCapture(nil)
+				c.inputField.LinkContextualList(c.eventbus, listLinkOpts)
+				c.inputField.InputHandler()(tcell.NewEventKey(tcell.KeyRune, 'r', tcell.ModNone), fakeSetFocus)
+				// should not panic
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

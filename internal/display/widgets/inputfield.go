@@ -59,7 +59,10 @@ func (i *InputField) LinkContextualList(eventbus eventbusmod.IEventBus, options 
 			options.OnInsertFromContext()
 			return nil
 		}
-		return defaultInputCapture(event)
+		if defaultInputCapture != nil {
+			event = defaultInputCapture(event)
+		}
+		return event
 	})
 
 	// Subscribes to eventbus
