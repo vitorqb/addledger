@@ -9,10 +9,19 @@ import (
 	"github.com/vitorqb/addledger/internal/testutils"
 )
 
+type MockLoader struct{}
+
+var _ ILoader = (*MockLoader)(nil)
+
+func (l *MockLoader) JournalFile(_ string) (string, error) {
+	return "/path/to/journal/from/mock", nil
+}
+
 func TestLoad(t *testing.T) {
 
 	type testcontext struct {
 		flagSet *pflag.FlagSet
+		loader  ILoader
 	}
 
 	type testcase struct {
@@ -22,16 +31,9 @@ func TestLoad(t *testing.T) {
 
 	testcases := []testcase{
 		{
-			name: "Missing destfile",
-			run: func(t *testing.T, c *testcontext) {
-				_, err := Load(c.flagSet, []string{})
-				assert.ErrorContains(t, err, "missing destination file")
-			},
-		},
-		{
 			name: "Minimal working example",
 			run: func(t *testing.T, c *testcontext) {
-				config, err := Load(c.flagSet, []string{"-dfoo"})
+				config, err := Load(c.flagSet, []string{"-dfoo"}, c.loader)
 				assert.Nil(t, err)
 				assert.Equal(t, config.DestFile, "foo")
 				assert.Equal(t, config.HLedgerExecutable, "hledger")
@@ -43,7 +45,7 @@ func TestLoad(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				cleanup := testutils.Setenv(t, "ADDLEDGER_DESTFILE", "foo")
 				defer cleanup()
-				config, err := Load(c.flagSet, []string{})
+				config, err := Load(c.flagSet, []string{}, c.loader)
 				assert.Nil(t, err)
 				assert.Equal(t, config.DestFile, "foo")
 			},
@@ -58,7 +60,7 @@ func TestLoad(t *testing.T) {
 					"--ledger-file=bar",
 					"--hledger-executable=baz",
 					"--printer-line-break-before=3",
-				})
+				}, c.loader)
 				assert.Nil(t, err)
 				assert.Equal(t, config.DestFile, "foo")
 				assert.Equal(t, config.HLedgerExecutable, "baz")
@@ -76,11 +78,27 @@ func TestLoad(t *testing.T) {
 					"ADDLEDGER_LEDGER_FILE", "foo3",
 				)
 				defer cleanup()
-				config, err := Load(c.flagSet, []string{})
+				config, err := Load(c.flagSet, []string{}, c.loader)
 				assert.Nil(t, err)
 				assert.Equal(t, "foo1", config.DestFile)
 				assert.Equal(t, "foo2", config.HLedgerExecutable)
 				assert.Equal(t, "foo3", config.LedgerFile)
+			},
+		},
+		{
+			name: "Defaults DestFile to LedgerFile",
+			run: func(t *testing.T, c *testcontext) {
+				config, err := Load(c.flagSet, []string{"--ledger-file=foo"}, c.loader)
+				assert.Nil(t, err)
+				assert.Equal(t, config.DestFile, "foo")
+			},
+		},
+		{
+			name: "Defaults DestFile to LedgerFile from hledger executable",
+			run: func(t *testing.T, c *testcontext) {
+				config, err := Load(c.flagSet, []string{}, c.loader)
+				assert.Nil(t, err)
+				assert.Equal(t, config.DestFile, "/path/to/journal/from/mock")
 			},
 		},
 	}
@@ -95,6 +113,7 @@ func TestLoad(t *testing.T) {
 			)
 			defer cleanup()
 			c.flagSet = pflag.NewFlagSet("foo", pflag.ContinueOnError)
+			c.loader = new(MockLoader)
 			SetupFlags(c.flagSet)
 			testcase.run(t, c)
 		})

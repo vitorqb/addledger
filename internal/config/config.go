@@ -32,16 +32,16 @@ type Config struct {
 }
 
 func SetupFlags(flagSet *pflag.FlagSet) {
-	flagSet.StringP("destfile", "d", "", "Destination file (where we will write)")
+	flagSet.StringP("destfile", "d", "", "Destination file (where we will write). Defaults to the ledger file.")
 	flagSet.String("hledger-executable", "hledger", "Executable to use for HLedger")
-	flagSet.String("ledger-file", "", "Ledger File to pass to HLedger commands")
+	flagSet.String("ledger-file", "", "Ledger File to pass to HLedger commands. If empty let ledger executable find it.")
 	flagSet.String("logfile", "", "File where to send log output. Empty for stderr.")
 	flagSet.String("loglevel", "WARN", "Level of logger. Defaults to warning.")
 	flagSet.Int("printer-line-break-before", 1, "Number of line breaks to print before a transaction.")
 	flagSet.Int("printer-line-break-after", 1, "Number of line breaks to print after a transaction.")
 }
 
-func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
+func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error) {
 	// Parse flags
 	err := flagSet.Parse(args)
 	if err != nil {
@@ -80,6 +80,14 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 		},
 	}
 
+	// Load dynamic values
+	if config.DestFile == "" {
+		config.DestFile = config.LedgerFile
+	}
+	if config.DestFile == "" {
+		config.DestFile, err = loader.JournalFile(config.HLedgerExecutable)
+	}
+
 	// Validate
 	if config.DestFile == "" {
 		return config, fmt.Errorf("missing destination file!")
@@ -89,6 +97,7 @@ func Load(flagSet *pflag.FlagSet, args []string) (*Config, error) {
 }
 
 func LoadFromCommandLine() (*Config, error) {
+	loader := NewLoader()
 	SetupFlags(pflag.CommandLine)
-	return Load(pflag.CommandLine, os.Args)
+	return Load(pflag.CommandLine, os.Args, loader)
 }
