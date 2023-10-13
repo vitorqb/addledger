@@ -375,52 +375,6 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "OnUndo moves the state page back",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.state.NextPhase()
-				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
-				c.controller.OnUndo()
-				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
-			},
-		},
-		{
-			name: "OnUndo moves the state page back if tags input",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.state.SetPhase(statemod.InputTags)
-				assert.Equal(t, c.state.CurrentPhase(), statemod.InputTags)
-				c.controller.OnUndo()
-				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
-			},
-		},
-		{
-			name: "OnUndo cleans up the last user input",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
-				c.state.NextPhase()
-				c.controller.OnUndo()
-				_, ok := c.state.JournalEntryInput.GetDate()
-				assert.False(t, ok)
-			},
-		},
-		{
-			name: "OnUndo cleans up the description",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
-				c.state.NextPhase()
-				c.state.InputMetadata.SetSelectedDescription("FOO")
-				c.controller.OnDescriptionDone(input.Context)
-				c.controller.OnUndo()
-				_, ok := c.state.JournalEntryInput.GetDescription()
-				assert.False(t, ok)
-				metadataDescription := c.state.InputMetadata.DescriptionText()
-				assert.Equal(t, "", metadataDescription)
-			},
-		},
-		{
 			name: "OnDescriptionSelectedFromContext ignores context if empty",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
@@ -446,17 +400,6 @@ func TestInputController(t *testing.T) {
 				description, ok := c.state.JournalEntryInput.GetDescription()
 				assert.True(t, ok)
 				assert.Equal(t, "FOO", description)
-			},
-		},
-		{
-			name: "OnUndo with posting account ",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
-				c.state.NextPhase()
-				c.controller.OnUndo()
-				_, ok := c.state.JournalEntryInput.GetDate()
-				assert.False(t, ok)
 			},
 		},
 		{
@@ -493,33 +436,6 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, "BAR", secondPostingAccount)
 				secondPostingAmmount, _ := secondPosting.GetAmmount()
 				assert.Equal(t, anotherAmmountNeg, secondPostingAmmount)
-			},
-		},
-		{
-			name: "Undo after first posting is entered ",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
-				c.controller.OnDateChanged("2022-01-01")
-				c.controller.OnDateDone()
-				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
-				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
-				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
-
-				// Must have 2 postings - the filled one and an empty one.
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
-				assert.Equal(t, c.state.CurrentPhase(), statemod.InputPostingAccount)
-
-				// Undo
-				c.controller.OnUndo()
-
-				// Must not have a single posting without value
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 1)
-				_, ammountFound := c.state.JournalEntryInput.CurrentPosting().GetAmmount()
-				assert.False(t, ammountFound)
 			},
 		},
 		{
@@ -600,42 +516,6 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "User undo on confirmation page",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
-				c.controller.OnDateChanged("2022-01-01")
-				c.controller.OnDateDone()
-				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
-				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
-				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
-				c.controller.OnPostingAccountChanged("BAR2")
-				c.controller.OnPostingAccountDone(input.Input)
-				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
-				c.controller.OnPostingAmmountDone(input.Input)
-
-				// Should have gone to confirmation page
-				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
-
-				// Should have 2 filled postings (empty one deleted)
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
-
-				// User decides to undo
-				c.controller.OnUndo()
-
-				// Should have 2 filled postings
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
-				lastPosting := c.state.JournalEntryInput.CurrentPosting()
-				acc, _ := lastPosting.GetAccount()
-				assert.Equal(t, "BAR2", acc)
-				ammount, _ := lastPosting.GetAmmount()
-				assert.Equal(t, anotherAmmountNeg, ammount)
-			},
-		},
-		{
 			name: "OnPostingAmmountDone",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
@@ -684,7 +564,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnTagDone(input.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "", c.state.InputMetadata.TagText())
-				assert.Equal(t, []journal.Tag{journal.Tag{Name: "FOO", Value: "BAR"}}, c.state.JournalEntryInput.GetTags())
+				assert.Equal(t, []journal.Tag{{Name: "FOO", Value: "BAR"}}, c.state.JournalEntryInput.GetTags())
 			},
 		},
 		{
@@ -805,6 +685,177 @@ func TestInputController(t *testing.T) {
 			c.printer = printermod.New(2, 2)
 			opts := tc.opts(t, c)
 			c.controller, c.initError = NewController(c.state, opts...)
+			tc.run(t, c)
+		})
+	}
+}
+
+func TestInputController__OnUndo(t *testing.T) {
+
+	type testcontext struct {
+		state      *statemod.State
+		controller *InputController
+		eventBus   *MockIEventBus
+	}
+
+	type testcase struct {
+		name string
+		run  func(t *testing.T, c *testcontext)
+	}
+
+	var testcases = []testcase{
+		{
+			name: "OnUndo moves the state page back",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.NextPhase()
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
+				c.controller.OnUndo()
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
+			},
+		},
+		{
+			name: "OnUndo moves the state page back if tags input",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputTags)
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputTags)
+				c.controller.OnUndo()
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDescription)
+			},
+		},
+		{
+			name: "OnUndo cleans up the last user input",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.NextPhase()
+				c.controller.OnUndo()
+				_, ok := c.state.JournalEntryInput.GetDate()
+				assert.False(t, ok)
+			},
+		},
+		{
+			name: "OnUndo cleans up the description",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.NextPhase()
+				c.state.InputMetadata.SetSelectedDescription("FOO")
+				c.controller.OnDescriptionDone(input.Context)
+				c.controller.OnUndo()
+				_, ok := c.state.JournalEntryInput.GetDescription()
+				assert.False(t, ok)
+				metadataDescription := c.state.InputMetadata.DescriptionText()
+				assert.Equal(t, "", metadataDescription)
+			},
+		},
+		{
+			name: "OnUndo cleans up date ",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.NextPhase()
+				c.controller.OnUndo()
+				_, ok := c.state.JournalEntryInput.GetDate()
+				assert.False(t, ok)
+			},
+		},
+		{
+			name: "OnUndo cleans up tags",
+			run: func(t *testing.T, c *testcontext) {
+				c.eventBus.EXPECT().Send(eventbus.Event{
+					Topic: "input.tag.settext",
+					Data:  "",
+				})
+				tag := journal.Tag{Name: "FOO", Value: "BAR"}
+				c.state.SetPhase(statemod.InputTags)
+				c.state.InputMetadata.SetTagText("FOO")
+				c.state.InputMetadata.SetSelectedTag(tag)
+				// First Done call saves tag
+				c.controller.OnTagDone(input.Context)
+				// Second Done call moves to next phase
+				c.controller.OnTagDone(input.Input)
+				assert.Equal(t, []journal.Tag{tag}, c.state.JournalEntryInput.GetTags())
+				c.controller.OnUndo()
+				assert.Equal(t, []journal.Tag{}, c.state.JournalEntryInput.GetTags())
+			},
+		},
+		{
+			name: "Undo after first posting is entered ",
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
+				c.controller.OnDescriptionChanged("FOO")
+				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnPostingAccountChanged("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Must have 2 postings - the filled one and an empty one.
+				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				assert.Equal(t, c.state.CurrentPhase(), statemod.InputPostingAccount)
+
+				// Undo
+				c.controller.OnUndo()
+
+				// Must not have a single posting without value
+				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 1)
+				_, ammountFound := c.state.JournalEntryInput.CurrentPosting().GetAmmount()
+				assert.False(t, ammountFound)
+			},
+		},
+		{
+			name: "User undo on confirmation page",
+			run: func(t *testing.T, c *testcontext) {
+				c.controller.OnDateChanged("2022-01-01")
+				c.controller.OnDateDone()
+				c.controller.OnDescriptionChanged("FOO")
+				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnPostingAccountChanged("BAR")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAccountChanged("BAR2")
+				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
+				c.controller.OnPostingAmmountDone(input.Input)
+
+				// Should have gone to confirmation page
+				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
+
+				// Should have 2 filled postings (empty one deleted)
+				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+
+				// User decides to undo
+				c.controller.OnUndo()
+
+				// Should have 2 filled postings
+				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				lastPosting := c.state.JournalEntryInput.CurrentPosting()
+				acc, _ := lastPosting.GetAccount()
+				assert.Equal(t, "BAR2", acc)
+				ammount, _ := lastPosting.GetAmmount()
+				assert.Equal(t, anotherAmmountNeg, ammount)
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			c := new(testcontext)
+			var bytesBuffer bytes.Buffer
+			c.state = statemod.InitialState()
+			c.eventBus = NewMockIEventBus(ctrl)
+			dateGuesser := NewMockIDateGuesser(ctrl)
+			dateGuesser.EXPECT().Guess(gomock.Any()).AnyTimes()
+			c.controller, err = NewController(c.state,
+				WithOutput(&bytesBuffer),
+				WithEventBus(c.eventBus),
+				WithDateGuesser(dateGuesser),
+				WithMetaLoader(NewMockIMetaLoader(ctrl)),
+				WithPrinter(printermod.New(2, 2)),
+			)
+			assert.NoError(t, err)
 			tc.run(t, c)
 		})
 	}
