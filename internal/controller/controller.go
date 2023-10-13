@@ -379,7 +379,9 @@ func (ic *InputController) OnUndo() {
 	case statemod.InputPostingAccount:
 		ic.state.JournalEntryInput.DeleteCurrentPosting()
 		if ic.state.JournalEntryInput.CountPostings() == 0 {
-			// We don't have any postings - go back to tags
+			// We don't have any postings - clear tags and go back
+			ic.state.JournalEntryInput.ClearTags()
+			ic.state.InputMetadata.SetTagText("")
 			ic.state.PrevPhase()
 		} else {
 			// We have a posting to go back to - clear last ammount and go back
