@@ -39,9 +39,9 @@ path and run it.
 ```
 $ addledger --help
 Usage of addledger:
-  -d, --destfile string                 Destination file (where we will write)
+  -d, --destfile string                 Destination file (where we will write). Defaults to the ledger file.
       --hledger-executable string       Executable to use for HLedger (default "hledger")
-      --ledger-file string              Ledger File to pass to HLedger commands
+      --ledger-file string              Ledger File to pass to HLedger commands. If empty let ledger executable find it.
       --logfile string                  File where to send log output. Empty for stderr.
       --loglevel string                 Level of logger. Defaults to warning. (default "WARN")
       --printer-line-break-after int    Number of line breaks to print after a transaction. (default 1)
@@ -51,15 +51,14 @@ Usage of addledger:
 A typical usage would be
 
 ```
-# With normal ~/.hledger.journal file
-$ addledger -d ~/.hledger.journal
+# Normal usage (with `hledger` executable)
+$ addledger
 
 # With a custom file
-$ addledger -d ~/my-custom-hledger.journal --ledger-file ~/my-custom-hledger.journal
+$ addledger --ledger-file ~/my-custom-hledger.journal
 
 # Or with env vars
-$ export ADDLEDGER_DESTFILE=~/journal
-$ export LEDGER_FILE=~/journal
+$ export ADDLEDGER_LEDGER_FILE=~/journal
 $ addledger
 ```
 
