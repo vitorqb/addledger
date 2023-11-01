@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	finance "github.com/vitorqb/addledger/internal/finance"
 	input "github.com/vitorqb/addledger/internal/input"
 	journal "github.com/vitorqb/addledger/internal/journal"
 )
@@ -36,10 +37,10 @@ func (m *MockIEngine) EXPECT() *MockIEngineMockRecorder {
 }
 
 // Guess mocks base method.
-func (m *MockIEngine) Guess() (journal.Ammount, bool) {
+func (m *MockIEngine) Guess() (finance.Ammount, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Guess")
-	ret0, _ := ret[0].(journal.Ammount)
+	ret0, _ := ret[0].(finance.Ammount)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
@@ -184,7 +185,7 @@ func (ic *InputController) OnPostingAccountChanged(newText string) {
 }
 
 func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
-	var ammount journal.Ammount
+	var ammount finance.Ammount
 	var success bool
 
 	switch source {

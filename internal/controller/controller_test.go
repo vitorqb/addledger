@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
@@ -22,22 +23,22 @@ import (
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
-var anAmmount = journal.Ammount{
+var anAmmount = finance.Ammount{
 	Commodity: "BRL",
 	Quantity:  decimal.New(9999, -3),
 }
 var anAmmountStr = "BRL 9.999"
-var anAmmountNeg = journal.Ammount{
+var anAmmountNeg = finance.Ammount{
 	Commodity: anAmmount.Commodity,
 	Quantity:  anAmmount.Quantity.Neg(),
 }
 var anAmmountNegStr = "BRL -9.999"
-var anotherAmmount = journal.Ammount{
+var anotherAmmount = finance.Ammount{
 	Commodity: "EUR",
 	Quantity:  decimal.New(1220, -2),
 }
 var anotherAmmountStr = "EUR 12.20"
-var anotherAmmountNeg = journal.Ammount{
+var anotherAmmountNeg = finance.Ammount{
 	Commodity: anotherAmmount.Commodity,
 	Quantity:  anotherAmmount.Quantity.Neg(),
 }

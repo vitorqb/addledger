@@ -2,6 +2,7 @@ package ammountguesser
 
 import (
 	"github.com/shopspring/decimal"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 )
@@ -22,13 +23,13 @@ type IEngine interface {
 
 	// Guess returns the guess for the current state. If can't
 	// guess, success is false.
-	Guess() (guess journal.Ammount, success bool)
+	Guess() (guess finance.Ammount, success bool)
 }
 
 var DefaultCommodity string = "EUR"
 
 // TODO Get rid of this!
-var DefaultGuess = journal.Ammount{
+var DefaultGuess = finance.Ammount{
 	Commodity: "EUR",
 	Quantity:  decimal.New(1220, -2),
 }
@@ -43,7 +44,7 @@ var _ IEngine = &Engine{}
 
 func NewEngine() *Engine { return &Engine{} }
 
-func (e *Engine) Guess() (guess journal.Ammount, success bool) {
+func (e *Engine) Guess() (guess finance.Ammount, success bool) {
 
 	// If user entered an ammount, use it
 	if ammountFromUserInput, err := input.TextToAmmount(e.userInput); err == nil {
@@ -85,7 +86,7 @@ func (e *Engine) Guess() (guess journal.Ammount, success bool) {
 		if !success {
 			break
 		} else {
-			return journal.Ammount{
+			return finance.Ammount{
 				Commodity: firstAmmount.Commodity,
 				Quantity:  balance,
 			}, true

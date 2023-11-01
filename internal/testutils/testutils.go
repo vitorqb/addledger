@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/utils"
@@ -34,7 +35,7 @@ func Date2(t *testing.T) time.Time {
 
 func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {
 	posting.SetAccount("ACC1")
-	posting.SetAmmount(journal.Ammount{
+	posting.SetAmmount(finance.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(1220, -2),
 	})
@@ -42,7 +43,7 @@ func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {
 
 func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {
 	posting.SetAccount("ACC2")
-	posting.SetAmmount(journal.Ammount{
+	posting.SetAmmount(finance.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(-1220, -2),
 	})
@@ -50,7 +51,7 @@ func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {
 
 func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {
 	posting.SetAccount("ACC3")
-	posting.SetAmmount(journal.Ammount{
+	posting.SetAmmount(finance.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(999, -1),
 	})
@@ -75,8 +76,8 @@ func Decimal_1(t *testing.T) decimal.Decimal {
 	return out
 }
 
-func Ammount_1(t *testing.T) *journal.Ammount {
-	return &journal.Ammount{Commodity: "EUR", Quantity: Decimal_1(t)}
+func Ammount_1(t *testing.T) *finance.Ammount {
+	return &finance.Ammount{Commodity: "EUR", Quantity: Decimal_1(t)}
 }
 
 func Transaction_1(t *testing.T) *journal.Transaction {
@@ -86,14 +87,14 @@ func Transaction_1(t *testing.T) *journal.Transaction {
 		Posting: []journal.Posting{
 			{
 				Account: "ACC1",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(1220, -2),
 				},
 			},
 			{
 				Account: "ACC2",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-1220, -2),
 				},
@@ -109,14 +110,14 @@ func Transaction_2(t *testing.T) *journal.Transaction {
 		Posting: []journal.Posting{
 			{
 				Account: "ACC3",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(2000, -2),
 				},
 			},
 			{
 				Account: "ACC4",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-2000, -2),
 				},
@@ -134,14 +135,14 @@ func Transaction_3(t *testing.T) *journal.Transaction {
 		Posting: []journal.Posting{
 			{
 				Account: "ACC5",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(2001, -2),
 				},
 			},
 			{
 				Account: "ACC6",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-2001, -2),
 				},

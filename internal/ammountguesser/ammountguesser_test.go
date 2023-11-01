@@ -6,12 +6,13 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/ammountguesser"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
 
-var anAmmount = journal.Ammount{Commodity: "EUR", Quantity: decimal.New(1221, -2)}
-var anAmmountBRL = journal.Ammount{Commodity: "BRL", Quantity: decimal.New(1222, -2)}
+var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: decimal.New(1221, -2)}
+var anAmmountBRL = finance.Ammount{Commodity: "BRL", Quantity: decimal.New(1222, -2)}
 
 func TestEngine(t *testing.T) {
 	type testcontext struct {

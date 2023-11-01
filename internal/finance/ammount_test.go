@@ -1,11 +1,11 @@
-package journal_test
+package finance_test
 
 import (
 	"testing"
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	. "github.com/vitorqb/addledger/internal/journal"
+	. "github.com/vitorqb/addledger/internal/finance"
 )
 
 func TestBalance(t *testing.T) {

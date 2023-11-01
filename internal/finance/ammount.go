@@ -1,4 +1,4 @@
-package journal
+package finance
 
 import (
 	"github.com/shopspring/decimal"

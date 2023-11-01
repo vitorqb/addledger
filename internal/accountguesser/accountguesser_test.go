@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/accountguesser"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/accountguesser"
@@ -59,7 +60,7 @@ func TestMatchedTransactionsGuesser(t *testing.T) {
 				return []journal.Posting{
 					{
 						Account: "ACC1",
-						Ammount: journal.Ammount{},
+						Ammount: finance.Ammount{},
 					},
 				}
 			},

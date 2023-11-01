@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/injector"
 	. "github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/journal"
@@ -30,7 +31,7 @@ func TestAmmountGuesserEngine(t *testing.T) {
 	state.InputMetadata.SetPostingAmmountText("99.99")
 	guess, found = state.InputMetadata.GetPostingAmmountGuess()
 	assert.True(t, found)
-	expectedGuess := journal.Ammount{
+	expectedGuess := finance.Ammount{
 		Commodity: ammountguesser.DefaultCommodity,
 		Quantity:  decimal.New(9999, -2),
 	}
@@ -99,7 +100,7 @@ func TestDescriptionMatchAccountGuesser(t *testing.T) {
 	// Set a user inputted posting on state
 	posting := state.JournalEntryInput.AddPosting()
 	posting.SetAccount("foo")
-	posting.SetAmmount(journal.Ammount{})
+	posting.SetAmmount(finance.Ammount{})
 
 	// Set a user inputted description on state
 	state.JournalEntryInput.SetDescription("Superm")

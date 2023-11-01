@@ -7,6 +7,7 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/finance"
 	. "github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	tu "github.com/vitorqb/addledger/internal/testutils"
@@ -126,41 +127,41 @@ func TestJournalEntryInput(t *testing.T) {
 		{
 			"Calculate posting balance no postings",
 			func(t *testing.T, c *context) {
-				expected := []journal.Ammount{}
+				expected := []finance.Ammount{}
 				assert.Equal(t, expected, c.input.PostingBalance())
 			},
 		},
 		{
 			"Calculate posting balance with postings total 0",
 			func(t *testing.T, c *context) {
-				ammount1 := journal.Ammount{
+				ammount1 := finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(12, 1),
 				}
 				c.input.AddPosting().SetAmmount(ammount1)
-				ammount2 := journal.Ammount{
+				ammount2 := finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-12, 1),
 				}
 				c.input.AddPosting().SetAmmount(ammount2)
-				expected := []journal.Ammount{}
+				expected := []finance.Ammount{}
 				assert.Equal(t, expected, c.input.PostingBalance())
 			},
 		},
 		{
 			"Calculate posting balance with postings total not 0",
 			func(t *testing.T, c *context) {
-				ammount1 := journal.Ammount{
+				ammount1 := finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(12, 1),
 				}
 				c.input.AddPosting().SetAmmount(ammount1)
-				ammount2 := journal.Ammount{
+				ammount2 := finance.Ammount{
 					Commodity: "BRL",
 					Quantity:  decimal.New(-12, 1),
 				}
 				c.input.AddPosting().SetAmmount(ammount2)
-				expected := []journal.Ammount{ammount1, ammount2}
+				expected := []finance.Ammount{ammount1, ammount2}
 				assert.ElementsMatch(t, expected, c.input.PostingBalance())
 			},
 		},
@@ -170,7 +171,7 @@ func TestJournalEntryInput(t *testing.T) {
 				c.input.AddPosting()
 				c.input.AddPosting()
 				c.input.AddPosting().SetAmmount(anAmmount)
-				expected := []journal.Ammount{anAmmount}
+				expected := []finance.Ammount{anAmmount}
 				assert.Equal(t, expected, c.input.PostingBalance())
 			},
 		},
@@ -280,27 +281,27 @@ func TestRepr(t *testing.T) {
 func TestTextToAmmount(t *testing.T) {
 	type testcase struct {
 		text     string
-		ammount  journal.Ammount
+		ammount  finance.Ammount
 		errorMsg string
 	}
 	var testcases = []testcase{
 		{
 			text: "EUR 12.20",
-			ammount: journal.Ammount{
+			ammount: finance.Ammount{
 				Commodity: "EUR",
 				Quantity:  decimal.New(1220, -2),
 			},
 		},
 		{
 			text: "EUR 99999.99999",
-			ammount: journal.Ammount{
+			ammount: finance.Ammount{
 				Commodity: "EUR",
 				Quantity:  decimal.NewFromFloat(99999.99999),
 			},
 		},
 		{
 			text: "12.20",
-			ammount: journal.Ammount{
+			ammount: finance.Ammount{
 				Commodity: "",
 				Quantity:  decimal.New(1220, -2),
 			},
