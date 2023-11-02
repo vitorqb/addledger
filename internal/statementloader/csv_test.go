@@ -26,9 +26,9 @@ func TestCSVLoader(t *testing.T) {
 				WithCSVLoaderAccountName("ACC"),
 				WithCSVLoaderDefaultCommodity("EUR"),
 				WithCSVLoaderMapping([]CSVColumnMapping{
-					{Column: 0, Importer: DateImporter},
-					{Column: 1, Importer: DescriptionImporter},
-					{Column: 2, Importer: AmmountImporter},
+					{Column: 0, Importer: DateImporter{}},
+					{Column: 1, Importer: DescriptionImporter{}},
+					{Column: 2, Importer: AmmountImporter{}},
 				}),
 			},
 			csvInput: `2023-10-31,FOO,12.21`,
@@ -49,10 +49,10 @@ func TestCSVLoader(t *testing.T) {
 			name: "Two entries",
 			options: []CSVLoaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
-					{Column: 0, Importer: AccountImporter},
-					{Column: 1, Importer: DateImporter},
-					{Column: 2, Importer: DescriptionImporter},
-					{Column: 3, Importer: AmmountImporter},
+					{Column: 0, Importer: AccountImporter{}},
+					{Column: 1, Importer: DateImporter{}},
+					{Column: 2, Importer: DescriptionImporter{}},
+					{Column: 3, Importer: AmmountImporter{}},
 				}),
 				WithCSVLoaderDefaultCommodity(""),
 			},
@@ -82,7 +82,7 @@ func TestCSVLoader(t *testing.T) {
 			name: "Column out of range",
 			options: []CSVLoaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
-					{Column: 10, Importer: DateImporter},
+					{Column: 10, Importer: DateImporter{}},
 				}),
 			},
 			csvInput:      `10/31/2023`,
@@ -92,7 +92,7 @@ func TestCSVLoader(t *testing.T) {
 			name: "Invalid date",
 			options: []CSVLoaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
-					{Column: 0, Importer: DateImporter},
+					{Column: 0, Importer: DateImporter{}},
 				}),
 			},
 			csvInput:      `10/31/2023`,

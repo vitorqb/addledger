@@ -5,6 +5,7 @@ import (
 
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
+	"github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/display"
@@ -107,6 +108,18 @@ func main() {
 	accountGuesser, err := injector.AccountGuesser(state)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load account guesser")
+	}
+
+	// If a csv statement file was passed, load it
+	if statementFile := config.CSVStatementLoaderConfig.File; statementFile != "" {
+		csvStatementLoader, err := injector.CSVStatementLoader(config.CSVStatementLoaderConfig)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to load csv statement loader")
+		}
+		err = app.LoadStatement(csvStatementLoader, statementFile, state)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to load statement")
+		}
 	}
 
 	// Starts a new layout

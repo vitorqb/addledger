@@ -18,6 +18,8 @@ func (l *MockLoader) JournalFile(_ string) (string, error) {
 }
 
 func TestLoad(t *testing.T) {
+	csvFile := testutils.TestDataPath(t, "statement.csv")
+	fullCsvPresetFile := testutils.TestDataPath(t, "csv_preset_full.json")
 
 	type testcontext struct {
 		flagSet *pflag.FlagSet
@@ -86,6 +88,24 @@ func TestLoad(t *testing.T) {
 			},
 		},
 		{
+			name: "With full csv statement config",
+			run: func(t *testing.T, c *testcontext) {
+				flags := []string{
+					"--csv-statement-file=" + csvFile,
+					"--csv-statement-preset=" + fullCsvPresetFile,
+				}
+				config, err := Load(c.flagSet, flags, c.loader)
+				assert.Nil(t, err)
+				assert.Equal(t, config.CSVStatementLoaderConfig.File, csvFile)
+				assert.Equal(t, config.CSVStatementLoaderConfig.Separator, ";")
+				assert.Equal(t, config.CSVStatementLoaderConfig.Account, "acc")
+				assert.Equal(t, config.CSVStatementLoaderConfig.DateFieldIndex, 0)
+				assert.Equal(t, config.CSVStatementLoaderConfig.DescriptionFieldIndex, 1)
+				assert.Equal(t, config.CSVStatementLoaderConfig.AccountFieldIndex, 2)
+				assert.Equal(t, config.CSVStatementLoaderConfig.AmmountFieldIndex, 3)
+			},
+		},
+		{
 			name: "Defaults DestFile to LedgerFile",
 			run: func(t *testing.T, c *testcontext) {
 				config, err := Load(c.flagSet, []string{"--ledger-file=foo"}, c.loader)
@@ -118,4 +138,58 @@ func TestLoad(t *testing.T) {
 			testcase.run(t, c)
 		})
 	}
+}
+
+func TestLoadCsvStatementLoaderConfig(t *testing.T) {
+	csvFile := testutils.TestDataPath(t, "statement.csv")
+	minPresetFile := testutils.TestDataPath(t, "csv_preset_min.json")
+	fullPresetFile := testutils.TestDataPath(t, "csv_preset_full.json")
+
+	t.Run("No file", func(t *testing.T) {
+		config, err := LoadCsvStatementLoaderConfig("", "")
+		assert.Equal(t, CSVStatementLoaderConfig{}, config)
+		assert.NoError(t, err)
+	})
+
+	t.Run("No preset", func(t *testing.T) {
+		config, err := LoadCsvStatementLoaderConfig(csvFile, "")
+		assert.Equal(t, CSVStatementLoaderConfig{}, config)
+		assert.ErrorContains(t, err, "missing preset")
+	})
+
+	t.Run("Preset not found", func(t *testing.T) {
+		config, err := LoadCsvStatementLoaderConfig(csvFile, "foo")
+		assert.Equal(t, CSVStatementLoaderConfig{}, config)
+		assert.ErrorContains(t, err, "failed to open preset file")
+	})
+
+	t.Run("Minimal preset found", func(t *testing.T) {
+		config, err := LoadCsvStatementLoaderConfig(csvFile, minPresetFile)
+		assert.NoError(t, err)
+		assert.Equal(t, CSVStatementLoaderConfig{
+			File:                  csvFile,
+			Separator:             "",
+			Account:               "",
+			Commodity:             "",
+			DateFieldIndex:        -1,
+			DescriptionFieldIndex: -1,
+			AccountFieldIndex:     -1,
+			AmmountFieldIndex:     -1,
+		}, config)
+	})
+
+	t.Run("Full preset found", func(t *testing.T) {
+		config, err := LoadCsvStatementLoaderConfig(csvFile, fullPresetFile)
+		assert.NoError(t, err)
+		assert.Equal(t, CSVStatementLoaderConfig{
+			File:                  csvFile,
+			Separator:             ";",
+			Account:               "acc",
+			Commodity:             "com",
+			DateFieldIndex:        0,
+			DescriptionFieldIndex: 1,
+			AccountFieldIndex:     2,
+			AmmountFieldIndex:     3,
+		}, config)
+	})
 }

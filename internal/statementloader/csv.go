@@ -40,7 +40,7 @@ func (l *CSVLoader) Load(reader io.Reader) ([]StatementEntry, error) {
 				return nil, fmt.Errorf("column index out of range for field %T", columnMapping.Importer)
 			}
 			value := record[columnMapping.Column]
-			if err := columnMapping.Importer(&statementEntry, value); err != nil {
+			if err := columnMapping.Importer.Import(&statementEntry, value); err != nil {
 				return nil, fmt.Errorf("error importing field %T: %w", columnMapping.Importer, err)
 			}
 		}

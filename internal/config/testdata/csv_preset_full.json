@@ -1,0 +1,9 @@
+{
+  "separator": ";",
+  "account": "acc",
+  "commodity": "com",
+  "dateFieldIndex": 0,
+  "descriptionFieldIndex": 1,
+  "accountFieldIndex": 2,
+  "ammountFieldIndex": 3
+}

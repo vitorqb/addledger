@@ -35,7 +35,7 @@ func TestDateImporter(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		statementEntry := &StatementEntry{}
-		err := DateImporter(statementEntry, tc.dateStr)
+		err := DateImporter{}.Import(statementEntry, tc.dateStr)
 		assert.Equal(t, tc.expectedDate, statementEntry.Date)
 		if tc.expectedError != "" {
 			assert.ErrorContains(t, err, tc.expectedError)
@@ -60,7 +60,7 @@ func TestAccountImporter(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		statementEntry := &StatementEntry{}
-		err := AccountImporter(statementEntry, tc.accountStr)
+		err := AccountImporter{}.Import(statementEntry, tc.accountStr)
 		assert.Equal(t, tc.expectedAccount, statementEntry.Account)
 		assert.ErrorIs(t, err, tc.expectedError)
 	}
@@ -90,7 +90,7 @@ func TestAmmountImporter(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		statementEntry := &StatementEntry{}
-		err := AmmountImporter(statementEntry, tc.ammountStr)
+		err := AmmountImporter{}.Import(statementEntry, tc.ammountStr)
 		assert.Equal(t, tc.expectedAmmount, statementEntry.Ammount)
 		if tc.expectedError != "" {
 			assert.ErrorContains(t, err, tc.expectedError)

@@ -6,6 +6,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
@@ -53,6 +54,9 @@ type (
 		JournalEntryInput *input.JournalEntryInput
 		InputMetadata     *InputMetadata
 		JournalMetadata   *JournalMetadata
+		// StatementEntries are entires loaded from a bank statement.
+		// They are used to help the user to create journal entries.
+		StatementEntries []statementloader.StatementEntry
 	}
 
 	// MaybeValue is a helper container that may contain a value or not
@@ -101,6 +105,7 @@ func InitialState() *State {
 		journalEntryInput,
 		inputMetadata,
 		journalMetadata,
+		[]statementloader.StatementEntry{},
 	}
 	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
@@ -371,4 +376,15 @@ func (jm *JournalMetadata) Tags() []journal.Tag {
 		tags = append(tags, transaction.Tags...)
 	}
 	return utils.Unique(tags)
+}
+
+// GetStatementEntries returns the current statement entries
+func (s *State) GetStatementEntries() []statementloader.StatementEntry {
+	return s.StatementEntries
+}
+
+// SetStatementEntries sets the current statement entries
+func (s *State) SetStatementEntries(x []statementloader.StatementEntry) {
+	s.StatementEntries = x
+	s.NotifyChange()
 }
