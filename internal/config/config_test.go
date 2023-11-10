@@ -100,6 +100,7 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, config.CSVStatementLoaderConfig.Separator, ";")
 				assert.Equal(t, config.CSVStatementLoaderConfig.Account, "acc")
 				assert.Equal(t, config.CSVStatementLoaderConfig.DateFieldIndex, 0)
+				assert.Equal(t, config.CSVStatementLoaderConfig.DateFormat, "01/02/2006")
 				assert.Equal(t, config.CSVStatementLoaderConfig.DescriptionFieldIndex, 1)
 				assert.Equal(t, config.CSVStatementLoaderConfig.AccountFieldIndex, 2)
 				assert.Equal(t, config.CSVStatementLoaderConfig.AmmountFieldIndex, 3)
@@ -171,6 +172,7 @@ func TestLoadCsvStatementLoaderConfig(t *testing.T) {
 			Separator:             "",
 			Account:               "",
 			Commodity:             "",
+			DateFormat:            "02/01/2006",
 			DateFieldIndex:        -1,
 			DescriptionFieldIndex: -1,
 			AccountFieldIndex:     -1,
@@ -186,6 +188,7 @@ func TestLoadCsvStatementLoaderConfig(t *testing.T) {
 			Separator:             ";",
 			Account:               "acc",
 			Commodity:             "com",
+			DateFormat:            "01/02/2006",
 			DateFieldIndex:        0,
 			DescriptionFieldIndex: 1,
 			AccountFieldIndex:     2,

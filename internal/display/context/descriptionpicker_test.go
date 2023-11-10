@@ -11,6 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/statementloader"
 )
 
 func TestDescriptionPicker(t *testing.T) {
@@ -37,6 +38,16 @@ func TestDescriptionPicker(t *testing.T) {
 					t.Fatal(err)
 				}
 				assert.Equal(t, "Description One", c.state.InputMetadata.SelectedDescription())
+			},
+		},
+		{
+			name: "Load description from CurrentStatement if found",
+			run: func(t *testing.T, c *testcontext) {
+				sEntries := []statementloader.StatementEntry{{Description: "Statement Description"}}
+				c.state.SetStatementEntries(sEntries)
+				c.descPicker.Refresh()
+				assert.Equal(t, 3, c.descPicker.GetItemCount())
+				assert.Equal(t, "Statement Description", c.state.InputMetadata.SelectedDescription())
 			},
 		},
 	}

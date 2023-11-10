@@ -5,6 +5,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 )
 
 //go:generate $MOCKGEN --source=ammountguesser.go --destination=../../mocks/ammountguesser/ammountguesser_mock.go
@@ -20,6 +21,10 @@ type IEngine interface {
 	// SetMatchingTransactions set's all transactions that match the current
 	// user input.
 	SetMatchingTransactions(x []journal.Transaction)
+
+	// SetStatementEntry set the statement entry that has been loaded and
+	// is being used for the current posting.
+	SetStatementEntry(x statementloader.StatementEntry)
 
 	// Guess returns the guess for the current state. If can't
 	// guess, success is false.
@@ -37,6 +42,7 @@ var DefaultGuess = finance.Ammount{
 type Engine struct {
 	userInput            string
 	postingInputs        []*input.PostingInput
+	statementEntry       statementloader.StatementEntry
 	matchingTransactions []journal.Transaction
 }
 
@@ -93,6 +99,11 @@ func (e *Engine) Guess() (guess finance.Ammount, success bool) {
 		}
 	}
 
+	// If we have a statement entry, use it
+	if e.statementEntry.Ammount.Quantity.GreaterThan(decimal.Zero) {
+		return e.statementEntry.Ammount.InvertSign(), true
+	}
+
 	// If we have a matching transaction, use it.
 	if len(e.matchingTransactions) > 0 {
 		transaction := e.matchingTransactions[0]
@@ -102,6 +113,7 @@ func (e *Engine) Guess() (guess finance.Ammount, success bool) {
 	return DefaultGuess, true
 }
 
-func (e *Engine) SetUserInputText(x string)                       { e.userInput = x }
-func (e *Engine) SetPostingInputs(x []*input.PostingInput)        { e.postingInputs = x }
-func (e *Engine) SetMatchingTransactions(x []journal.Transaction) { e.matchingTransactions = x }
+func (e *Engine) SetUserInputText(x string)                          { e.userInput = x }
+func (e *Engine) SetPostingInputs(x []*input.PostingInput)           { e.postingInputs = x }
+func (e *Engine) SetMatchingTransactions(x []journal.Transaction)    { e.matchingTransactions = x }
+func (e *Engine) SetStatementEntry(x statementloader.StatementEntry) { e.statementEntry = x }

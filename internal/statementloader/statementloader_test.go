@@ -1,6 +1,7 @@
 package statementloader_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,34 +15,46 @@ import (
 func TestDateImporter(t *testing.T) {
 	type testCase struct {
 		dateStr       string
+		format        string
 		expectedDate  time.Time
 		expectedError string
 	}
 	testCases := []testCase{
 		{
 			dateStr:       "2020-01-01",
+			format:        "2006-01-02",
 			expectedDate:  time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 			expectedError: "",
 		},
 		{
 			dateStr:       "31/10/2023",
+			format:        "02/01/2006",
 			expectedDate:  time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),
 			expectedError: "",
 		},
 		{
+			dateStr:      "10/31/2023",
+			format:       "01/02/2006",
+			expectedDate: time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),
+		},
+		{
 			dateStr:       "10/31/2023",
-			expectedError: "invalid date format: 10/31/2023",
+			format:        "02/01/2006",
+			expectedError: "invalid date (from format 02/01/2006): 10/31/2023",
 		},
 	}
 	for _, tc := range testCases {
-		statementEntry := &StatementEntry{}
-		err := DateImporter{}.Import(statementEntry, tc.dateStr)
-		assert.Equal(t, tc.expectedDate, statementEntry.Date)
-		if tc.expectedError != "" {
-			assert.ErrorContains(t, err, tc.expectedError)
-		} else {
-			assert.NoError(t, err)
-		}
+		testName := fmt.Sprintf("%s-%s", tc.format, tc.dateStr)
+		t.Run(testName, func(t *testing.T) {
+			statementEntry := &StatementEntry{}
+			err := DateImporter{tc.format}.Import(statementEntry, tc.dateStr)
+			assert.Equal(t, tc.expectedDate, statementEntry.Date)
+			if tc.expectedError != "" {
+				assert.ErrorContains(t, err, tc.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
 	}
 }
 

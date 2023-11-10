@@ -171,6 +171,26 @@ func TestTransactionMatcher(t *testing.T) {
 	assert.Equal(t, expectedMatchedTransactions, state.InputMetadata.MatchingTransactions())
 }
 
+func TestStatementAccountGuesser(t *testing.T) {
+	state := statemod.InitialState()
+	accountGuesser, err := StatementAccountGuesser(state)
+	assert.NoError(t, err)
+
+	// Put a statement entry on the sate
+	sEntries := []statementloader.StatementEntry{{Account: "acc1"}}
+	state.SetStatementEntries(sEntries)
+
+	// Set an user inputted posting on state
+	posting := state.JournalEntryInput.AddPosting()
+	posting.SetAccount("foo")
+	posting.SetAmmount(finance.Ammount{})
+
+	// Guess should be right
+	guess, success := accountGuesser.Guess()
+	assert.True(t, success)
+	assert.Equal(t, journal.Account("acc1"), guess)
+}
+
 func TestCSVStatementLoaderOptions(t *testing.T) {
 	type testcase struct {
 		name            string
@@ -197,6 +217,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				Account:               "acc",
 				Commodity:             "com",
 				DateFieldIndex:        0,
+				DateFormat:            "01/02/2006",
 				DescriptionFieldIndex: 1,
 				AccountFieldIndex:     2,
 				AmmountFieldIndex:     3,
@@ -206,7 +227,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				statementloader.WithCSVLoaderAccountName("acc"),
 				statementloader.WithCSVLoaderDefaultCommodity("com"),
 				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{
-					{Column: 0, Importer: statementloader.DateImporter{}},
+					{Column: 0, Importer: statementloader.DateImporter{Format: "01/02/2006"}},
 					{Column: 1, Importer: statementloader.DescriptionImporter{}},
 					{Column: 2, Importer: statementloader.AccountImporter{}},
 					{Column: 3, Importer: statementloader.AmmountImporter{}},

@@ -8,7 +8,6 @@ import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/dateguesser"
-	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/metaloader"
 	"github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
@@ -57,6 +56,10 @@ func AmmountGuesserEngine(state *statemod.State) ammountguesser.IEngine {
 		newPostings := state.JournalEntryInput.GetPostings()
 		ammountGuesserEngine.SetPostingInputs(newPostings)
 
+		// sync statement entry
+		statementEntry, _ := state.CurrentStatementEntry()
+		ammountGuesserEngine.SetStatementEntry(statementEntry)
+
 		oldGuess, oldGuessFound := state.InputMetadata.GetPostingAmmountGuess()
 		guess, success := ammountGuesserEngine.Guess()
 		if success {
@@ -101,15 +104,8 @@ func DescriptionMatchAccountGuesser(state *statemod.State) (*accountguesser.Matc
 	syncWithState := func() {
 		matchedTransactions := state.InputMetadata.MatchingTransactions()
 		accountGuesser.SetMatchedTransactions(matchedTransactions)
-
-		var postings []journal.Posting
-		inputPostings := state.JournalEntryInput.GetPostings()
-		for _, inputPostings := range inputPostings {
-			if inputPostings.IsComplete() {
-				postings = append(postings, inputPostings.ToPosting())
-			}
-		}
-		accountGuesser.SetInputPostings(postings)
+		completePostings := state.JournalEntryInput.GetCompletePostings()
+		accountGuesser.SetInputPostings(completePostings)
 	}
 
 	// Runs a first sync
@@ -144,8 +140,36 @@ func LastTransactionAccountGuesser(state *statemod.State) (*accountguesser.LastT
 	return accountGuesser, nil
 }
 
+func StatementAccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
+	// Creates a new StatementAccountGuesser
+	accountGuesser, err := accountguesser.NewStatementAccountGuesser()
+	if err != nil {
+		return nil, err
+	}
+
+	// Function that syncs the state with the internal AccountGuesser state.
+	sync := func() {
+		statementEntry, _ := state.CurrentStatementEntry()
+		accountGuesser.SetStatementEntry(statementEntry)
+		completedPostings := state.JournalEntryInput.GetCompletePostings()
+		accountGuesser.SetInputPostings(completedPostings)
+	}
+
+	// Runs first sync
+	sync()
+
+	// Run sync on state update
+	state.AddOnChangeHook(sync)
+
+	return accountGuesser, nil
+}
+
 func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
-	// Returns a composite of DescriptionMatch and LastTransaction
+	// Returns a composite of all account guessers
+	statementAccountGuesser, err := StatementAccountGuesser(state)
+	if err != nil {
+		return nil, err
+	}
 	descriptionMatchAccountGuesser, err := DescriptionMatchAccountGuesser(state)
 	if err != nil {
 		return nil, err
@@ -154,7 +178,11 @@ func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, erro
 	if err != nil {
 		return nil, err
 	}
-	return accountguesser.NewCompositeAccountGuesser(descriptionMatchAccountGuesser, lastTransactionAccountGuesser)
+	return accountguesser.NewCompositeAccountGuesser(
+		statementAccountGuesser,
+		descriptionMatchAccountGuesser,
+		lastTransactionAccountGuesser,
+	)
 }
 
 func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
@@ -177,9 +205,8 @@ func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]sta
 	}
 	mapping := []statementloader.CSVColumnMapping{}
 	if idate := config.DateFieldIndex; idate != -1 {
-		mapping = append(mapping, statementloader.CSVColumnMapping{
-			Column: idate, Importer: statementloader.DateImporter{},
-		})
+		importer := statementloader.DateImporter{Format: config.DateFormat}
+		mapping = append(mapping, statementloader.CSVColumnMapping{Column: idate, Importer: importer})
 	}
 	if idescription := config.DescriptionFieldIndex; idescription != -1 {
 		mapping = append(mapping, statementloader.CSVColumnMapping{

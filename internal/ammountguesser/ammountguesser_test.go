@@ -8,11 +8,13 @@ import (
 	. "github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
 
 var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: decimal.New(1221, -2)}
 var anAmmountBRL = finance.Ammount{Commodity: "BRL", Quantity: decimal.New(1222, -2)}
+var anotherAmmount = finance.Ammount{Commodity: "USD", Quantity: decimal.New(9922, -2)}
 
 func TestEngine(t *testing.T) {
 	type testcontext struct {
@@ -73,6 +75,25 @@ func TestEngine(t *testing.T) {
 				guess, success := c.engine.Guess()
 				assert.True(t, success)
 				assert.Equal(t, anAmmount, guess)
+			},
+		},
+		{
+			name: "Guess from loaded statement entry",
+			run: func(c *testcontext, t *testing.T) {
+				// Set some matching transactions that should be ignored
+				c.engine.SetUserInputText("")
+				transaction := tu.Transaction_2(t)
+				matchingTransaction := []journal.Transaction{*transaction}
+				c.engine.SetMatchingTransactions(matchingTransaction)
+
+				// Set a statement entry
+				sEntry := statementloader.StatementEntry{Ammount: anotherAmmount}
+				c.engine.SetStatementEntry(sEntry)
+
+				// Guess
+				guess, success := c.engine.Guess()
+				assert.True(t, success)
+				assert.Equal(t, anotherAmmount.InvertSign(), guess)
 			},
 		},
 	}

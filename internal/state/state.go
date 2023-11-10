@@ -388,3 +388,19 @@ func (s *State) SetStatementEntries(x []statementloader.StatementEntry) {
 	s.StatementEntries = x
 	s.NotifyChange()
 }
+
+// CurrentStatementEntry returns the current statement entry
+func (s *State) CurrentStatementEntry() (e statementloader.StatementEntry, found bool) {
+	if len(s.StatementEntries) == 0 {
+		return statementloader.StatementEntry{}, false
+	}
+	return s.StatementEntries[0], true
+}
+
+// PopStatementEntry pops the current statement entry
+func (s *State) PopStatementEntry() {
+	if len(s.StatementEntries) > 0 {
+		s.StatementEntries = s.StatementEntries[1:]
+		s.NotifyChange()
+	}
+}

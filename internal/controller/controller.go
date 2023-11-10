@@ -102,6 +102,15 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 }
 
 func (ic *InputController) OnDateChanged(x string) {
+	// No input and loaded statement - use statement date
+	if x == "" {
+		if sEntry, found := ic.state.CurrentStatementEntry(); found {
+			ic.state.InputMetadata.SetDateGuess(sEntry.Date)
+			return
+		}
+	}
+
+	// Delegate to DateGuesser
 	date, success := ic.dateGuesser.Guess(x)
 	if success {
 		ic.state.InputMetadata.SetDateGuess(date)
@@ -243,7 +252,6 @@ func (ic *InputController) OnInputConfirmation() {
 	}
 	ic.state.JournalEntryInput = input.NewJournalEntryInput()
 	ic.state.InputMetadata.Reset()
-	ic.state.SetPhase(statemod.InputDate)
 	accountLoadErr := ic.metaLoader.LoadAccounts()
 	if accountLoadErr != nil {
 		// TODO Let the user know somehow!
@@ -253,6 +261,13 @@ func (ic *InputController) OnInputConfirmation() {
 	// Note: we could call `ic.metaLoader.LoadTransactions` here. This is, however,
 	// quite slow for large journals.
 	ic.state.JournalMetadata.AppendTransaction(transaction)
+
+	// We are done w/ the current loaded statement
+	ic.state.PopStatementEntry()
+
+	// Go back to first phase and ensure date is cleared
+	ic.state.SetPhase(statemod.InputDate)
+	ic.OnDateChanged("")
 }
 
 func (ic *InputController) OnInputRejection() {

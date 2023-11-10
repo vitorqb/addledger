@@ -15,6 +15,10 @@ func (a Ammount) Equal(a2 Ammount) bool {
 	return a.Quantity.Equal(a2.Quantity) && a.Commodity == a2.Commodity
 }
 
+func (a Ammount) InvertSign() Ammount {
+	return Ammount{a.Commodity, a.Quantity.Neg()}
+}
+
 // Returns the balance for each currency in a list of Ammounts.
 func Balance(ammounts []Ammount) []Ammount {
 	commoditiesQuantityMap := map[string]decimal.Decimal{}

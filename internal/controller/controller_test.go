@@ -16,6 +16,7 @@ import (
 	"github.com/vitorqb/addledger/internal/listaction"
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
@@ -23,6 +24,7 @@ import (
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
+var otherTime, _ = time.Parse(time.RFC3339, "2022-01-02")
 var anAmmount = finance.Ammount{
 	Commodity: "BRL",
 	Quantity:  decimal.New(9999, -3),
@@ -159,6 +161,18 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
+			name: "On date change with empty input and statement",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				statementEntries := []statementloader.StatementEntry{{Date: otherTime}}
+				c.state.SetStatementEntries(statementEntries)
+				c.controller.OnDateChanged("")
+				guess, success := c.state.InputMetadata.GetDateGuess()
+				assert.True(t, success)
+				assert.Equal(t, otherTime, guess)
+			},
+		},
+		{
 			name: "On date change but no guess",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
@@ -271,6 +285,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				countTransactionsBefore := len(c.state.JournalMetadata.Transactions())
 				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.controller.OnInputConfirmation()
@@ -282,6 +297,43 @@ func TestInputController(t *testing.T) {
 
 				// Must have added the transaction to the state
 				assert.Equal(t, len(c.state.JournalMetadata.Transactions()), countTransactionsBefore+1)
+			},
+		},
+		{
+			name: "OnInputConfirmation pops statement entry",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetStatementEntries([]statementloader.StatementEntry{{}})
+				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.dateGuesser.EXPECT().Guess(gomock.Any())
+				c.metaLoader.EXPECT().LoadAccounts().Times(1)
+				c.metaLoader.EXPECT().LoadTransactions().Times(0)
+				c.controller.OnInputConfirmation()
+
+				// Must have popped the statement entry
+				assert.Equal(t, 0, len(c.state.GetStatementEntries()))
+			},
+		},
+		{
+			name: "OnInputConfirmation fixes date guess",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				date1 := testutils.Date1(t)
+				date2 := testutils.Date2(t)
+				stmEntries := []statementloader.StatementEntry{
+					{Date: date1},
+					{Date: date2},
+				}
+				c.state.SetStatementEntries(stmEntries)
+				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.metaLoader.EXPECT().LoadAccounts().Times(1)
+				c.metaLoader.EXPECT().LoadTransactions().Times(0)
+				c.state.SetPhase(statemod.Confirmation)
+				c.controller.OnInputConfirmation()
+
+				// We expect the date of the 2nd statement entry to be the guess
+				dateGuess, _ := c.state.InputMetadata.GetDateGuess()
+				assert.Equal(t, date2, dateGuess)
 			},
 		},
 		{
@@ -445,7 +497,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
-				c.dateGuesser.EXPECT().Guess(gomock.Any()).Return(aTime, true)
+				c.dateGuesser.EXPECT().Guess(gomock.Any()).AnyTimes().Return(aTime, true)
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")

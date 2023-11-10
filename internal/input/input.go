@@ -172,6 +172,18 @@ func (i *JournalEntryInput) GetPostings() []*PostingInput {
 	return []*PostingInput{}
 }
 
+// GetCompletePostings returns all postings that are complete.
+func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
+	var postings []journal.Posting
+	for _, postingInput := range i.GetPostings() {
+		if postingInput.IsComplete() {
+			posting := postingInput.ToPosting()
+			postings = append(postings, posting)
+		}
+	}
+	return postings
+}
+
 func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	postInput = NewPostingInput()
 	postInput.AddOnChangeHook(i.NotifyChange)

@@ -28,6 +28,8 @@ type CSVStatementLoaderConfig struct {
 	Commodity string `json:"commodity"`
 	// Index of the date field in the CSV file.
 	DateFieldIndex int `json:"dateFieldIndex"`
+	// Date format to use for parsing the date field.
+	DateFormat string `json:"dateFormat"`
 	// Index of the account field in the CSV file.
 	AccountFieldIndex int `json:"accountFieldIndex"`
 	// Index of the description field in the CSV file.
@@ -157,6 +159,7 @@ func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig
 	config.AmmountFieldIndex = -1
 	config.DateFieldIndex = -1
 	config.DescriptionFieldIndex = -1
+	config.DateFormat = "02/01/2006"
 	err = json.Unmarshal(presetBytes, &config)
 	if err != nil {
 		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to unmarshal preset file: %w", err)

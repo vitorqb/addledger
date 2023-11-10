@@ -11,6 +11,7 @@ import (
 	finance "github.com/vitorqb/addledger/internal/finance"
 	input "github.com/vitorqb/addledger/internal/input"
 	journal "github.com/vitorqb/addledger/internal/journal"
+	statementloader "github.com/vitorqb/addledger/internal/statementloader"
 )
 
 // MockIEngine is a mock of IEngine interface.
@@ -73,6 +74,18 @@ func (m *MockIEngine) SetPostingInputs(x []*input.PostingInput) {
 func (mr *MockIEngineMockRecorder) SetPostingInputs(x interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPostingInputs", reflect.TypeOf((*MockIEngine)(nil).SetPostingInputs), x)
+}
+
+// SetStatementEntry mocks base method.
+func (m *MockIEngine) SetStatementEntry(x statementloader.StatementEntry) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetStatementEntry", x)
+}
+
+// SetStatementEntry indicates an expected call of SetStatementEntry.
+func (mr *MockIEngineMockRecorder) SetStatementEntry(x interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStatementEntry", reflect.TypeOf((*MockIEngine)(nil).SetStatementEntry), x)
 }
 
 // SetUserInputText mocks base method.

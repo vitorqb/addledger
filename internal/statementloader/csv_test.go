@@ -26,7 +26,7 @@ func TestCSVLoader(t *testing.T) {
 				WithCSVLoaderAccountName("ACC"),
 				WithCSVLoaderDefaultCommodity("EUR"),
 				WithCSVLoaderMapping([]CSVColumnMapping{
-					{Column: 0, Importer: DateImporter{}},
+					{Column: 0, Importer: DateImporter{"2006-01-02"}},
 					{Column: 1, Importer: DescriptionImporter{}},
 					{Column: 2, Importer: AmmountImporter{}},
 				}),
@@ -50,7 +50,7 @@ func TestCSVLoader(t *testing.T) {
 			options: []CSVLoaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
 					{Column: 0, Importer: AccountImporter{}},
-					{Column: 1, Importer: DateImporter{}},
+					{Column: 1, Importer: DateImporter{"02/01/2006"}},
 					{Column: 2, Importer: DescriptionImporter{}},
 					{Column: 3, Importer: AmmountImporter{}},
 				}),
@@ -92,11 +92,11 @@ func TestCSVLoader(t *testing.T) {
 			name: "Invalid date",
 			options: []CSVLoaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
-					{Column: 0, Importer: DateImporter{}},
+					{Column: 0, Importer: DateImporter{"2006-01-02"}},
 				}),
 			},
 			csvInput:      `10/31/2023`,
-			expectedError: "invalid date format",
+			expectedError: "invalid date (from format 2006-01-02): 10/31/2023",
 		},
 	}
 	for _, tc := range testCases {

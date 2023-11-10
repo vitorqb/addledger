@@ -48,25 +48,20 @@ func (a AccountImporter) Import(statementEntry *StatementEntry, value string) er
 var _ FieldImporter = AccountImporter{}
 
 // DateImporter imports the date field.
-type DateImporter struct{}
+type DateImporter struct {
+	Format string
+}
 
 func (d DateImporter) Import(statementEntry *StatementEntry, value string) error {
 	// Note: we are hardcoding the date formats here, which is not ideal.
 	// We should probably allow the user to configure the date formats.
-
-	// ISO format (yyyy-mm-dd)
-	if parsed, err := time.Parse("2006-01-02", value); err == nil {
-		statementEntry.Date = parsed
-		return nil
+	if d.Format != "" {
+		if parsed, err := time.Parse(d.Format, value); err == nil {
+			statementEntry.Date = parsed
+			return nil
+		}
 	}
-
-	// EU format (dd/mm/yyyy)
-	if parsed, err := time.Parse("02/01/2006", value); err == nil {
-		statementEntry.Date = parsed
-		return nil
-	}
-
-	return fmt.Errorf("invalid date format: %s", value)
+	return fmt.Errorf("invalid date (from format %s): %s", d.Format, value)
 }
 
 var _ FieldImporter = DateImporter{}
