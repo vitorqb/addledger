@@ -14,11 +14,11 @@ import (
 
 type (
 	Layout struct {
+		*tview.Flex
 		state   *state.State
 		View    *View
 		Input   *Input
 		Context *Context
-		flex    *tview.Flex
 	}
 )
 
@@ -80,14 +80,10 @@ func NewLayout(
 		return event
 	})
 	return &Layout{
+		Flex:    flex,
 		state:   state,
 		View:    view,
 		Input:   input,
 		Context: context,
-		flex:    flex,
 	}, nil
-}
-
-func (l *Layout) GetContent() tview.Primitive {
-	return l.flex
 }

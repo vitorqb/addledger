@@ -34,15 +34,14 @@ func TestNewLayout(t *testing.T) {
 				key := tcell.KeyCtrlZ
 				event := tcell.NewEventKey(key, 'z', tcell.ModCtrl)
 				setFocus := func(tview.Primitive) {}
-				c.layout.GetContent().InputHandler()(event, setFocus)
+				c.layout.InputHandler()(event, setFocus)
 			},
 		},
 		{
 			name: "Displays the tag picker",
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputTags)
-				flex := c.layout.GetContent().(*tview.Flex)
-				_, page := flex.GetItem(2).(*tview.Pages).GetFrontPage()
+				_, page := c.layout.GetItem(2).(*tview.Pages).GetFrontPage()
 				assert.IsType(t, &TagsPicker{}, page)
 			},
 		},

@@ -133,7 +133,7 @@ func main() {
 
 	// Run!
 	err = app.
-		SetRoot(layout.GetContent(), true).
+		SetRoot(layout, true).
 		SetFocus(layout.Input.GetContent()).
 		Run()
 	if err != nil {
