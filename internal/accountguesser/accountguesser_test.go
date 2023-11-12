@@ -6,7 +6,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/accountguesser"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/accountguesser"
 )
@@ -59,7 +61,7 @@ func TestMatchedTransactionsGuesser(t *testing.T) {
 				return []journal.Posting{
 					{
 						Account: "ACC1",
-						Ammount: journal.Ammount{},
+						Ammount: finance.Ammount{},
 					},
 				}
 			},
@@ -156,6 +158,60 @@ func TestLastTransactionAccountGuesser(t *testing.T) {
 			if tc.success {
 				assert.Equal(t, tc.expected, actual)
 			}
+		})
+	}
+}
+
+func TestStatementAccountGuesser(t *testing.T) {
+	type testcontext struct {
+		accountguesser *StatementAccountGuesser
+	}
+	type testcase struct {
+		name     string
+		sEntry   statementloader.StatementEntry
+		input    []journal.Posting
+		success  bool
+		expected journal.Account
+	}
+	var testcases = []testcase{
+		{
+			name:     "no statement entry",
+			sEntry:   statementloader.StatementEntry{},
+			success:  false,
+			expected: "",
+		},
+		{
+			name:     "statement entry with account",
+			sEntry:   statementloader.StatementEntry{Account: "savings"},
+			success:  true,
+			expected: "savings",
+		},
+		{
+			name:     "existing input posting w same account",
+			sEntry:   statementloader.StatementEntry{Account: "savings"},
+			input:    []journal.Posting{{Account: "savings"}},
+			success:  false,
+			expected: "",
+		},
+		{
+			name:     "existing input posting w different account",
+			sEntry:   statementloader.StatementEntry{Account: "savings"},
+			input:    []journal.Posting{{Account: "expenses"}},
+			success:  true,
+			expected: "savings",
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			c := new(testcontext)
+			c.accountguesser, err = NewStatementAccountGuesser()
+			assert.NoError(t, err)
+			c.accountguesser.SetStatementEntry(tc.sEntry)
+			c.accountguesser.SetInputPostings(tc.input)
+			actual, success := c.accountguesser.Guess()
+			assert.Equal(t, tc.success, success)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

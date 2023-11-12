@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +14,28 @@ import (
 type PrinterConfig struct {
 	NumLineBreaksBefore int // Number of empty lines to print before a transaction.
 	NumLineBreaksAfter  int // Number of empty lines to print after a transaction.
+}
+
+// CSVStatementLoaderConfig represents the value for configuring a statementloader.CSVLoader.
+type CSVStatementLoaderConfig struct {
+	// File to load.
+	File string
+	// Separator to use.
+	Separator string `json:"separator"`
+	// Default account to use for all entries.
+	Account string `json:"account"`
+	// Default commodity to use for all entries.
+	Commodity string `json:"commodity"`
+	// Index of the date field in the CSV file.
+	DateFieldIndex int `json:"dateFieldIndex"`
+	// Date format to use for parsing the date field.
+	DateFormat string `json:"dateFormat"`
+	// Index of the account field in the CSV file.
+	AccountFieldIndex int `json:"accountFieldIndex"`
+	// Index of the description field in the CSV file.
+	DescriptionFieldIndex int `json:"descriptionFieldIndex"`
+	// Index of the ammount field in the CSV file.
+	AmmountFieldIndex int `json:"ammountFieldIndex"`
 }
 
 // Config is the root configuration for the entire app.
@@ -29,6 +52,8 @@ type Config struct {
 	LogLevel string
 	// Configures the transaction printer
 	PrinterConfig PrinterConfig
+	// Configures a CSV statement loader
+	CSVStatementLoaderConfig CSVStatementLoaderConfig
 }
 
 func SetupFlags(flagSet *pflag.FlagSet) {
@@ -37,8 +62,14 @@ func SetupFlags(flagSet *pflag.FlagSet) {
 	flagSet.String("ledger-file", "", "Ledger File to pass to HLedger commands. If empty let ledger executable find it.")
 	flagSet.String("logfile", "", "File where to send log output. Empty for stderr.")
 	flagSet.String("loglevel", "WARN", "Level of logger. Defaults to warning.")
+
+	// Printer config
 	flagSet.Int("printer-line-break-before", 1, "Number of line breaks to print before a transaction.")
 	flagSet.Int("printer-line-break-after", 1, "Number of line breaks to print after a transaction.")
+
+	// CSV Statement Loader config
+	flagSet.String("csv-statement-file", "", "CSV file to load as a statement.")
+	flagSet.String("csv-statement-preset", "default", "Preset to use for CSV statement.")
 }
 
 func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error) {
@@ -67,6 +98,15 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 		return &Config{}, fmt.Errorf("failed to bind env: %w", err)
 	}
 
+	// Loads the CSVStatementLoaderConfig
+	csvStatementLoaderConfig, err := LoadCsvStatementLoaderConfig(
+		viper.GetString("csv-statement-file"),
+		viper.GetString("csv-statement-preset"),
+	)
+	if err != nil {
+		return &Config{}, fmt.Errorf("failed to load csv statement config: %w", err)
+	}
+
 	// Unpack
 	config := &Config{
 		DestFile:          viper.GetString("destfile"),
@@ -78,6 +118,7 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 			NumLineBreaksBefore: viper.GetInt("printer-line-break-before"),
 			NumLineBreaksAfter:  viper.GetInt("printer-line-break-after"),
 		},
+		CSVStatementLoaderConfig: csvStatementLoaderConfig,
 	}
 
 	// Load dynamic values
@@ -100,4 +141,29 @@ func LoadFromCommandLine() (*Config, error) {
 	loader := NewLoader()
 	SetupFlags(pflag.CommandLine)
 	return Load(pflag.CommandLine, os.Args, loader)
+}
+
+func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig, error) {
+	if file == "" {
+		return CSVStatementLoaderConfig{}, nil
+	}
+	if preset == "" {
+		return CSVStatementLoaderConfig{}, fmt.Errorf("missing preset")
+	}
+	presetBytes, err := os.ReadFile(preset)
+	if err != nil {
+		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to open preset file: %w", err)
+	}
+	var config CSVStatementLoaderConfig
+	config.AccountFieldIndex = -1
+	config.AmmountFieldIndex = -1
+	config.DateFieldIndex = -1
+	config.DescriptionFieldIndex = -1
+	config.DateFormat = "02/01/2006"
+	err = json.Unmarshal(presetBytes, &config)
+	if err != nil {
+		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to unmarshal preset file: %w", err)
+	}
+	config.File = file
+	return config, nil
 }

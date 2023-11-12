@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/metaloader"
 	statemod "github.com/vitorqb/addledger/internal/state"
@@ -21,14 +22,14 @@ var transactions = []journal.Transaction{
 		Posting: []journal.Posting{
 			{
 				Account: "liabilities:other",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-4000000, -5),
 				},
 			},
 			{
 				Account: "expenses:sports",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(4000000, -5),
 				},

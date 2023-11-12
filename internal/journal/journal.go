@@ -2,12 +2,14 @@ package journal
 
 import (
 	"time"
+
+	"github.com/vitorqb/addledger/internal/finance"
 )
 
 // Posting represents a Posting inside a transaction
 type Posting struct {
 	Account string
-	Ammount Ammount
+	Ammount finance.Ammount
 }
 
 // Transaction represents a transaction inside a journal.

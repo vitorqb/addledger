@@ -84,6 +84,7 @@ func NewAccountList(
 ) (*widgets.ContextualList, error) {
 	list, err := widgets.NewContextualList(widgets.ContextualListOptions{
 		GetItemsFunc: func() (out []string) {
+			// List all accounts
 			for _, acc := range state.JournalMetadata.Accounts() {
 				out = append(out, string(acc))
 			}

@@ -6,11 +6,12 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/state"
 )
 
-var anAmmount = journal.Ammount{
+var anAmmount = finance.Ammount{
 	Commodity: "EUR",
 	Quantity:  decimal.New(2400, -2),
 }

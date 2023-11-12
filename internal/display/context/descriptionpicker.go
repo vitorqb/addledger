@@ -22,8 +22,15 @@ func NewDescriptionPicker(
 				descriptions = append(descriptions, transaction.Description)
 			}
 			out := utils.Unique(descriptions)
+
+			// NOTE: add current statement description if it exists.
+			if sEntry, found := state.CurrentStatementEntry(); found {
+				out = append(out, sEntry.Description)
+			}
+
 			// NOTE: call reverse so last transactions will be suggested first.
 			utils.Reverse(out)
+
 			return out
 		},
 		SetSelectedFunc: func(s string) {

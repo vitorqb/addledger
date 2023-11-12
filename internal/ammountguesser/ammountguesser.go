@@ -2,8 +2,10 @@ package ammountguesser
 
 import (
 	"github.com/shopspring/decimal"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 )
 
 //go:generate $MOCKGEN --source=ammountguesser.go --destination=../../mocks/ammountguesser/ammountguesser_mock.go
@@ -20,15 +22,19 @@ type IEngine interface {
 	// user input.
 	SetMatchingTransactions(x []journal.Transaction)
 
+	// SetStatementEntry set the statement entry that has been loaded and
+	// is being used for the current posting.
+	SetStatementEntry(x statementloader.StatementEntry)
+
 	// Guess returns the guess for the current state. If can't
 	// guess, success is false.
-	Guess() (guess journal.Ammount, success bool)
+	Guess() (guess finance.Ammount, success bool)
 }
 
 var DefaultCommodity string = "EUR"
 
 // TODO Get rid of this!
-var DefaultGuess = journal.Ammount{
+var DefaultGuess = finance.Ammount{
 	Commodity: "EUR",
 	Quantity:  decimal.New(1220, -2),
 }
@@ -36,6 +42,7 @@ var DefaultGuess = journal.Ammount{
 type Engine struct {
 	userInput            string
 	postingInputs        []*input.PostingInput
+	statementEntry       statementloader.StatementEntry
 	matchingTransactions []journal.Transaction
 }
 
@@ -43,7 +50,7 @@ var _ IEngine = &Engine{}
 
 func NewEngine() *Engine { return &Engine{} }
 
-func (e *Engine) Guess() (guess journal.Ammount, success bool) {
+func (e *Engine) Guess() (guess finance.Ammount, success bool) {
 
 	// If user entered an ammount, use it
 	if ammountFromUserInput, err := input.TextToAmmount(e.userInput); err == nil {
@@ -85,11 +92,16 @@ func (e *Engine) Guess() (guess journal.Ammount, success bool) {
 		if !success {
 			break
 		} else {
-			return journal.Ammount{
+			return finance.Ammount{
 				Commodity: firstAmmount.Commodity,
 				Quantity:  balance,
 			}, true
 		}
+	}
+
+	// If we have a statement entry, use it
+	if e.statementEntry.Ammount.Quantity.GreaterThan(decimal.Zero) {
+		return e.statementEntry.Ammount.InvertSign(), true
 	}
 
 	// If we have a matching transaction, use it.
@@ -101,6 +113,7 @@ func (e *Engine) Guess() (guess journal.Ammount, success bool) {
 	return DefaultGuess, true
 }
 
-func (e *Engine) SetUserInputText(x string)                       { e.userInput = x }
-func (e *Engine) SetPostingInputs(x []*input.PostingInput)        { e.postingInputs = x }
-func (e *Engine) SetMatchingTransactions(x []journal.Transaction) { e.matchingTransactions = x }
+func (e *Engine) SetUserInputText(x string)                          { e.userInput = x }
+func (e *Engine) SetPostingInputs(x []*input.PostingInput)           { e.postingInputs = x }
+func (e *Engine) SetMatchingTransactions(x []journal.Transaction)    { e.matchingTransactions = x }
+func (e *Engine) SetStatementEntry(x statementloader.StatementEntry) { e.statementEntry = x }

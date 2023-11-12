@@ -1,6 +1,7 @@
 package input
 
 import (
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/pkg/react"
 )
@@ -36,18 +37,18 @@ func (i *PostingInput) GetAccount() (string, bool) {
 	return "", false
 }
 
-func (i *PostingInput) SetAmmount(value journal.Ammount) {
+func (i *PostingInput) SetAmmount(value finance.Ammount) {
 	i.inputs["ammount"] = value
 	i.NotifyChange()
 }
 
-func (i *PostingInput) GetAmmount() (journal.Ammount, bool) {
+func (i *PostingInput) GetAmmount() (finance.Ammount, bool) {
 	if rawValue, found := i.inputs["ammount"]; found {
-		if value, ok := rawValue.(journal.Ammount); ok {
+		if value, ok := rawValue.(finance.Ammount); ok {
 			return value, true
 		}
 	}
-	return journal.Ammount{}, false
+	return finance.Ammount{}, false
 }
 
 func (i *PostingInput) ClearAmmount() {

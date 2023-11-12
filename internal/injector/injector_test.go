@@ -9,10 +9,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/injector"
 	. "github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
@@ -30,7 +32,7 @@ func TestAmmountGuesserEngine(t *testing.T) {
 	state.InputMetadata.SetPostingAmmountText("99.99")
 	guess, found = state.InputMetadata.GetPostingAmmountGuess()
 	assert.True(t, found)
-	expectedGuess := journal.Ammount{
+	expectedGuess := finance.Ammount{
 		Commodity: ammountguesser.DefaultCommodity,
 		Quantity:  decimal.New(9999, -2),
 	}
@@ -99,7 +101,7 @@ func TestDescriptionMatchAccountGuesser(t *testing.T) {
 	// Set a user inputted posting on state
 	posting := state.JournalEntryInput.AddPosting()
 	posting.SetAccount("foo")
-	posting.SetAmmount(journal.Ammount{})
+	posting.SetAmmount(finance.Ammount{})
 
 	// Set a user inputted description on state
 	state.JournalEntryInput.SetDescription("Superm")
@@ -167,4 +169,85 @@ func TestTransactionMatcher(t *testing.T) {
 
 	// Ensure that the matched transactions are on the state.
 	assert.Equal(t, expectedMatchedTransactions, state.InputMetadata.MatchingTransactions())
+}
+
+func TestStatementAccountGuesser(t *testing.T) {
+	state := statemod.InitialState()
+	accountGuesser, err := StatementAccountGuesser(state)
+	assert.NoError(t, err)
+
+	// Put a statement entry on the sate
+	sEntries := []statementloader.StatementEntry{{Account: "acc1"}}
+	state.SetStatementEntries(sEntries)
+
+	// Set an user inputted posting on state
+	posting := state.JournalEntryInput.AddPosting()
+	posting.SetAccount("foo")
+	posting.SetAmmount(finance.Ammount{})
+
+	// Guess should be right
+	guess, success := accountGuesser.Guess()
+	assert.True(t, success)
+	assert.Equal(t, journal.Account("acc1"), guess)
+}
+
+func TestCSVStatementLoaderOptions(t *testing.T) {
+	type testcase struct {
+		name            string
+		config          config.CSVStatementLoaderConfig
+		expectedOptions []statementloader.CSVLoaderOption
+	}
+	testcases := []testcase{
+		{
+			name: "empty",
+			config: config.CSVStatementLoaderConfig{
+				DateFieldIndex:        -1,
+				DescriptionFieldIndex: -1,
+				AccountFieldIndex:     -1,
+				AmmountFieldIndex:     -1,
+			},
+			expectedOptions: []statementloader.CSVLoaderOption{
+				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{}),
+			},
+		},
+		{
+			name: "full",
+			config: config.CSVStatementLoaderConfig{
+				Separator:             ";",
+				Account:               "acc",
+				Commodity:             "com",
+				DateFieldIndex:        0,
+				DateFormat:            "01/02/2006",
+				DescriptionFieldIndex: 1,
+				AccountFieldIndex:     2,
+				AmmountFieldIndex:     3,
+			},
+			expectedOptions: []statementloader.CSVLoaderOption{
+				statementloader.WithCSVSeparator(';'),
+				statementloader.WithCSVLoaderAccountName("acc"),
+				statementloader.WithCSVLoaderDefaultCommodity("com"),
+				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{
+					{Column: 0, Importer: statementloader.DateImporter{Format: "01/02/2006"}},
+					{Column: 1, Importer: statementloader.DescriptionImporter{}},
+					{Column: 2, Importer: statementloader.AccountImporter{}},
+					{Column: 3, Importer: statementloader.AmmountImporter{}},
+				}),
+			},
+		},
+	}
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			actualConfig := statementloader.CSVLoaderConfig{}
+			expectedConfig := statementloader.CSVLoaderConfig{}
+			options, err := CSVStatementLoaderOptions(testcase.config)
+			assert.Nil(t, err)
+			for _, option := range options {
+				option(&actualConfig)
+			}
+			for _, option := range testcase.expectedOptions {
+				option(&expectedConfig)
+			}
+			assert.Equal(t, expectedConfig, actualConfig)
+		})
+	}
 }

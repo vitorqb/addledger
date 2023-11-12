@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
@@ -124,16 +125,16 @@ func (i *JournalEntryInput) CountPostings() int {
 }
 
 // PostingBalance returns the balance left for all postings
-func (i *JournalEntryInput) PostingBalance() []journal.Ammount {
+func (i *JournalEntryInput) PostingBalance() []finance.Ammount {
 	postings := i.GetPostings()
-	var ammounts []journal.Ammount
+	var ammounts []finance.Ammount
 	for _, posting := range postings {
 		ammount, found := posting.GetAmmount()
 		if found {
 			ammounts = append(ammounts, ammount)
 		}
 	}
-	return journal.Balance(ammounts)
+	return finance.Balance(ammounts)
 }
 
 // PostingHasZeroBalance returns true if there is no left balance
@@ -169,6 +170,18 @@ func (i *JournalEntryInput) GetPostings() []*PostingInput {
 		}
 	}
 	return []*PostingInput{}
+}
+
+// GetCompletePostings returns all postings that are complete.
+func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
+	var postings []journal.Posting
+	for _, postingInput := range i.GetPostings() {
+		if postingInput.IsComplete() {
+			posting := postingInput.ToPosting()
+			postings = append(postings, posting)
+		}
+	}
+	return postings
 }
 
 func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
@@ -285,7 +298,7 @@ func (jei *JournalEntryInput) ToTransaction() (journal.Transaction, error) {
 	}, nil
 }
 
-func TextToAmmount(x string) (journal.Ammount, error) {
+func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal
 	var commodity string
@@ -296,12 +309,12 @@ func TextToAmmount(x string) (journal.Ammount, error) {
 		commodity = words[0]
 		quantity, err = decimal.NewFromString(words[1])
 	default:
-		return journal.Ammount{}, fmt.Errorf("invalid format")
+		return finance.Ammount{}, fmt.Errorf("invalid format")
 	}
 	if err != nil {
-		return journal.Ammount{}, fmt.Errorf("invalid format: %w", err)
+		return finance.Ammount{}, fmt.Errorf("invalid format: %w", err)
 	}
-	return journal.Ammount{Commodity: commodity, Quantity: quantity}, nil
+	return finance.Ammount{Commodity: commodity, Quantity: quantity}, nil
 }
 
 var TagRegex = regexp.MustCompile(`^(?P<name>[a-zA-Z0-9\-\_]+):(?P<value>[a-zA-Z0-9\-\_]+)$`)

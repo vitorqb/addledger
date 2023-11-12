@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
@@ -50,14 +49,13 @@ var EmptyInputActionShowAll EmptyInputAction = func(cl *ContextualList) {
 // select an entry from it for an input.
 type ContextualList struct {
 	*tview.List
-	inputCache       string
-	defaultCache     string
-	getItemsFunc     func() []string
-	getInputFunc     func() string
-	setSelectedFunc  func(string)
-	getDefaultFunc   func() (defaultValue string, success bool)
-	emptyInputAction EmptyInputAction
-	initialized      bool
+	getItemsFunc         func() []string
+	getInputFunc         func() string
+	setSelectedFunc      func(string)
+	getDefaultFunc       func() (defaultValue string, success bool)
+	emptyInputAction     EmptyInputAction
+	isRefreshing         bool
+	isHandlingListAction bool
 }
 
 // NewContextualList creates a new ContextualList. `getItemsFunc` is a
@@ -83,14 +81,11 @@ func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
 	// Builds list
 	list := &ContextualList{
 		List:             tview.NewList(),
-		inputCache:       "",
-		defaultCache:     "",
 		getItemsFunc:     options.GetItemsFunc,
 		getInputFunc:     options.GetInputFunc,
 		setSelectedFunc:  options.SetSelectedFunc,
 		getDefaultFunc:   options.GetDefaultFunc,
 		emptyInputAction: options.EmptyInputAction,
-		initialized:      false,
 	}
 	list.ShowSecondaryText(false)
 	list.SetChangedFunc(func(_ int, mainText, _ string, _ rune) {
@@ -103,14 +98,16 @@ func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
 
 // HandleAction handles a ListAction (e.g. next, prev, etc).
 func (cl *ContextualList) HandleAction(action listaction.ListAction) {
+	cl.isHandlingListAction = true
+	defer func() { cl.isHandlingListAction = false }()
 	logrus.WithField("action", action).Debug("Received listAction")
 	switch action {
 	case listaction.NEXT:
-		eventKey := tcell.NewEventKey(tcell.KeyDown, ' ', tcell.ModNone)
-		cl.InputHandler()(eventKey, func(p tview.Primitive) {})
+		currentItem := cl.GetCurrentItem()
+		cl.SetCurrentItem(currentItem + 1)
 	case listaction.PREV:
-		eventKey := tcell.NewEventKey(tcell.KeyUp, ' ', tcell.ModNone)
-		cl.InputHandler()(eventKey, func(p tview.Primitive) {})
+		currentItem := cl.GetCurrentItem()
+		cl.SetCurrentItem(currentItem - 1)
 	case listaction.NONE:
 	default:
 	}
@@ -129,7 +126,17 @@ func (cl *ContextualList) HandleActionFromEvent(e eventbus.Event) {
 // Refresh deletes all items, queries for them again and puts together the list only
 // with items that match the current input.
 func (cl *ContextualList) Refresh() {
-	input := cl.getInputFunc()
+	// If we are already refreshing, do nothing.
+	if cl.isRefreshing {
+		return
+	}
+	cl.isRefreshing = true
+	defer func() { cl.isRefreshing = false }()
+
+	// If we are handling an action, don't refresh.
+	if cl.isHandlingListAction {
+		return
+	}
 
 	// After we refresh, if we have 0 items, set selected to ""
 	defer func() {
@@ -147,35 +154,8 @@ func (cl *ContextualList) Refresh() {
 		}
 	}()
 
-	// Always mark as initialized after the first refresh
-	defer func() {
-		cl.initialized = true
-	}()
-
-	// Cache hits
-	if cl.initialized && input == cl.inputCache {
-
-		// If input is empty, we need to check whether the default changed!
-		if input == "" {
-			defaultValue, _ := cl.getDefaultFunc()
-
-			// If default didn't change, nothing to do.
-			if defaultValue == cl.defaultCache {
-				return
-			}
-
-			// Default changed, so we need to print items again.
-			cl.defaultCache = defaultValue
-			cl.emptyInputAction(cl)
-			return
-		}
-
-		// Input is not empty and hasn't changed - nothing to do.
-		return
-	}
-
-	// No cache hit - new input!
-	cl.inputCache = input
+	cl.Clear()
+	input := cl.getInputFunc()
 
 	// If the input is empty, dispatch to the empty input action
 	if input == "" {
@@ -184,7 +164,6 @@ func (cl *ContextualList) Refresh() {
 	}
 
 	// Input is not empty - match and sort by match
-	cl.Clear()
 	matches := fuzzy.RankFindFold(input, cl.getItemsFunc())
 	sort.Sort(matches)
 	for _, match := range matches {

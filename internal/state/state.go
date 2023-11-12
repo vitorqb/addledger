@@ -3,8 +3,10 @@ package state
 import (
 	"time"
 
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
@@ -30,8 +32,8 @@ type (
 		selectedDescription    string
 
 		// Controls posting ammount
-		postingAmmountGuess *MaybeValue[journal.Ammount]
-		postingAmmountInput *MaybeValue[journal.Ammount]
+		postingAmmountGuess *MaybeValue[finance.Ammount]
+		postingAmmountInput *MaybeValue[finance.Ammount]
 		postingAmmountText  string
 
 		// Controls tags
@@ -52,6 +54,9 @@ type (
 		JournalEntryInput *input.JournalEntryInput
 		InputMetadata     *InputMetadata
 		JournalMetadata   *JournalMetadata
+		// StatementEntries are entires loaded from a bank statement.
+		// They are used to help the user to create journal entries.
+		StatementEntries []statementloader.StatementEntry
 	}
 
 	// MaybeValue is a helper container that may contain a value or not
@@ -87,8 +92,8 @@ func InitialState() *State {
 		selectedPostingAccount: "",
 		descriptionText:        "",
 		selectedDescription:    "",
-		postingAmmountGuess:    &MaybeValue[journal.Ammount]{},
-		postingAmmountInput:    &MaybeValue[journal.Ammount]{},
+		postingAmmountGuess:    &MaybeValue[finance.Ammount]{},
+		postingAmmountInput:    &MaybeValue[finance.Ammount]{},
 		postingAmmountText:     "",
 		dateGuess:              &MaybeValue[time.Time]{},
 		matchingTransactions:   []journal.Transaction{},
@@ -100,6 +105,7 @@ func InitialState() *State {
 		journalEntryInput,
 		inputMetadata,
 		journalMetadata,
+		[]statementloader.StatementEntry{},
 	}
 	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
@@ -194,16 +200,16 @@ func (im *InputMetadata) SetSelectedDescription(x string) {
 }
 
 // SetPostingAmmountGuess sets the current guess for the ammount to enter.
-func (im *InputMetadata) SetPostingAmmountGuess(x journal.Ammount) {
+func (im *InputMetadata) SetPostingAmmountGuess(x finance.Ammount) {
 	im.postingAmmountGuess.Set(x)
 	im.NotifyChange()
 }
 
 // GetPostingAmmountGuess returns the current guess for the ammount to enter. The
 // second returned value described whether the value is set or not.
-func (im *InputMetadata) GetPostingAmmountGuess() (journal.Ammount, bool) {
+func (im *InputMetadata) GetPostingAmmountGuess() (finance.Ammount, bool) {
 	if !im.postingAmmountGuess.IsSet {
-		return journal.Ammount{}, false
+		return finance.Ammount{}, false
 	}
 	return im.postingAmmountGuess.Value, true
 }
@@ -215,16 +221,16 @@ func (im *InputMetadata) ClearPostingAmmountGuess() {
 }
 
 // SetPostingAmmountInput sets the current inputted ammount by the user.
-func (im *InputMetadata) SetPostingAmmountInput(x journal.Ammount) {
+func (im *InputMetadata) SetPostingAmmountInput(x finance.Ammount) {
 	im.postingAmmountInput.Set(x)
 	im.NotifyChange()
 }
 
 // GetPostingAmmountInput returns the current input for the ammount to enter. The
 // second returned value described whether the value is set or not.
-func (im *InputMetadata) GetPostingAmmountInput() (journal.Ammount, bool) {
+func (im *InputMetadata) GetPostingAmmountInput() (finance.Ammount, bool) {
 	if !im.postingAmmountInput.IsSet {
-		return journal.Ammount{}, false
+		return finance.Ammount{}, false
 	}
 	return im.postingAmmountInput.Value, true
 }
@@ -324,8 +330,8 @@ func (im *InputMetadata) Reset() {
 	im.selectedPostingAccount = ""
 	im.descriptionText = ""
 	im.selectedDescription = ""
-	im.postingAmmountGuess = &MaybeValue[journal.Ammount]{}
-	im.postingAmmountInput = &MaybeValue[journal.Ammount]{}
+	im.postingAmmountGuess = &MaybeValue[finance.Ammount]{}
+	im.postingAmmountInput = &MaybeValue[finance.Ammount]{}
 	im.postingAmmountText = ""
 	im.dateGuess = &MaybeValue[time.Time]{}
 	im.NotifyChange()
@@ -370,4 +376,31 @@ func (jm *JournalMetadata) Tags() []journal.Tag {
 		tags = append(tags, transaction.Tags...)
 	}
 	return utils.Unique(tags)
+}
+
+// GetStatementEntries returns the current statement entries
+func (s *State) GetStatementEntries() []statementloader.StatementEntry {
+	return s.StatementEntries
+}
+
+// SetStatementEntries sets the current statement entries
+func (s *State) SetStatementEntries(x []statementloader.StatementEntry) {
+	s.StatementEntries = x
+	s.NotifyChange()
+}
+
+// CurrentStatementEntry returns the current statement entry
+func (s *State) CurrentStatementEntry() (e statementloader.StatementEntry, found bool) {
+	if len(s.StatementEntries) == 0 {
+		return statementloader.StatementEntry{}, false
+	}
+	return s.StatementEntries[0], true
+}
+
+// PopStatementEntry pops the current statement entry
+func (s *State) PopStatementEntry() {
+	if len(s.StatementEntries) > 0 {
+		s.StatementEntries = s.StatementEntries[1:]
+		s.NotifyChange()
+	}
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/pkg/hledger"
@@ -38,14 +39,14 @@ var expectedTransactions = []journal.Transaction{
 		Posting: []journal.Posting{
 			{
 				Account: "liabilities:other",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-4000000, -5),
 				},
 			},
 			{
 				Account: "expenses:sports",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(4000000, -5),
 				},
@@ -60,14 +61,14 @@ var expectedTransactions = []journal.Transaction{
 		Posting: []journal.Posting{
 			{
 				Account: "revenues:salary",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(-164734000, -5),
 				},
 			},
 			{
 				Account: "assets:bank:current:lacaixa",
-				Ammount: journal.Ammount{
+				Ammount: finance.Ammount{
 					Commodity: "EUR",
 					Quantity:  decimal.New(164734000, -5),
 				},

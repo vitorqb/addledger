@@ -5,13 +5,13 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/finance"
 	. "github.com/vitorqb/addledger/internal/input"
-	"github.com/vitorqb/addledger/internal/journal"
 )
 
 var aDecimal, _ = decimal.NewFromString("2.20")
-var anAmmount = journal.Ammount{Commodity: "EUR", Quantity: aDecimal}
-var anotherAmmount = journal.Ammount{Commodity: "EUR", Quantity: decimal.New(-22, -1)}
+var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: aDecimal}
+var anotherAmmount = finance.Ammount{Commodity: "EUR", Quantity: decimal.New(-22, -1)}
 
 func TestPostingInput(t *testing.T) {
 

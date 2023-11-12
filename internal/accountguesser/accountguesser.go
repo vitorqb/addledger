@@ -2,6 +2,7 @@ package accountguesser
 
 import (
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 )
 
 //go:generate $MOCKGEN --source=accountguesser.go --destination=../../mocks/accountguesser/accountguesser_mock.go
@@ -62,7 +63,7 @@ func NewMatchedTransactionsAccountGuesser() (*MatchedTransactionsGuesser, error)
 }
 
 // LastTransactionAccountGuesser uses the last entered transaction to try
-// to guess an account
+// to guess an account.
 type LastTransactionAccountGuesser struct {
 	transactionHistory MatchedTransactions
 }
@@ -88,6 +89,45 @@ func (ag *LastTransactionAccountGuesser) Guess() (acc journal.Account, success b
 
 func NewLastTransactionAccountGuesser() (*LastTransactionAccountGuesser, error) {
 	return &LastTransactionAccountGuesser{MatchedTransactions{}}, nil
+}
+
+// StatementAccountGuesser uses the current statement entry to try
+// to guess an account
+type StatementAccountGuesser struct {
+	sEntry        statementloader.StatementEntry
+	inputPostings []journal.Posting
+}
+
+var _ IAccountGuesser = &StatementAccountGuesser{}
+
+func (ag *StatementAccountGuesser) SetStatementEntry(x statementloader.StatementEntry) {
+	ag.sEntry = x
+}
+
+func (ag *StatementAccountGuesser) SetInputPostings(x []journal.Posting) {
+	ag.inputPostings = x
+}
+
+// Guess tries to guess an account based on a loaded statement entry. If there
+// is a statement entry with an acconut that does not yet exist in the
+// input postings, it returns that account.
+func (ag *StatementAccountGuesser) Guess() (acc journal.Account, success bool) {
+	if ag.sEntry.Account == "" {
+		return "", false
+	}
+	for _, posting := range ag.inputPostings {
+		if posting.Account == ag.sEntry.Account {
+			return "", false
+		}
+	}
+	return journal.Account(ag.sEntry.Account), true
+}
+
+func NewStatementAccountGuesser() (*StatementAccountGuesser, error) {
+	return &StatementAccountGuesser{
+		statementloader.StatementEntry{},
+		[]journal.Posting{},
+	}, nil
 }
 
 // CompositeAccountGuesser composes N different account guessers

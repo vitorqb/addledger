@@ -7,11 +7,11 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display/context"
-	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/finance"
 	statemod "github.com/vitorqb/addledger/internal/state"
 )
 
-var anAmmount = journal.Ammount{Commodity: "EUR", Quantity: decimal.New(1220, -2)}
+var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: decimal.New(1220, -2)}
 
 func TestAmmountGuesser(t *testing.T) {
 	type testcontext struct {
