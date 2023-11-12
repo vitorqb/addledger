@@ -15,10 +15,11 @@ import (
 type (
 	Layout struct {
 		*tview.Flex
-		state   *state.State
-		View    *View
-		Input   *Input
-		Context *Context
+		state            *state.State
+		View             *View
+		Input            *Input
+		Context          *Context
+		statementDisplay *StatementDisplay
 	}
 )
 
@@ -65,10 +66,16 @@ func NewLayout(
 	if err != nil {
 		return nil, fmt.Errorf("failed to instatiate context: %w", err)
 	}
+
+	// Create a StatementDisplay, which displays info about the current statement
+	// (if any). It starts hidden and is only shown when there are statements.
+	statementDisplay := NewStatementDisplay(state)
+
 	flex := tview.
 		NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(view.GetContent(), 0, 5, false).
+		AddItem(statementDisplay, 0, 0, false).
 		AddItem(input.GetContent(), 0, 1, false).
 		AddItem(context.GetContent(), 0, 10, false)
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -79,11 +86,22 @@ func NewLayout(
 		}
 		return event
 	})
-	return &Layout{
-		Flex:    flex,
-		state:   state,
-		View:    view,
-		Input:   input,
-		Context: context,
-	}, nil
+	layout := &Layout{
+		Flex:             flex,
+		state:            state,
+		View:             view,
+		Input:            input,
+		Context:          context,
+		statementDisplay: statementDisplay,
+	}
+	layout.Refresh()
+	state.AddOnChangeHook(layout.Refresh)
+	return layout, nil
+}
+
+func (l *Layout) Refresh() {
+	// If there are statements, display the statement display
+	if len(l.state.StatementEntries) > 0 {
+		l.Flex.ResizeItem(l.statementDisplay, 0, 1)
+	}
 }

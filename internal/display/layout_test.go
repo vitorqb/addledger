@@ -41,7 +41,7 @@ func TestNewLayout(t *testing.T) {
 			name: "Displays the tag picker",
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputTags)
-				_, page := c.layout.GetItem(2).(*tview.Pages).GetFrontPage()
+				_, page := c.layout.GetItem(3).(*tview.Pages).GetFrontPage()
 				assert.IsType(t, &TagsPicker{}, page)
 			},
 		},
