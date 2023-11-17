@@ -22,18 +22,7 @@ func main() {
 	}
 
 	// Configures logging
-	if config.LogFile != "" {
-		logFile, err := os.OpenFile(config.LogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to open log file.")
-		}
-		logrus.SetOutput(logFile)
-	}
-	logLevel, err := logrus.ParseLevel(config.LogLevel)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to parse log level.")
-	}
-	logrus.SetLevel(logLevel)
+	app.ConfigureLogger(logrus.StandardLogger(), config.LogFile, config.LogLevel)
 
 	// Creates a hledger client
 	hledgerClient := injector.HledgerClient(config)
@@ -110,16 +99,10 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load account guesser")
 	}
 
-	// If a csv statement file was passed, load it
-	if statementFile := config.CSVStatementLoaderConfig.File; statementFile != "" {
-		csvStatementLoader, err := injector.CSVStatementLoader(config.CSVStatementLoaderConfig)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to load csv statement loader")
-		}
-		err = app.LoadStatement(csvStatementLoader, statementFile, state)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to load statement")
-		}
+	// Maybe load a CSV statement
+	err = app.MaybeLoadCsvStatement(config.CSVStatementLoaderConfig, state)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load csv statement")
 	}
 
 	// Starts a new layout
@@ -137,6 +120,6 @@ func main() {
 		SetFocus(layout.Input.GetContent()).
 		Run()
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 }
