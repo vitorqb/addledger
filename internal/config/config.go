@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"github.com/vitorqb/addledger/internal/utils"
 )
 
 // PrinterConfig represents the value for configuring a printer.Printer.
@@ -69,7 +71,7 @@ func SetupFlags(flagSet *pflag.FlagSet) {
 
 	// CSV Statement Loader config
 	flagSet.String("csv-statement-file", "", "CSV file to load as a statement.")
-	flagSet.String("csv-statement-preset", "", "Preset to use for CSV statement.")
+	flagSet.String("csv-statement-preset", "", "Preset to use for CSV statement. If a simple filename is given, it will be searched in ~/.config/addledger/presets (with a .json extension).")
 }
 
 func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error) {
@@ -149,6 +151,12 @@ func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig
 	}
 	if preset == "" {
 		return CSVStatementLoaderConfig{}, fmt.Errorf("missing preset")
+	}
+	if !utils.LooksLikePath(preset) {
+		preset = fmt.Sprintf("%s/.config/addledger/presets/%s", os.Getenv("HOME"), preset)
+	}
+	if filepath.Ext(preset) == "" {
+		preset += ".json"
 	}
 	presetBytes, err := os.ReadFile(preset)
 	if err != nil {

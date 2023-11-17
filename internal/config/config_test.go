@@ -164,6 +164,12 @@ func TestLoadCsvStatementLoaderConfig(t *testing.T) {
 		assert.ErrorContains(t, err, "failed to open preset file")
 	})
 
+	t.Run("Preset as file name loads from config dir", func(t *testing.T) {
+		t.Setenv("HOME", "/home/foo")
+		_, err := LoadCsvStatementLoaderConfig(csvFile, "foo")
+		assert.ErrorContains(t, err, "/home/foo/.config/addledger/presets/foo.json")
+	})
+
 	t.Run("Minimal preset found", func(t *testing.T) {
 		config, err := LoadCsvStatementLoaderConfig(csvFile, minPresetFile)
 		assert.NoError(t, err)

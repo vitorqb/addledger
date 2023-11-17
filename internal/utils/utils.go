@@ -1,5 +1,7 @@
 package utils
 
+import "strings"
+
 // StopSplitArray signals that the SplitArray should stop.
 type StopSplitArray struct{}
 
@@ -45,4 +47,9 @@ func Reverse[T interface{}](a []T) {
 	for i, j := 0, len(a)-1; i < j; i, j = i+1, j-1 {
 		a[i], a[j] = a[j], a[i]
 	}
+}
+
+// Returns True if a string looks like a relative or absolute path.
+func LooksLikePath(s string) bool {
+	return strings.Contains(s, "/") || strings.Contains(s, "\\")
 }
