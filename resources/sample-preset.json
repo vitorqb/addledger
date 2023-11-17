@@ -1,0 +1,10 @@
+{
+  "separator": ",",
+  "account": "assets:bank:current-account",
+  "commodity": "EUR",
+  "dateFieldIndex": 0,
+  "dateFormat": "01/02/2006",
+  "descriptionFieldIndex": 1,
+  "accountFieldIndex": -1,
+  "ammountFieldIndex": 2
+}

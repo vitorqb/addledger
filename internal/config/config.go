@@ -152,7 +152,7 @@ func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig
 	}
 	presetBytes, err := os.ReadFile(preset)
 	if err != nil {
-		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to open preset file: %w", err)
+		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to open preset file %s: %w", preset, err)
 	}
 	var config CSVStatementLoaderConfig
 	config.AccountFieldIndex = -1
