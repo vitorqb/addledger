@@ -69,7 +69,7 @@ func SetupFlags(flagSet *pflag.FlagSet) {
 
 	// CSV Statement Loader config
 	flagSet.String("csv-statement-file", "", "CSV file to load as a statement.")
-	flagSet.String("csv-statement-preset", "default", "Preset to use for CSV statement.")
+	flagSet.String("csv-statement-preset", "", "Preset to use for CSV statement.")
 }
 
 func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error) {
