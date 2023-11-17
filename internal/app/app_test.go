@@ -6,8 +6,10 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
+	logrusTest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/app"
+	"github.com/vitorqb/addledger/internal/config"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
@@ -53,4 +55,36 @@ func TestConfigureLogger(t *testing.T) {
 		assert.Contains(t, fileContent, "foo")
 	})
 
+	t.Run("Fails to open log file", func(t *testing.T) {
+		logger, logHook := logrusTest.NewNullLogger()
+		logger.ExitFunc = func(int) {}
+		logFile := "/foo/bar"
+		ConfigureLogger(logger, logFile, "info")
+		assert.Equal(t, 1, len(logHook.Entries))
+		assert.Equal(t, logrus.FatalLevel, logHook.LastEntry().Level)
+		assert.Contains(t, logHook.LastEntry().Message, "Failed to open log file")
+	})
+
+	t.Run("Fails to parse log level", func(t *testing.T) {
+		logger, logHook := logrusTest.NewNullLogger()
+		logger.ExitFunc = func(int) {}
+		ConfigureLogger(logger, "", "foo")
+		assert.Equal(t, 1, len(logHook.Entries))
+		assert.Equal(t, logrus.FatalLevel, logHook.LastEntry().Level)
+		assert.Contains(t, logHook.LastEntry().Message, "Failed to parse log level")
+	})
+}
+
+func TestMaybeLoadCsvStatement(t *testing.T) {
+	t.Run("No file", func(t *testing.T) {
+		state := statemod.InitialState()
+		err := MaybeLoadCsvStatement(config.CSVStatementLoaderConfig{}, state)
+		assert.Nil(t, err)
+		assert.Equal(t, []statementloader.StatementEntry{}, state.GetStatementEntries())
+	})
+	t.Run("Fails to load statement", func(t *testing.T) {
+		state := statemod.InitialState()
+		err := MaybeLoadCsvStatement(config.CSVStatementLoaderConfig{File: "dont-exist"}, state)
+		assert.ErrorContains(t, err, "failed to load statement")
+	})
 }

@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 )
@@ -46,4 +48,20 @@ func ConfigureLogger(logger *logrus.Logger, LogFile string, LogLevel string) {
 		logger.WithError(err).Fatal("Failed to parse log level.")
 	}
 	logger.SetLevel(logLevel)
+}
+
+// MaybeLoadStatement loads a CSV statement if the config is set.
+func MaybeLoadCsvStatement(config config.CSVStatementLoaderConfig, state *state.State) error {
+	if config.File == "" {
+		return nil
+	}
+	csvStatementLoader, err := injector.CSVStatementLoader(config)
+	if err != nil {
+		return fmt.Errorf("failed to load csv statement loader: %w", err)
+	}
+	err = LoadStatement(csvStatementLoader, config.File, state)
+	if err != nil {
+		return fmt.Errorf("failed to load statement: %w", err)
+	}
+	return nil
 }

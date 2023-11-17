@@ -99,16 +99,10 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load account guesser")
 	}
 
-	// If a csv statement file was passed, load it
-	if statementFile := config.CSVStatementLoaderConfig.File; statementFile != "" {
-		csvStatementLoader, err := injector.CSVStatementLoader(config.CSVStatementLoaderConfig)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to load csv statement loader")
-		}
-		err = app.LoadStatement(csvStatementLoader, statementFile, state)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to load statement")
-		}
+	// Maybe load a CSV statement
+	err = app.MaybeLoadCsvStatement(config.CSVStatementLoaderConfig, state)
+	if err != nil {
+		logrus.WithError(err).Fatal("Failed to load csv statement")
 	}
 
 	// Starts a new layout
