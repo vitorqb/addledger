@@ -103,5 +103,7 @@ func (l *Layout) Refresh() {
 	// If there are statements, display the statement display
 	if len(l.state.StatementEntries) > 0 {
 		l.Flex.ResizeItem(l.statementDisplay, 0, 1)
+		return
 	}
+	l.Flex.ResizeItem(l.statementDisplay, 0, 0)
 }
