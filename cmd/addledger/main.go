@@ -120,6 +120,6 @@ func main() {
 		SetFocus(layout.Input.GetContent()).
 		Run()
 	if err != nil {
-		panic(err)
+		logrus.Fatal(err)
 	}
 }
