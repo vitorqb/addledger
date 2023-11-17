@@ -181,7 +181,6 @@ func TestDateField(t *testing.T) {
 		{
 			name: "Call controller when done",
 			run: func(c *testcontext, t *testing.T) {
-				c.controller.EXPECT().OnDateChanged("")
 				c.controller.EXPECT().OnDateChanged("1993-11-23")
 				c.controller.EXPECT().OnDateDone()
 				dateField := DateField(c.controller)
@@ -192,7 +191,6 @@ func TestDateField(t *testing.T) {
 		{
 			name: "Call controller when change",
 			run: func(c *testcontext, t *testing.T) {
-				c.controller.EXPECT().OnDateChanged("")
 				c.controller.EXPECT().OnDateChanged("1993-11-23")
 				dateField := DateField(c.controller)
 				dateField.SetText("1993-11-23")
