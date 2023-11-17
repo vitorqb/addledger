@@ -22,18 +22,7 @@ func main() {
 	}
 
 	// Configures logging
-	if config.LogFile != "" {
-		logFile, err := os.OpenFile(config.LogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
-		if err != nil {
-			logrus.WithError(err).Fatal("Failed to open log file.")
-		}
-		logrus.SetOutput(logFile)
-	}
-	logLevel, err := logrus.ParseLevel(config.LogLevel)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to parse log level.")
-	}
-	logrus.SetLevel(logLevel)
+	app.ConfigureLogger(logrus.StandardLogger(), config.LogFile, config.LogLevel)
 
 	// Creates a hledger client
 	hledgerClient := injector.HledgerClient(config)

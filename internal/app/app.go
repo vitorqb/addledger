@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 )
@@ -29,4 +30,20 @@ func LoadStatement(
 
 	state.SetStatementEntries(entries)
 	return nil
+}
+
+// ConfigureLogger configures the logger.
+func ConfigureLogger(logger *logrus.Logger, LogFile string, LogLevel string) {
+	if LogFile != "" {
+		logFile, err := os.OpenFile(LogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			logger.WithError(err).Fatal("Failed to open log file.")
+		}
+		logger.SetOutput(logFile)
+	}
+	logLevel, err := logrus.ParseLevel(LogLevel)
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to parse log level.")
+	}
+	logger.SetLevel(logLevel)
 }
