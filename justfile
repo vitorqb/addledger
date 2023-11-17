@@ -21,7 +21,12 @@ GORELEASER := env_var_or_default("GORELEASER", join(BIN, "goreleaser-" + GORELEA
 SEMVER_VERSION := env_var_or_default("SEMVER_VERSION", "3c76a6f9d113f4045f693845131185611a62162e")
 SEMVER := env_var_or_default("SEMVER", join(BIN, "semver-" + SEMVER_VERSION + ".sh"))
 
+# helpers
 PATH := env_var("PATH")
+
+# known paths
+resources := join(justfile_directory(), "resources")
+
 
 #
 # Developing
@@ -37,6 +42,14 @@ setup:
 # Runs the app
 run args="":
     {{GO}} run cmd/addledger/main.go {{args}}
+
+# Runs the app with csv statement
+run-with-csv-statement:
+    #!/bin/bash
+    export ADDLEDGER_CSV_STATEMENT_FILE={{join(resources, "sample-statement.csv")}}
+    export ADDLEDGER_CSV_STATEMENT_PRESET={{join(resources, "sample-preset.json")}}
+    echo "Running with csv statement ${ADDLEDGER_CSV_STATEMENT_FILE} and preset ${ADDLEDGER_CSV_STATEMENT_PRESET}"
+    {{GO}} run cmd/addledger/main.go    
 
 # Runs all tests
 test target="./...": mocks

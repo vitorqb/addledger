@@ -100,7 +100,7 @@ func (e *Engine) Guess() (guess finance.Ammount, success bool) {
 	}
 
 	// If we have a statement entry, use it
-	if e.statementEntry.Ammount.Quantity.GreaterThan(decimal.Zero) {
+	if e.statementEntry.Ammount.Quantity.Abs().GreaterThan(decimal.Zero) {
 		return e.statementEntry.Ammount.InvertSign(), true
 	}
 
