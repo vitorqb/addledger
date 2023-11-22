@@ -10,10 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
+	ammountguesser_mock "github.com/vitorqb/addledger/mocks/ammountguesser"
 	. "github.com/vitorqb/addledger/mocks/statementloader"
 	. "github.com/vitorqb/addledger/mocks/transactionmatcher"
 )
@@ -118,5 +120,44 @@ func TestLinkTransactionMatcher(t *testing.T) {
 		// Check state was properly set
 		resultMatchingTransactions := state.InputMetadata.MatchingTransactions()
 		assert.Equal(t, matchedTransactions, resultMatchingTransactions)
+	})
+}
+
+func TestLinkAmmountGuesser(t *testing.T) {
+	t.Run("Saves guess to state", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		engine := ammountguesser_mock.NewMockIEngine(ctrl)
+		state := statemod.InitialState()
+
+		// All input used for guessing
+		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
+		userInput := "EUR 12.20"
+		statementEntry := statementloader.StatementEntry{}
+
+		// Set on state
+		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
+		state.InputMetadata.SetPostingAmmountText(userInput)
+		state.JournalEntryInput.AddPosting()
+		state.SetStatementEntries([]statementloader.StatementEntry{statementEntry})
+		// Assertions & behavior for engine
+		engine.EXPECT().SetMatchingTransactions(matchingTransactions)
+		engine.EXPECT().SetPostingInputs(gomock.Any())
+		engine.EXPECT().SetStatementEntry(statementEntry)
+		engine.EXPECT().SetUserInputText(userInput)
+
+		// Mock the result
+		guess := finance.Ammount{}
+		engine.EXPECT().Guess().Return(guess, true)
+
+		// Prepares the engine
+		LinkAmmountGuesser(state, engine)
+
+		// Trigger state change hooks
+		state.SetPhase(statemod.InputPostingAmmount)
+
+		// Ensure ammount guesser guessed
+		actualGuess, _ := state.InputMetadata.GetPostingAmmountGuess()
+		assert.Equal(t, guess, actualGuess)
 	})
 }

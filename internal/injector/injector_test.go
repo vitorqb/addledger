@@ -20,18 +20,17 @@ import (
 )
 
 func TestAmmountGuesserEngine(t *testing.T) {
-	state := statemod.InitialState()
-	_ = AmmountGuesserEngine(state)
+	ammountGuesser := AmmountGuesserEngine()
 
 	// At the beggining, default guess
-	guess, found := state.InputMetadata.GetPostingAmmountGuess()
-	assert.True(t, found)
+	guess, success := ammountGuesser.Guess()
+	assert.True(t, success)
 	assert.Equal(t, ammountguesser.DefaultGuess, guess)
 
 	// On new input for ammount guesser text, updates guess
-	state.InputMetadata.SetPostingAmmountText("99.99")
-	guess, found = state.InputMetadata.GetPostingAmmountGuess()
-	assert.True(t, found)
+	ammountGuesser.SetUserInputText("99.99")
+	guess, success = ammountGuesser.Guess()
+	assert.True(t, success)
 	expectedGuess := finance.Ammount{
 		Commodity: ammountguesser.DefaultCommodity,
 		Quantity:  decimal.New(9999, -2),
@@ -39,9 +38,9 @@ func TestAmmountGuesserEngine(t *testing.T) {
 	assert.Equal(t, expectedGuess, guess)
 
 	// On invalid input, defaults to default guess
-	state.InputMetadata.SetPostingAmmountText("aaaa")
-	guess, found = state.InputMetadata.GetPostingAmmountGuess()
-	assert.True(t, found)
+	ammountGuesser.SetUserInputText("")
+	guess, success = ammountGuesser.Guess()
+	assert.True(t, success)
 	assert.Equal(t, ammountguesser.DefaultGuess, guess)
 }
 
