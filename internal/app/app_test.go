@@ -10,10 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/statementloader"
+	. "github.com/vitorqb/addledger/mocks/transactionmatcher"
 )
 
 func TestLoadStatement(t *testing.T) {
@@ -86,5 +88,35 @@ func TestMaybeLoadCsvStatement(t *testing.T) {
 		state := statemod.InitialState()
 		err := MaybeLoadCsvStatement(config.CSVStatementLoaderConfig{File: "dont-exist"}, state)
 		assert.ErrorContains(t, err, "failed to load statement")
+	})
+}
+
+func TestLinkTransactionMatcher(t *testing.T) {
+	t.Run("Saves transactions to state", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		// Prepares state with description and transaction history
+		transactionHistory := []journal.Transaction{{Comment: "one"}}
+		description := "description"
+		state := statemod.InitialState()
+
+		// Prepares the matcher with expected calls
+		matchedTransactions := []journal.Transaction{{Comment: "two"}}
+		matcher := NewMockITransactionMatcher(ctrl)
+		matcher.EXPECT().SetDescriptionInput(description)
+		matcher.EXPECT().SetTransactionHistory(transactionHistory)
+		matcher.EXPECT().Match().Return(matchedTransactions)
+
+		// Links
+		LinkTransactionMatcher(state, matcher)
+
+		// Set the state variables
+		state.JournalMetadata.SetTransactions(transactionHistory)
+		state.JournalEntryInput.SetDescription(description)
+
+		// Check state was properly set
+		resultMatchingTransactions := state.InputMetadata.MatchingTransactions()
+		assert.Equal(t, matchedTransactions, resultMatchingTransactions)
 	})
 }

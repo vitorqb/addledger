@@ -11,6 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/transactionmatcher"
 )
 
 // LoadStatement loads a statement from a file and saves it to the state.
@@ -64,4 +65,32 @@ func MaybeLoadCsvStatement(config config.CSVStatementLoaderConfig, state *state.
 		return fmt.Errorf("failed to load statement: %w", err)
 	}
 	return nil
+}
+
+// LinkTransactionMatcher links a transaction matcher to the state. Every time the
+// state changes, the matcher will calculate the transactions matching the user
+// inputs and save them to the state.
+func LinkTransactionMatcher(state *state.State, matcher transactionmatcher.ITransactionMatcher) {
+	busy := false
+	state.AddOnChangeHook(func() {
+		if busy {
+			return
+		}
+		busy = true
+		defer func() {
+			busy = false
+		}()
+
+		descriptionInput, found := state.JournalEntryInput.GetDescription()
+		if !found {
+			return
+		}
+		matcher.SetDescriptionInput(descriptionInput)
+
+		transactionHistory := state.JournalMetadata.Transactions()
+		matcher.SetTransactionHistory(transactionHistory)
+
+		matchingTransactions := matcher.Match()
+		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
+	})
 }
