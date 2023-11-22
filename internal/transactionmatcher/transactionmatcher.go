@@ -7,6 +7,8 @@ import (
 	"github.com/vitorqb/addledger/internal/stringmatcher"
 )
 
+//go:generate $MOCKGEN --source=transactionmatcher.go --destination=../../mocks/transactionmatcher/transactionmatcher_mock.go
+
 // match is a transaction and its distance from the inputs.
 type match struct {
 	transaction journal.Transaction

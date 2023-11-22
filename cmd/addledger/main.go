@@ -72,10 +72,11 @@ func main() {
 
 	// Loads a TransactionMatcher. We don't need the reference since it's
 	// linked to the state.
-	_, err = injector.TransactionMatcher(state)
+	transactionMatcher, err := injector.TransactionMatcher()
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load transaction matcher")
 	}
+	app.LinkTransactionMatcher(state, transactionMatcher)
 
 	// Starts a new controller
 	controller, err := controller.NewController(state,
@@ -91,7 +92,8 @@ func main() {
 
 	// Starts the AmmountGuesserEngine. Note it's linked to state refresh
 	// so we don't need it's instance.
-	_ = injector.AmmountGuesserEngine(state)
+	ammountGuesser := injector.AmmountGuesserEngine()
+	app.LinkAmmountGuesser(state, ammountGuesser)
 
 	// Start an account guesser
 	accountGuesser, err := injector.AccountGuesser(state)

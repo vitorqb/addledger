@@ -7,17 +7,19 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/injector"
-	"github.com/vitorqb/addledger/internal/state"
+	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/transactionmatcher"
 )
 
 // LoadStatement loads a statement from a file and saves it to the state.
 func LoadStatement(
 	loader statementloader.StatementLoader,
 	file string,
-	state *state.State,
+	state *statemod.State,
 ) error {
 	f, err := os.Open(file)
 	if err != nil {
@@ -51,7 +53,7 @@ func ConfigureLogger(logger *logrus.Logger, LogFile string, LogLevel string) {
 }
 
 // MaybeLoadStatement loads a CSV statement if the config is set.
-func MaybeLoadCsvStatement(config config.CSVStatementLoaderConfig, state *state.State) error {
+func MaybeLoadCsvStatement(config config.CSVStatementLoaderConfig, state *statemod.State) error {
 	if config.File == "" {
 		return nil
 	}
@@ -64,4 +66,68 @@ func MaybeLoadCsvStatement(config config.CSVStatementLoaderConfig, state *state.
 		return fmt.Errorf("failed to load statement: %w", err)
 	}
 	return nil
+}
+
+// LinkTransactionMatcher links a transaction matcher to the state. Every time the
+// state changes, the matcher will calculate the transactions matching the user
+// inputs and save them to the state.
+func LinkTransactionMatcher(state *statemod.State, matcher transactionmatcher.ITransactionMatcher) {
+	busy := false
+	state.AddOnChangeHook(func() {
+		if busy {
+			return
+		}
+		busy = true
+		defer func() {
+			busy = false
+		}()
+
+		descriptionInput, found := state.JournalEntryInput.GetDescription()
+		if !found {
+			return
+		}
+		matcher.SetDescriptionInput(descriptionInput)
+
+		transactionHistory := state.JournalMetadata.Transactions()
+		matcher.SetTransactionHistory(transactionHistory)
+
+		matchingTransactions := matcher.Match()
+		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
+	})
+}
+
+// LinkAmmountGuesser links a given Ammount Guesser to state updates
+func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IEngine) {
+	busy := false
+	// subscribes to changes
+	state.AddOnChangeHook(func() {
+		if busy {
+			return
+		}
+		busy = true
+		defer func() { busy = false }()
+
+		// sync matching transactions
+		matchingTransactions := state.InputMetadata.MatchingTransactions()
+		guesser.SetMatchingTransactions(matchingTransactions)
+
+		// sync input text
+		newText := state.InputMetadata.GetPostingAmmountText()
+		guesser.SetUserInputText(newText)
+
+		// sync existing postings
+		newPostings := state.JournalEntryInput.GetPostings()
+		guesser.SetPostingInputs(newPostings)
+
+		// sync statement entry
+		statementEntry, _ := state.CurrentStatementEntry()
+		guesser.SetStatementEntry(statementEntry)
+
+		guess, success := guesser.Guess()
+		if !success {
+			state.InputMetadata.ClearPostingAmmountGuess()
+			return
+		}
+		state.InputMetadata.SetPostingAmmountGuess(guess)
+	})
 }

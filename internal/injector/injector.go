@@ -22,57 +22,10 @@ func HledgerClient(config *configmod.Config) hledger.IClient {
 	return hledger.NewClient(config.HLedgerExecutable, config.LedgerFile)
 }
 
-// AmmountGuesserEngine instantiates a new guesser engine for ammounts and
-// links it to the state
-func AmmountGuesserEngine(state *statemod.State) ammountguesser.IEngine {
+// AmmountGuesserEngine instantiates a new guesser engine for ammount.
+func AmmountGuesserEngine() ammountguesser.IEngine {
 	// starts an engine
 	ammountGuesserEngine := ammountguesser.NewEngine()
-
-	// sets initial guess
-	text := state.InputMetadata.GetPostingAmmountText()
-	ammountGuesserEngine.SetUserInputText(text)
-	if guess, success := ammountGuesserEngine.Guess(); success {
-		state.InputMetadata.SetPostingAmmountGuess(guess)
-	}
-
-	busy := false
-	// subscribes to changes
-	state.AddOnChangeHook(func() {
-		if busy {
-			return
-		}
-		busy = true
-		defer func() { busy = false }()
-
-		// sync matching transactions
-		matchingTransactions := state.InputMetadata.MatchingTransactions()
-		ammountGuesserEngine.SetMatchingTransactions(matchingTransactions)
-
-		// sync input text
-		newText := state.InputMetadata.GetPostingAmmountText()
-		ammountGuesserEngine.SetUserInputText(newText)
-
-		// sync existing postings
-		newPostings := state.JournalEntryInput.GetPostings()
-		ammountGuesserEngine.SetPostingInputs(newPostings)
-
-		// sync statement entry
-		statementEntry, _ := state.CurrentStatementEntry()
-		ammountGuesserEngine.SetStatementEntry(statementEntry)
-
-		oldGuess, oldGuessFound := state.InputMetadata.GetPostingAmmountGuess()
-		guess, success := ammountGuesserEngine.Guess()
-		if success {
-			if !guess.Equal(oldGuess) {
-				state.InputMetadata.SetPostingAmmountGuess(guess)
-			}
-		} else {
-			if oldGuessFound {
-				state.InputMetadata.ClearPostingAmmountGuess()
-			}
-		}
-
-	})
 
 	// returns
 	return ammountGuesserEngine
@@ -235,7 +188,7 @@ func CSVStatementLoader(config configmod.CSVStatementLoaderConfig) (*statementlo
 	return statementloader.NewCSVLoader(options...), nil
 }
 
-func TransactionMatcher(state *statemod.State) (transactionmatcher.ITransactionMatcher, error) {
+func TransactionMatcher() (transactionmatcher.ITransactionMatcher, error) {
 	// We could inject a stringmatcher here if we ever want to make it configurable.
 	stringMatcher, err := stringmatcher.New(&stringmatcher.Options{})
 	if err != nil {
@@ -243,24 +196,6 @@ func TransactionMatcher(state *statemod.State) (transactionmatcher.ITransactionM
 	}
 
 	transactionMatcher := transactionmatcher.New(stringMatcher)
-
-	// Ensure the state is updated when the matched transaction changes.
-	busy := false
-	state.AddOnChangeHook(func() {
-		if !busy {
-			busy = true
-			defer func() { busy = false }()
-			descriptionInput, found := state.JournalEntryInput.GetDescription()
-			if !found {
-				return
-			}
-			transactionMatcher.SetDescriptionInput(descriptionInput)
-			transactionHistory := state.JournalMetadata.Transactions()
-			transactionMatcher.SetTransactionHistory(transactionHistory)
-			matchingTransactions := transactionMatcher.Match()
-			state.InputMetadata.SetMatchingTransactions(matchingTransactions)
-		}
-	})
 
 	return transactionMatcher, nil
 }
