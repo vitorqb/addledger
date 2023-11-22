@@ -5,9 +5,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	"github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/injector"
@@ -18,31 +16,6 @@ import (
 	"github.com/vitorqb/addledger/internal/testutils"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
-
-func TestAmmountGuesserEngine(t *testing.T) {
-	ammountGuesser := AmmountGuesserEngine()
-
-	// At the beggining, default guess
-	guess, success := ammountGuesser.Guess()
-	assert.True(t, success)
-	assert.Equal(t, ammountguesser.DefaultGuess, guess)
-
-	// On new input for ammount guesser text, updates guess
-	ammountGuesser.SetUserInputText("99.99")
-	guess, success = ammountGuesser.Guess()
-	assert.True(t, success)
-	expectedGuess := finance.Ammount{
-		Commodity: ammountguesser.DefaultCommodity,
-		Quantity:  decimal.New(9999, -2),
-	}
-	assert.Equal(t, expectedGuess, guess)
-
-	// On invalid input, defaults to default guess
-	ammountGuesser.SetUserInputText("")
-	guess, success = ammountGuesser.Guess()
-	assert.True(t, success)
-	assert.Equal(t, ammountguesser.DefaultGuess, guess)
-}
 
 func TestStateAndMetaLoader(t *testing.T) {
 	ctrl := gomock.NewController(t)

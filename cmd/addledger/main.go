@@ -92,7 +92,7 @@ func main() {
 
 	// Starts the AmmountGuesserEngine. Note it's linked to state refresh
 	// so we don't need it's instance.
-	ammountGuesser := injector.AmmountGuesserEngine()
+	ammountGuesser := injector.AmmountGuesser()
 	app.LinkAmmountGuesser(state, ammountGuesser)
 
 	// Start an account guesser

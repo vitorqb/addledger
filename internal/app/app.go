@@ -97,7 +97,7 @@ func LinkTransactionMatcher(state *statemod.State, matcher transactionmatcher.IT
 }
 
 // LinkAmmountGuesser links a given Ammount Guesser to state updates
-func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IEngine) {
+func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IAmmountGuesser) {
 	busy := false
 	// subscribes to changes
 	state.AddOnChangeHook(func() {
@@ -107,23 +107,14 @@ func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IEngine) {
 		busy = true
 		defer func() { busy = false }()
 
-		// sync matching transactions
-		matchingTransactions := state.InputMetadata.MatchingTransactions()
-		guesser.SetMatchingTransactions(matchingTransactions)
-
-		// sync input text
-		newText := state.InputMetadata.GetPostingAmmountText()
-		guesser.SetUserInputText(newText)
-
-		// sync existing postings
-		newPostings := state.JournalEntryInput.GetPostings()
-		guesser.SetPostingInputs(newPostings)
-
-		// sync statement entry
-		statementEntry, _ := state.CurrentStatementEntry()
-		guesser.SetStatementEntry(statementEntry)
-
-		guess, success := guesser.Guess()
+		currentStatementEntry, _ := state.CurrentStatementEntry()
+		inputs := ammountguesser.Inputs{
+			UserInput:            state.InputMetadata.GetPostingAmmountText(),
+			PostingInputs:        state.JournalEntryInput.GetPostings(),
+			StatementEntry:       currentStatementEntry,
+			MatchingTransactions: state.InputMetadata.MatchingTransactions(),
+		}
+		guess, success := guesser.Guess(inputs)
 		if !success {
 			state.InputMetadata.ClearPostingAmmountGuess()
 			return
