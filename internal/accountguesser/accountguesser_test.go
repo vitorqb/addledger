@@ -89,9 +89,10 @@ func TestMatchedTransactionsGuesser(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			c.accountguesser.SetMatchedTransactions(tc.matchedTransactions(t))
-			c.accountguesser.SetInputPostings(tc.inputPostings())
-			actual, success := c.accountguesser.Guess()
+			actual, success := c.accountguesser.Guess(Inputs{
+				MatchingTransactions: tc.matchedTransactions(t),
+				PostingInputs:        tc.inputPostings(),
+			})
 			assert.Equal(t, tc.success, success)
 			if tc.success {
 				assert.Equal(t, tc.expected, actual)
@@ -106,21 +107,21 @@ func TestLastTransactionAccountGuesser(t *testing.T) {
 	}
 	type testcase struct {
 		name               string
-		transactionHistory func() MatchedTransactions
+		transactionHistory func() TransactionHistory
 		success            bool
 		expected           journal.Account
 	}
 	var testcases = []testcase{
 		{
 			name: "no matched transactions",
-			transactionHistory: func() MatchedTransactions {
+			transactionHistory: func() TransactionHistory {
 				return []journal.Transaction{}
 			},
 			success: false,
 		},
 		{
 			name: "uses last transaction first posting",
-			transactionHistory: func() MatchedTransactions {
+			transactionHistory: func() TransactionHistory {
 				return []journal.Transaction{
 					{
 						Posting: []journal.Posting{
@@ -152,8 +153,9 @@ func TestLastTransactionAccountGuesser(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			c.accountguesser.SetTransactionHistory(tc.transactionHistory())
-			actual, success := c.accountguesser.Guess()
+			actual, success := c.accountguesser.Guess(Inputs{
+				TransactionHistory: tc.transactionHistory(),
+			})
 			assert.Equal(t, tc.success, success)
 			if tc.success {
 				assert.Equal(t, tc.expected, actual)
@@ -207,9 +209,10 @@ func TestStatementAccountGuesser(t *testing.T) {
 			c := new(testcontext)
 			c.accountguesser, err = NewStatementAccountGuesser()
 			assert.NoError(t, err)
-			c.accountguesser.SetStatementEntry(tc.sEntry)
-			c.accountguesser.SetInputPostings(tc.input)
-			actual, success := c.accountguesser.Guess()
+			actual, success := c.accountguesser.Guess(Inputs{
+				StatementEntry: tc.sEntry,
+				PostingInputs:  tc.input,
+			})
 			assert.Equal(t, tc.success, success)
 			assert.Equal(t, tc.expected, actual)
 		})
@@ -218,72 +221,74 @@ func TestStatementAccountGuesser(t *testing.T) {
 
 func TestCompositeAccountGuesser(t *testing.T) {
 	type testcontext struct {
+		ctrl           *gomock.Controller
+		inputs         Inputs
 		accountguesser *CompositeAccountGuesser
 	}
 	type testcase struct {
 		name             string
-		composedGuessers func(ctrl *gomock.Controller) []IAccountGuesser
+		composedGuessers func(c *testcontext) []AccountGuesser
 		success          bool
 		expected         journal.Account
 	}
 	var testcases = []testcase{
 		{
 			name: "no composed guessers",
-			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
-				return []IAccountGuesser{}
+			composedGuessers: func(c *testcontext) []AccountGuesser {
+				return []AccountGuesser{}
 			},
 			success: false,
 		},
 		{
 			name: "single composed guesser (succcess)",
-			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
-				accountGuesser := NewMockIAccountGuesser(ctrl)
-				accountGuesser.EXPECT().Guess().Return(journal.Account("savings"), true)
-				return []IAccountGuesser{accountGuesser}
+			composedGuessers: func(c *testcontext) []AccountGuesser {
+				accountGuesser := NewMockAccountGuesser(c.ctrl)
+				accountGuesser.EXPECT().Guess(c.inputs).Return(journal.Account("savings"), true)
+				return []AccountGuesser{accountGuesser}
 			},
 			success:  true,
 			expected: "savings",
 		},
 		{
 			name: "single composed guesser (failure)",
-			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
-				accountGuesser := NewMockIAccountGuesser(ctrl)
-				accountGuesser.EXPECT().Guess().Return(journal.Account(""), false)
-				return []IAccountGuesser{accountGuesser}
+			composedGuessers: func(c *testcontext) []AccountGuesser {
+				accountGuesser := NewMockAccountGuesser(c.ctrl)
+				accountGuesser.EXPECT().Guess(c.inputs).Return(journal.Account(""), false)
+				return []AccountGuesser{accountGuesser}
 			},
 			success: false,
 		},
 		{
 			name: "two composed guesser (first success)",
-			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
-				accountGuesserOne := NewMockIAccountGuesser(ctrl)
-				accountGuesserOne.EXPECT().Guess().Return(journal.Account("savings1"), true)
-				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
-				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
+			composedGuessers: func(c *testcontext) []AccountGuesser {
+				accountGuesserOne := NewMockAccountGuesser(c.ctrl)
+				accountGuesserOne.EXPECT().Guess(c.inputs).Return(journal.Account("savings1"), true)
+				accountGuesserTwo := NewMockAccountGuesser(c.ctrl)
+				return []AccountGuesser{accountGuesserOne, accountGuesserTwo}
 			},
 			success:  true,
 			expected: "savings1",
 		},
 		{
 			name: "two composed guesser (second success)",
-			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
-				accountGuesserOne := NewMockIAccountGuesser(ctrl)
-				accountGuesserOne.EXPECT().Guess().Return(journal.Account(""), false)
-				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
-				accountGuesserTwo.EXPECT().Guess().Return(journal.Account("savings2"), true)
-				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
+			composedGuessers: func(c *testcontext) []AccountGuesser {
+				accountGuesserOne := NewMockAccountGuesser(c.ctrl)
+				accountGuesserOne.EXPECT().Guess(c.inputs).Return(journal.Account(""), false)
+				accountGuesserTwo := NewMockAccountGuesser(c.ctrl)
+				accountGuesserTwo.EXPECT().Guess(c.inputs).Return(journal.Account("savings2"), true)
+				return []AccountGuesser{accountGuesserOne, accountGuesserTwo}
 			},
 			success:  true,
 			expected: "savings2",
 		},
 		{
 			name: "two composed guesser (failure)",
-			composedGuessers: func(ctrl *gomock.Controller) []IAccountGuesser {
-				accountGuesserOne := NewMockIAccountGuesser(ctrl)
-				accountGuesserOne.EXPECT().Guess().Return(journal.Account(""), false)
-				accountGuesserTwo := NewMockIAccountGuesser(ctrl)
-				accountGuesserTwo.EXPECT().Guess().Return(journal.Account(""), false)
-				return []IAccountGuesser{accountGuesserOne, accountGuesserTwo}
+			composedGuessers: func(c *testcontext) []AccountGuesser {
+				accountGuesserOne := NewMockAccountGuesser(c.ctrl)
+				accountGuesserOne.EXPECT().Guess(c.inputs).Return(journal.Account(""), false)
+				accountGuesserTwo := NewMockAccountGuesser(c.ctrl)
+				accountGuesserTwo.EXPECT().Guess(c.inputs).Return(journal.Account(""), false)
+				return []AccountGuesser{accountGuesserOne, accountGuesserTwo}
 			},
 			success: false,
 		},
@@ -296,12 +301,14 @@ func TestCompositeAccountGuesser(t *testing.T) {
 			defer ctrl.Finish()
 			var err error
 			c := new(testcontext)
-			composedGuessers := tc.composedGuessers(ctrl)
+			c.ctrl = ctrl
+			c.inputs = Inputs{Description: "description"}
+			composedGuessers := tc.composedGuessers(c)
 			c.accountguesser, err = NewCompositeAccountGuesser(composedGuessers...)
 			if err != nil {
 				t.Fatal(err)
 			}
-			actual, success := c.accountguesser.Guess()
+			actual, success := c.accountguesser.Guess(c.inputs)
 			assert.Equal(t, tc.success, success)
 			if tc.success {
 				assert.Equal(t, tc.expected, actual)

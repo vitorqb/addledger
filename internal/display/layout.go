@@ -27,7 +27,7 @@ func NewLayout(
 	controller controller.IInputController,
 	state *state.State,
 	eventBus eventbus.IEventBus,
-	accountGuesser accountguesser.IAccountGuesser,
+	accountGuesser accountguesser.AccountGuesser,
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)

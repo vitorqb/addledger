@@ -7,11 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/config"
-	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/injector"
 	. "github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/journal"
-	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
@@ -38,78 +36,6 @@ func TestStateAndMetaLoader(t *testing.T) {
 	assert.Equal(t, transactions, state.JournalMetadata.Transactions())
 }
 
-func TestDescriptionMatchAccountGuesser(t *testing.T) {
-	state := statemod.InitialState()
-	accountGuesser, err := DescriptionMatchAccountGuesser(state)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// At the beggining, no guess
-	_, success := accountGuesser.Guess()
-	assert.False(t, success)
-
-	// Set the transaction history on state
-	state.InputMetadata.SetMatchingTransactions([]journal.Transaction{
-		{
-			Description: "Supermarket",
-			Posting: []journal.Posting{
-				{
-					Account: "bank:currentaccount",
-				},
-				{
-					Account: "expenses:supermarket",
-				},
-			},
-		},
-	})
-
-	// Set a user inputted posting on state
-	posting := state.JournalEntryInput.AddPosting()
-	posting.SetAccount("foo")
-	posting.SetAmmount(finance.Ammount{})
-
-	// Set a user inputted description on state
-	state.JournalEntryInput.SetDescription("Superm")
-
-	// Guess should be right
-	guess, success := accountGuesser.Guess()
-	assert.True(t, success)
-	assert.Equal(t, journal.Account("expenses:supermarket"), guess)
-}
-
-func TestLastTransactionAccountGuesser(t *testing.T) {
-	state := statemod.InitialState()
-	accountGuesser, err := LastTransactionAccountGuesser(state)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// At the beggining, no guess
-	_, success := accountGuesser.Guess()
-	assert.False(t, success)
-
-	// Set the transaction history on state
-	state.JournalMetadata.SetTransactions([]journal.Transaction{
-		{
-			Description: "Supermarket",
-			Posting: []journal.Posting{
-				{
-					Account: "bank:currentaccount",
-				},
-				{
-					Account: "expenses:supermarket",
-				},
-			},
-		},
-	})
-
-	// Guess should be right
-	guess, success := accountGuesser.Guess()
-	assert.True(t, success)
-	assert.Equal(t, journal.Account("bank:currentaccount"), guess)
-}
-
 func TestPrinter(t *testing.T) {
 	config := config.PrinterConfig{NumLineBreaksBefore: 2, NumLineBreaksAfter: 3}
 	printer, err := injector.Printer(config)
@@ -131,26 +57,6 @@ func TestTransactionMatcher(t *testing.T) {
 	matcher.SetDescriptionInput("test")
 	matchedTransactions := matcher.Match()
 	assert.Equal(t, expectedMatchedTransactions, matchedTransactions)
-}
-
-func TestStatementAccountGuesser(t *testing.T) {
-	state := statemod.InitialState()
-	accountGuesser, err := StatementAccountGuesser(state)
-	assert.NoError(t, err)
-
-	// Put a statement entry on the sate
-	sEntries := []statementloader.StatementEntry{{Account: "acc1"}}
-	state.SetStatementEntries(sEntries)
-
-	// Set an user inputted posting on state
-	posting := state.JournalEntryInput.AddPosting()
-	posting.SetAccount("foo")
-	posting.SetAmmount(finance.Ammount{})
-
-	// Guess should be right
-	guess, success := accountGuesser.Guess()
-	assert.True(t, success)
-	assert.Equal(t, journal.Account("acc1"), guess)
 }
 
 func TestCSVStatementLoaderOptions(t *testing.T) {

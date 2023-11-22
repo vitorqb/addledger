@@ -8,34 +8,73 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	accountguesser "github.com/vitorqb/addledger/internal/accountguesser"
 	journal "github.com/vitorqb/addledger/internal/journal"
 )
 
-// MockIAccountGuesser is a mock of IAccountGuesser interface.
-type MockIAccountGuesser struct {
+// MockAccountGuesser is a mock of AccountGuesser interface.
+type MockAccountGuesser struct {
 	ctrl     *gomock.Controller
-	recorder *MockIAccountGuesserMockRecorder
+	recorder *MockAccountGuesserMockRecorder
 }
 
-// MockIAccountGuesserMockRecorder is the mock recorder for MockIAccountGuesser.
-type MockIAccountGuesserMockRecorder struct {
-	mock *MockIAccountGuesser
+// MockAccountGuesserMockRecorder is the mock recorder for MockAccountGuesser.
+type MockAccountGuesserMockRecorder struct {
+	mock *MockAccountGuesser
 }
 
-// NewMockIAccountGuesser creates a new mock instance.
-func NewMockIAccountGuesser(ctrl *gomock.Controller) *MockIAccountGuesser {
-	mock := &MockIAccountGuesser{ctrl: ctrl}
-	mock.recorder = &MockIAccountGuesserMockRecorder{mock}
+// NewMockAccountGuesser creates a new mock instance.
+func NewMockAccountGuesser(ctrl *gomock.Controller) *MockAccountGuesser {
+	mock := &MockAccountGuesser{ctrl: ctrl}
+	mock.recorder = &MockAccountGuesserMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIAccountGuesser) EXPECT() *MockIAccountGuesserMockRecorder {
+func (m *MockAccountGuesser) EXPECT() *MockAccountGuesserMockRecorder {
 	return m.recorder
 }
 
 // Guess mocks base method.
-func (m *MockIAccountGuesser) Guess() (journal.Account, bool) {
+func (m *MockAccountGuesser) Guess(inputs accountguesser.Inputs) (journal.Account, bool) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Guess", inputs)
+	ret0, _ := ret[0].(journal.Account)
+	ret1, _ := ret[1].(bool)
+	return ret0, ret1
+}
+
+// Guess indicates an expected call of Guess.
+func (mr *MockAccountGuesserMockRecorder) Guess(inputs interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockAccountGuesser)(nil).Guess), inputs)
+}
+
+// MockDEPRECATEDIAccountGuesser is a mock of DEPRECATEDIAccountGuesser interface.
+type MockDEPRECATEDIAccountGuesser struct {
+	ctrl     *gomock.Controller
+	recorder *MockDEPRECATEDIAccountGuesserMockRecorder
+}
+
+// MockDEPRECATEDIAccountGuesserMockRecorder is the mock recorder for MockDEPRECATEDIAccountGuesser.
+type MockDEPRECATEDIAccountGuesserMockRecorder struct {
+	mock *MockDEPRECATEDIAccountGuesser
+}
+
+// NewMockDEPRECATEDIAccountGuesser creates a new mock instance.
+func NewMockDEPRECATEDIAccountGuesser(ctrl *gomock.Controller) *MockDEPRECATEDIAccountGuesser {
+	mock := &MockDEPRECATEDIAccountGuesser{ctrl: ctrl}
+	mock.recorder = &MockDEPRECATEDIAccountGuesserMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDEPRECATEDIAccountGuesser) EXPECT() *MockDEPRECATEDIAccountGuesserMockRecorder {
+	return m.recorder
+}
+
+// Guess mocks base method.
+func (m *MockDEPRECATEDIAccountGuesser) Guess() (journal.Account, bool) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Guess")
 	ret0, _ := ret[0].(journal.Account)
@@ -44,7 +83,7 @@ func (m *MockIAccountGuesser) Guess() (journal.Account, bool) {
 }
 
 // Guess indicates an expected call of Guess.
-func (mr *MockIAccountGuesserMockRecorder) Guess() *gomock.Call {
+func (mr *MockDEPRECATEDIAccountGuesserMockRecorder) Guess() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIAccountGuesser)(nil).Guess))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockDEPRECATEDIAccountGuesser)(nil).Guess))
 }

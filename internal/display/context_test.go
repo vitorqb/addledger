@@ -6,10 +6,13 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/accountguesser"
 	. "github.com/vitorqb/addledger/internal/display"
 	"github.com/vitorqb/addledger/internal/display/widgets"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	mock_accountguesser "github.com/vitorqb/addledger/mocks/accountguesser"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
@@ -114,10 +117,20 @@ func TestNewDateGuesser(t *testing.T) {
 }
 
 func TestAccountList(t *testing.T) {
+
+	statementEntry := statementloader.StatementEntry{Description: "description"}
+	statementEntries := []statementloader.StatementEntry{statementEntry}
+	matchedTransaction := accountguesser.MatchedTransactions{{Comment: "comment1"}}
+	postingInput := input.NewPostingInput()
+	testutils.FillPostingInput_1(t, postingInput)
+	posting := postingInput.ToPosting()
+	postings := []journal.Posting{posting}
+	transactionHistory := accountguesser.TransactionHistory{{Comment: "comment2"}}
+
 	type testcontext struct {
 		state          *statemod.State
 		eventBus       *mock_eventbus.MockIEventBus
-		accountGuesser *mock_accountguesser.MockIAccountGuesser
+		accountGuesser *mock_accountguesser.MockAccountGuesser
 		accountList    *widgets.ContextualList
 	}
 	type testcase struct {
@@ -129,10 +142,31 @@ func TestAccountList(t *testing.T) {
 		{
 			name: "Set's default account as first item",
 			setup: func(c *testcontext) {
-				c.accountGuesser.EXPECT().Guess().Return(journal.Account("GUESS"), true)
+				c.accountGuesser.EXPECT().Guess(gomock.Any()).Return(journal.Account("GUESS"), true)
 			},
 			run: func(c *testcontext, t *testing.T) {
 				assert.Equal(t, "GUESS", c.state.InputMetadata.SelectedPostingAccount())
+			},
+		},
+		{
+			name: "Guesses account from state",
+			setup: func(c *testcontext) {
+				// Note: the account guesser is called for each state update
+				c.accountGuesser.EXPECT().Guess(gomock.Any()).Times(7)
+				c.accountGuesser.EXPECT().Guess(gomock.Any()).Do(func(inputs accountguesser.Inputs) {
+					assert.Equal(t, accountguesser.Inputs{
+						StatementEntry:       statementEntry,
+						TransactionHistory:   transactionHistory,
+						PostingInputs:        postings,
+						MatchingTransactions: matchedTransaction,
+					}, inputs)
+				})
+			},
+			run: func(c *testcontext, t *testing.T) {
+				c.state.InputMetadata.SetMatchingTransactions(matchedTransaction)
+				testutils.FillPostingInput_1(t, c.state.JournalEntryInput.CurrentPosting())
+				c.state.JournalMetadata.SetTransactions(transactionHistory)
+				c.state.SetStatementEntries(statementEntries)
 			},
 		},
 	}
@@ -145,7 +179,7 @@ func TestAccountList(t *testing.T) {
 			c.state = statemod.InitialState()
 			c.eventBus = mock_eventbus.NewMockIEventBus(ctrl)
 			c.eventBus.EXPECT().Subscribe(gomock.Any())
-			c.accountGuesser = mock_accountguesser.NewMockIAccountGuesser(ctrl)
+			c.accountGuesser = mock_accountguesser.NewMockAccountGuesser(ctrl)
 			if tc.setup != nil {
 				tc.setup(c)
 			}

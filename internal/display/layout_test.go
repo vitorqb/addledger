@@ -19,7 +19,7 @@ func TestNewLayout(t *testing.T) {
 		controller     *mock_controller.MockIInputController
 		state          *statemod.State
 		eventbus       *mock_eventbus.MockIEventBus
-		accountGuesser *mock_accountguesser.MockIAccountGuesser
+		accountGuesser *mock_accountguesser.MockAccountGuesser
 		layout         *Layout
 	}
 	type testcase struct {
@@ -54,7 +54,7 @@ func TestNewLayout(t *testing.T) {
 			c := new(testcontext)
 			c.controller = mock_controller.NewMockIInputController(ctrl)
 			c.eventbus = mock_eventbus.NewMockIEventBus(ctrl)
-			c.accountGuesser = mock_accountguesser.NewMockIAccountGuesser(ctrl)
+			c.accountGuesser = mock_accountguesser.NewMockAccountGuesser(ctrl)
 			c.state = statemod.InitialState()
 			// Subscribe is called multiple times for each subscription
 			// that happens in the entire layout.
@@ -62,7 +62,7 @@ func TestNewLayout(t *testing.T) {
 			// Some controller methods are called on startup
 			c.controller.EXPECT().OnDateChanged("")
 			// AccountGuesser is called on startup
-			c.accountGuesser.EXPECT().Guess().AnyTimes()
+			c.accountGuesser.EXPECT().Guess(gomock.Any()).AnyTimes()
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.accountGuesser)
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)
