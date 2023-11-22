@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	logrusTest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/ammountguesser"
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -127,7 +128,7 @@ func TestLinkAmmountGuesser(t *testing.T) {
 	t.Run("Saves guess to state", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		engine := ammountguesser_mock.NewMockIEngine(ctrl)
+		guesser := ammountguesser_mock.NewMockIAmmountGuesser(ctrl)
 		state := statemod.InitialState()
 
 		// All input used for guessing
@@ -135,29 +136,31 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		userInput := "EUR 12.20"
 		statementEntry := statementloader.StatementEntry{}
 
+		// The expected guess
+		expectedGuess := *testutils.Ammount_1(t)
+
 		// Set on state
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.InputMetadata.SetPostingAmmountText(userInput)
 		state.JournalEntryInput.AddPosting()
 		state.SetStatementEntries([]statementloader.StatementEntry{statementEntry})
 		// Assertions & behavior for engine
-		engine.EXPECT().SetMatchingTransactions(matchingTransactions)
-		engine.EXPECT().SetPostingInputs(gomock.Any())
-		engine.EXPECT().SetStatementEntry(statementEntry)
-		engine.EXPECT().SetUserInputText(userInput)
-
-		// Mock the result
-		guess := finance.Ammount{}
-		engine.EXPECT().Guess().Return(guess, true)
+		guesser.EXPECT().Guess(gomock.Any()).DoAndReturn(func(inputs ammountguesser.Inputs) (finance.Ammount, bool) {
+			assert.Equal(t, userInput, inputs.UserInput)
+			assert.Equal(t, statementEntry, inputs.StatementEntry)
+			assert.Equal(t, matchingTransactions, inputs.MatchingTransactions)
+			assert.Equal(t, state.JournalEntryInput.GetPostings(), inputs.PostingInputs)
+			return expectedGuess, true
+		})
 
 		// Prepares the engine
-		LinkAmmountGuesser(state, engine)
+		LinkAmmountGuesser(state, guesser)
 
 		// Trigger state change hooks
 		state.SetPhase(statemod.InputPostingAmmount)
 
 		// Ensure ammount guesser guessed
 		actualGuess, _ := state.InputMetadata.GetPostingAmmountGuess()
-		assert.Equal(t, guess, actualGuess)
+		assert.Equal(t, expectedGuess, actualGuess)
 	})
 }

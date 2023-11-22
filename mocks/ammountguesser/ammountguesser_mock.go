@@ -8,94 +8,44 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	ammountguesser "github.com/vitorqb/addledger/internal/ammountguesser"
 	finance "github.com/vitorqb/addledger/internal/finance"
-	input "github.com/vitorqb/addledger/internal/input"
-	journal "github.com/vitorqb/addledger/internal/journal"
-	statementloader "github.com/vitorqb/addledger/internal/statementloader"
 )
 
-// MockIEngine is a mock of IEngine interface.
-type MockIEngine struct {
+// MockIAmmountGuesser is a mock of IAmmountGuesser interface.
+type MockIAmmountGuesser struct {
 	ctrl     *gomock.Controller
-	recorder *MockIEngineMockRecorder
+	recorder *MockIAmmountGuesserMockRecorder
 }
 
-// MockIEngineMockRecorder is the mock recorder for MockIEngine.
-type MockIEngineMockRecorder struct {
-	mock *MockIEngine
+// MockIAmmountGuesserMockRecorder is the mock recorder for MockIAmmountGuesser.
+type MockIAmmountGuesserMockRecorder struct {
+	mock *MockIAmmountGuesser
 }
 
-// NewMockIEngine creates a new mock instance.
-func NewMockIEngine(ctrl *gomock.Controller) *MockIEngine {
-	mock := &MockIEngine{ctrl: ctrl}
-	mock.recorder = &MockIEngineMockRecorder{mock}
+// NewMockIAmmountGuesser creates a new mock instance.
+func NewMockIAmmountGuesser(ctrl *gomock.Controller) *MockIAmmountGuesser {
+	mock := &MockIAmmountGuesser{ctrl: ctrl}
+	mock.recorder = &MockIAmmountGuesserMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockIEngine) EXPECT() *MockIEngineMockRecorder {
+func (m *MockIAmmountGuesser) EXPECT() *MockIAmmountGuesserMockRecorder {
 	return m.recorder
 }
 
 // Guess mocks base method.
-func (m *MockIEngine) Guess() (finance.Ammount, bool) {
+func (m *MockIAmmountGuesser) Guess(inputs ammountguesser.Inputs) (finance.Ammount, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Guess")
+	ret := m.ctrl.Call(m, "Guess", inputs)
 	ret0, _ := ret[0].(finance.Ammount)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // Guess indicates an expected call of Guess.
-func (mr *MockIEngineMockRecorder) Guess() *gomock.Call {
+func (mr *MockIAmmountGuesserMockRecorder) Guess(inputs interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIEngine)(nil).Guess))
-}
-
-// SetMatchingTransactions mocks base method.
-func (m *MockIEngine) SetMatchingTransactions(x []journal.Transaction) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetMatchingTransactions", x)
-}
-
-// SetMatchingTransactions indicates an expected call of SetMatchingTransactions.
-func (mr *MockIEngineMockRecorder) SetMatchingTransactions(x interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMatchingTransactions", reflect.TypeOf((*MockIEngine)(nil).SetMatchingTransactions), x)
-}
-
-// SetPostingInputs mocks base method.
-func (m *MockIEngine) SetPostingInputs(x []*input.PostingInput) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetPostingInputs", x)
-}
-
-// SetPostingInputs indicates an expected call of SetPostingInputs.
-func (mr *MockIEngineMockRecorder) SetPostingInputs(x interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPostingInputs", reflect.TypeOf((*MockIEngine)(nil).SetPostingInputs), x)
-}
-
-// SetStatementEntry mocks base method.
-func (m *MockIEngine) SetStatementEntry(x statementloader.StatementEntry) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetStatementEntry", x)
-}
-
-// SetStatementEntry indicates an expected call of SetStatementEntry.
-func (mr *MockIEngineMockRecorder) SetStatementEntry(x interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetStatementEntry", reflect.TypeOf((*MockIEngine)(nil).SetStatementEntry), x)
-}
-
-// SetUserInputText mocks base method.
-func (m *MockIEngine) SetUserInputText(x string) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetUserInputText", x)
-}
-
-// SetUserInputText indicates an expected call of SetUserInputText.
-func (mr *MockIEngineMockRecorder) SetUserInputText(x interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUserInputText", reflect.TypeOf((*MockIEngine)(nil).SetUserInputText), x)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIAmmountGuesser)(nil).Guess), inputs)
 }

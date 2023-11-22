@@ -22,13 +22,9 @@ func HledgerClient(config *configmod.Config) hledger.IClient {
 	return hledger.NewClient(config.HLedgerExecutable, config.LedgerFile)
 }
 
-// AmmountGuesserEngine instantiates a new guesser engine for ammount.
-func AmmountGuesserEngine() ammountguesser.IEngine {
-	// starts an engine
-	ammountGuesserEngine := ammountguesser.NewEngine()
-
-	// returns
-	return ammountGuesserEngine
+// AmmountGuesser instantiates a new guesser for ammount.
+func AmmountGuesser() ammountguesser.IAmmountGuesser {
+	return ammountguesser.New()
 }
 
 func DateGuesser() (dateguesser.IDateGuesser, error) {

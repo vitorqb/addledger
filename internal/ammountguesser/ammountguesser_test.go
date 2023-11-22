@@ -16,92 +16,77 @@ var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: decimal.New(1221, -2
 var anAmmountBRL = finance.Ammount{Commodity: "BRL", Quantity: decimal.New(1222, -2)}
 var anotherAmmount = finance.Ammount{Commodity: "USD", Quantity: decimal.New(9922, -2)}
 
-func TestEngine(t *testing.T) {
-	type testcontext struct {
-		engine *Engine
-	}
+func TestAmmountGuesser(t *testing.T) {
 	type testcase struct {
-		name string
-		run  func(c *testcontext, t *testing.T)
+		name      string
+		inputs    Inputs
+		setupFunc func(tc *testcase)
+		guess     finance.Ammount
+		success   bool
 	}
 	var testcases = []testcase{
 		{
-			name: "Guesses from user input when valid stirng",
-			run: func(c *testcontext, t *testing.T) {
-				c.engine.SetUserInputText("EUR 12.21")
-				guess, success := c.engine.Guess()
-				assert.True(t, success)
-				assert.Equal(t, anAmmount, guess)
-			},
+			name:    "Guesses from user input when valid stirng",
+			inputs:  Inputs{UserInput: "EUR 12.21"},
+			guess:   anAmmount,
+			success: true,
 		},
 		{
-			name: "Guesses from user input without currency using default",
-			run: func(c *testcontext, t *testing.T) {
-				c.engine.SetUserInputText("12.21")
-				guess, success := c.engine.Guess()
-				assert.True(t, success)
-				assert.Equal(t, anAmmount, guess)
-			},
+			name:    "Guesses from user input without currency using default",
+			inputs:  Inputs{UserInput: "12.21"},
+			guess:   anAmmount,
+			success: true,
 		},
 		{
-			name: "Guesses from user input w another currency",
-			run: func(c *testcontext, t *testing.T) {
-				c.engine.SetUserInputText("BRL 12.22")
-				guess, success := c.engine.Guess()
-				assert.True(t, success)
-				assert.Equal(t, anAmmountBRL, guess)
-			},
+			name:    "Guesses from user input w another currency",
+			inputs:  Inputs{UserInput: "BRL 12.22"},
+			guess:   anAmmountBRL,
+			success: true,
 		},
 		{
 			name: "Guesses from matching transaction",
-			run: func(c *testcontext, t *testing.T) {
-				c.engine.SetUserInputText("")
-				transaction := tu.Transaction_2(t)
-				matchingTransaction := []journal.Transaction{*transaction}
-				c.engine.SetMatchingTransactions(matchingTransaction)
-				guess, success := c.engine.Guess()
-				assert.True(t, success)
-				expected := transaction.Posting[0].Ammount
-				assert.Equal(t, expected, guess)
+			setupFunc: func(tc *testcase) {
+				t := tu.Transaction_2(t)
+				tc.inputs.MatchingTransactions = []journal.Transaction{*t}
+				tc.guess = t.Posting[0].Ammount
 			},
+			success: true,
 		},
 		{
 			name: "Don't guess from matching transaction if user input text",
-			run: func(c *testcontext, t *testing.T) {
-				c.engine.SetUserInputText("EUR 12.21")
-				transaction := tu.Transaction_1(t)
-				matchingTransaction := []journal.Transaction{*transaction}
-				c.engine.SetMatchingTransactions(matchingTransaction)
-				guess, success := c.engine.Guess()
-				assert.True(t, success)
-				assert.Equal(t, anAmmount, guess)
+			setupFunc: func(tc *testcase) {
+				t := tu.Transaction_1(t)
+				tc.inputs.MatchingTransactions = []journal.Transaction{*t}
+				tc.inputs.UserInput = "EUR 12.21"
 			},
+			guess:   anAmmount,
+			success: true,
 		},
 		{
 			name: "Guess from loaded statement entry",
-			run: func(c *testcontext, t *testing.T) {
+			setupFunc: func(tc *testcase) {
 				// Set some matching transactions that should be ignored
-				c.engine.SetUserInputText("")
-				transaction := tu.Transaction_2(t)
-				matchingTransaction := []journal.Transaction{*transaction}
-				c.engine.SetMatchingTransactions(matchingTransaction)
+				t := tu.Transaction_2(t)
+				tc.inputs.MatchingTransactions = []journal.Transaction{*t}
 
 				// Set a statement entry
-				sEntry := statementloader.StatementEntry{Ammount: anotherAmmount}
-				c.engine.SetStatementEntry(sEntry)
+				tc.inputs.StatementEntry = statementloader.StatementEntry{Ammount: anotherAmmount}
 
-				// Guess
-				guess, success := c.engine.Guess()
-				assert.True(t, success)
-				assert.Equal(t, anotherAmmount.InvertSign(), guess)
 			},
+			guess:   anotherAmmount.InvertSign(),
+			success: true,
 		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			c := new(testcontext)
-			c.engine = NewEngine()
-			tc.run(c, t)
+			if tc.setupFunc != nil {
+				tc.setupFunc(&tc)
+			}
+			guesser := AmmountGuesser{}
+
+			guess, success := guesser.Guess(tc.inputs)
+			assert.Equal(t, tc.guess, guess)
+			assert.Equal(t, tc.success, success)
 		})
 	}
 }
