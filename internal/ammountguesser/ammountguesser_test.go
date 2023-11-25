@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/finance"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	tu "github.com/vitorqb/addledger/internal/testutils"
@@ -74,6 +75,25 @@ func TestAmmountGuesser(t *testing.T) {
 
 			},
 			guess:   anotherAmmount.InvertSign(),
+			success: true,
+		},
+		{
+			name: "Guess from pending balance",
+			setupFunc: func(tc *testcase) {
+				// Set some matching transactions that should be ignored
+				transact := tu.Transaction_2(t)
+				tc.inputs.MatchingTransactions = []journal.Transaction{*transact}
+
+				// Set a statement entry that should be ignored
+				tc.inputs.StatementEntry = statementloader.StatementEntry{Ammount: anotherAmmount}
+
+				// Set some pending balance
+				postingInput := input.NewPostingInput()
+				tu.FillPostingInput_1(t, postingInput)
+				postingInput.SetAmmount(anAmmount)
+				tc.inputs.PostingInputs = []*input.PostingInput{postingInput}
+			},
+			guess:   anAmmount.InvertSign(),
 			success: true,
 		},
 	}

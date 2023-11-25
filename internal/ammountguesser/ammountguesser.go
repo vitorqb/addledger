@@ -58,7 +58,7 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 		var success bool = true
 		balance := decimal.Zero
 		commodity := ""
-		for _, posting := range nonEmptyPostingInputs[1:] {
+		for _, posting := range nonEmptyPostingInputs {
 			ammount, _ := posting.GetAmmount()
 			// Multiple commodities -> stop
 			if commodity != "" && ammount.Commodity != commodity {
