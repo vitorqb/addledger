@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/injector"
@@ -120,5 +121,36 @@ func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IAmmountGu
 			return
 		}
 		state.InputMetadata.SetPostingAmmountGuess(guess)
+	})
+}
+
+// LinkAccountGuesser links a given Account Guesser to state updates
+func LinkAccountGuesser(state *statemod.State, guesser accountguesser.AccountGuesser) {
+	busy := false
+	state.AddOnChangeHook(func() {
+		if busy {
+			return
+		}
+		busy = true
+		defer func() { busy = false }()
+
+		matchedTransactions := state.InputMetadata.MatchingTransactions()
+		completePosting := state.JournalEntryInput.GetCompletePostings()
+		transactionHist := state.JournalMetadata.Transactions()
+		statementEntry, _ := state.CurrentStatementEntry()
+		description, _ := state.JournalEntryInput.GetDescription()
+		inputs := accountguesser.Inputs{
+			StatementEntry:       statementEntry,
+			MatchingTransactions: matchedTransactions,
+			Description:          description,
+			PostingInputs:        completePosting,
+			TransactionHistory:   transactionHist,
+		}
+		acc, success := guesser.Guess(inputs)
+		if !success {
+			state.InputMetadata.ClearPostingAccountGuess()
+			return
+		}
+		state.InputMetadata.SetPostingAccountGuess(acc)
 	})
 }

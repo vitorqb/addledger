@@ -199,6 +199,11 @@ func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	return
 }
 
+func (i *JournalEntryInput) SetPostings(posting []*PostingInput) {
+	i.inputs["postings"] = posting
+	i.NotifyChange()
+}
+
 func (i *JournalEntryInput) DeleteCurrentPosting() {
 	if rawPostings, found := i.inputs["postings"]; found {
 		if postings, ok := rawPostings.([]*PostingInput); ok {

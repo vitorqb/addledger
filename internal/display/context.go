@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/rivo/tview"
-	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/input"
@@ -77,11 +76,7 @@ func (c Context) Refresh() {
 	}
 }
 
-func NewAccountList(
-	state *statemod.State,
-	eventbus eventbusmod.IEventBus,
-	accountGuesser accountguesser.AccountGuesser,
-) (*widgets.ContextualList, error) {
+func NewAccountList(state *statemod.State, eventbus eventbusmod.IEventBus) (*widgets.ContextualList, error) {
 	list, err := widgets.NewContextualList(widgets.ContextualListOptions{
 		GetItemsFunc: func() (out []string) {
 			// List all accounts
@@ -97,18 +92,8 @@ func NewAccountList(
 			return state.InputMetadata.PostingAccountText()
 		},
 		GetDefaultFunc: func() (defaultValue string, success bool) {
-			matchedTransactions := state.InputMetadata.MatchingTransactions()
-			completePosting := state.JournalEntryInput.GetCompletePostings()
-			transactionHist := state.JournalMetadata.Transactions()
-			statementEntry, _ := state.CurrentStatementEntry()
-			inputs := accountguesser.Inputs{
-				StatementEntry:       statementEntry,
-				MatchingTransactions: matchedTransactions,
-				PostingInputs:        completePosting,
-				TransactionHistory:   transactionHist,
-			}
-			acc, success := accountGuesser.Guess(inputs)
-			return string(acc), success
+			guess, success := state.InputMetadata.GetPostingAccountGuess()
+			return string(guess), success
 		},
 	})
 	if err != nil {

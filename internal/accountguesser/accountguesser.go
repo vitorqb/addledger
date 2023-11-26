@@ -36,12 +36,6 @@ type AccountGuesser interface {
 	Guess(inputs Inputs) (guess journal.Account, success bool)
 }
 
-// DEPRECATEDIAccountGuesser is an interface for an AccountGuesser, whose goal is to
-// guess which account the user wants to input.
-type DEPRECATEDIAccountGuesser interface {
-	Guess() (guess journal.Account, success bool)
-}
-
 var _ AccountGuesser = &MatchedTransactionsGuesser{}
 
 // MatchedTransactionsGuesser uses the matched transactions and

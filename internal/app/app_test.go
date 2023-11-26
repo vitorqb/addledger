@@ -8,18 +8,23 @@ import (
 	"github.com/sirupsen/logrus"
 	logrusTest "github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/finance"
+	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
+	accountguesser_mock "github.com/vitorqb/addledger/mocks/accountguesser"
 	ammountguesser_mock "github.com/vitorqb/addledger/mocks/ammountguesser"
 	. "github.com/vitorqb/addledger/mocks/statementloader"
 	. "github.com/vitorqb/addledger/mocks/transactionmatcher"
 )
+
+var account = journal.Account("ACC")
 
 func TestLoadStatement(t *testing.T) {
 
@@ -163,4 +168,75 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		actualGuess, _ := state.InputMetadata.GetPostingAmmountGuess()
 		assert.Equal(t, expectedGuess, actualGuess)
 	})
+}
+
+func TestLinkAccountGuesser(t *testing.T) {
+	t.Run("Updates guess in state", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		guesser := accountguesser_mock.NewMockAccountGuesser(ctrl)
+
+		// Input used for guessing
+		statementEntry := testutils.StatementEntry_1(t)
+		statamentEntries := []statementloader.StatementEntry{statementEntry}
+		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
+		postings := []journal.Posting{testutils.Posting_1(t)}
+		postingInput := testutils.PostingInput_1(t)
+		postingsInputs := []*input.PostingInput{&postingInput}
+		transationHistory := []journal.Transaction{*testutils.Transaction_2(t)}
+		userInput := "User input"
+		inputs := accountguesser.Inputs{
+			MatchingTransactions: matchingTransactions,
+			PostingInputs:        postings,
+			Description:          userInput,
+			TransactionHistory:   transationHistory,
+			StatementEntry:       statementEntry,
+		}
+
+		// Set on state
+		state := statemod.InitialState()
+		state.SetStatementEntries(statamentEntries)
+		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
+		state.JournalEntryInput.SetPostings(postingsInputs)
+		state.JournalEntryInput.SetDescription(userInput)
+		state.JournalMetadata.SetTransactions(transationHistory)
+
+		// The expected call to guesser
+		guesser.EXPECT().Guess(inputs).Return(journal.Account(account), true)
+
+		// Links
+		LinkAccountGuesser(state, guesser)
+
+		// Forces state hooks to run
+		state.SetPhase(statemod.InputPostingAccount)
+
+		// Ensures state is updated w guess
+		actualGuess, _ := state.InputMetadata.GetPostingAccountGuess()
+		assert.Equal(t, account, actualGuess)
+	})
+
+	t.Run("Clears guess when no guess", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		guesser := accountguesser_mock.NewMockAccountGuesser(ctrl)
+
+		// Set a guess on state
+		state := statemod.InitialState()
+		state.InputMetadata.SetPostingAccountGuess(account)
+
+		// The expected call to guesser
+		guesser.EXPECT().Guess(gomock.Any()).Return(journal.Account(""), false)
+
+		// Links
+		LinkAccountGuesser(state, guesser)
+
+		// Forces state hooks to run
+		state.SetPhase(statemod.InputPostingAccount)
+
+		// Ensures state is updated w guess
+		actualGuess, success := state.InputMetadata.GetPostingAccountGuess()
+		assert.Equal(t, journal.Account(""), actualGuess)
+		assert.False(t, success)
+	})
+
 }
