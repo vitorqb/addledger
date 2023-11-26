@@ -11,11 +11,11 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
-	mock_accountguesser "github.com/vitorqb/addledger/mocks/accountguesser"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
 )
 
 var expectedDate1String = "1993-11-23\nTue, 23 Nov 1993"
+var anAccount = journal.Account("ACC")
 
 // FakeRefreshablePrimitive is a fake tview.Primitive that implements
 // the Refreshable interface
@@ -114,11 +114,11 @@ func TestNewDateGuesser(t *testing.T) {
 }
 
 func TestAccountList(t *testing.T) {
+
 	type testcontext struct {
-		state          *statemod.State
-		eventBus       *mock_eventbus.MockIEventBus
-		accountGuesser *mock_accountguesser.MockIAccountGuesser
-		accountList    *widgets.ContextualList
+		state       *statemod.State
+		eventBus    *mock_eventbus.MockIEventBus
+		accountList *widgets.ContextualList
 	}
 	type testcase struct {
 		name  string
@@ -129,10 +129,10 @@ func TestAccountList(t *testing.T) {
 		{
 			name: "Set's default account as first item",
 			setup: func(c *testcontext) {
-				c.accountGuesser.EXPECT().Guess().Return(journal.Account("GUESS"), true)
+				c.state.InputMetadata.SetPostingAccountGuess(anAccount)
 			},
 			run: func(c *testcontext, t *testing.T) {
-				assert.Equal(t, "GUESS", c.state.InputMetadata.SelectedPostingAccount())
+				assert.Equal(t, string(anAccount), c.state.InputMetadata.SelectedPostingAccount())
 			},
 		},
 	}
@@ -145,11 +145,10 @@ func TestAccountList(t *testing.T) {
 			c.state = statemod.InitialState()
 			c.eventBus = mock_eventbus.NewMockIEventBus(ctrl)
 			c.eventBus.EXPECT().Subscribe(gomock.Any())
-			c.accountGuesser = mock_accountguesser.NewMockIAccountGuesser(ctrl)
 			if tc.setup != nil {
 				tc.setup(c)
 			}
-			c.accountList, err = NewAccountList(c.state, c.eventBus, c.accountGuesser)
+			c.accountList, err = NewAccountList(c.state, c.eventBus)
 			if err != nil {
 				t.Fatal(err)
 			}

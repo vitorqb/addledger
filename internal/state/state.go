@@ -26,10 +26,13 @@ type (
 	// InputMetadata is the state relative to inputs.
 	InputMetadata struct {
 		react.IReact
-		postingAccountText     string
 		selectedPostingAccount string
 		descriptionText        string
 		selectedDescription    string
+
+		// Controls posting account
+		postingAccountText  string
+		postingAccountGuess *MaybeValue[journal.Account]
 
 		// Controls posting ammount
 		postingAmmountGuess *MaybeValue[finance.Ammount]
@@ -88,10 +91,11 @@ func InitialState() *State {
 	journalEntryInput := input.NewJournalEntryInput()
 	inputMetadata := &InputMetadata{
 		IReact:                 react.New(),
-		postingAccountText:     "",
 		selectedPostingAccount: "",
 		descriptionText:        "",
 		selectedDescription:    "",
+		postingAccountText:     "",
+		postingAccountGuess:    &MaybeValue[journal.Account]{},
 		postingAmmountGuess:    &MaybeValue[finance.Ammount]{},
 		postingAmmountInput:    &MaybeValue[finance.Ammount]{},
 		postingAmmountText:     "",
@@ -167,6 +171,26 @@ func (im *InputMetadata) SetPostingAccountText(x string) {
 		im.postingAccountText = x
 		im.NotifyChange()
 	}
+}
+
+// GetPostingAccountGuess returns the current guess for the PostingAccount input.
+func (im *InputMetadata) GetPostingAccountGuess() (journal.Account, bool) {
+	if !im.postingAccountGuess.IsSet {
+		return journal.Account(""), false
+	}
+	return im.postingAccountGuess.Value, true
+}
+
+// SetPostingAccountGuess sets the current guess for the PostingAccount input.
+func (im *InputMetadata) SetPostingAccountGuess(x journal.Account) {
+	im.postingAccountGuess.Set(x)
+	im.NotifyChange()
+}
+
+// ClearPostingAccountGuess clears the current guess for the PostingAccount input.
+func (im *InputMetadata) ClearPostingAccountGuess() {
+	im.postingAccountGuess.Clear()
+	im.NotifyChange()
 }
 
 // SelectedPostingAccount returns the current text for the selected account in the

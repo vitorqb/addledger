@@ -5,7 +5,6 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/controller"
 	contextmod "github.com/vitorqb/addledger/internal/display/context"
 	"github.com/vitorqb/addledger/internal/eventbus"
@@ -27,13 +26,12 @@ func NewLayout(
 	controller controller.IInputController,
 	state *state.State,
 	eventBus eventbus.IEventBus,
-	accountGuesser accountguesser.IAccountGuesser,
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)
 
 	// Creates a Context
-	accountList, err := NewAccountList(state, eventBus, accountGuesser)
+	accountList, err := NewAccountList(state, eventBus)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create account list: %w", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/utils"
 )
 
@@ -148,6 +149,25 @@ func Transaction_3(t *testing.T) *journal.Transaction {
 				},
 			},
 		},
+	}
+}
+
+func Posting_1(t *testing.T) journal.Posting {
+	return journal.Posting{Account: "ACC1", Ammount: *Ammount_1(t)}
+}
+
+func PostingInput_1(t *testing.T) input.PostingInput {
+	out := input.NewPostingInput()
+	out.SetAccount("ACC1")
+	out.SetAmmount(*Ammount_1(t))
+	return *out
+}
+
+func StatementEntry_1(t *testing.T) statementloader.StatementEntry {
+	return statementloader.StatementEntry{
+		Date:        Date1(t),
+		Description: "Description1",
+		Ammount:     *Ammount_1(t),
 	}
 }
 

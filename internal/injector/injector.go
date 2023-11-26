@@ -42,78 +42,18 @@ func MetaLoader(state *statemod.State, hledgerClient hledger.IClient) (*metaload
 // DescriptionMatchAccountGuesser instantiates a new DescriptionMatchAccountGuesser and syncs it with
 // the state.
 func DescriptionMatchAccountGuesser(state *statemod.State) (*accountguesser.MatchedTransactionsGuesser, error) {
-
-	// Creates a new Description Guesser
-	accountGuesser, err := accountguesser.NewMatchedTransactionsAccountGuesser()
-	if err != nil {
-		return nil, err
-	}
-
-	// Function that syncs the state with the internal AccountGuesser state.
-	syncWithState := func() {
-		matchedTransactions := state.InputMetadata.MatchingTransactions()
-		accountGuesser.SetMatchedTransactions(matchedTransactions)
-		completePostings := state.JournalEntryInput.GetCompletePostings()
-		accountGuesser.SetInputPostings(completePostings)
-	}
-
-	// Runs a first sync
-	syncWithState()
-
-	// Runs a sync everytime the state changes
-	state.AddOnChangeHook(syncWithState)
-
-	// Returns
-	return accountGuesser, nil
+	return accountguesser.NewMatchedTransactionsAccountGuesser()
 }
 
 func LastTransactionAccountGuesser(state *statemod.State) (*accountguesser.LastTransactionAccountGuesser, error) {
-	// Creates a new LastTransactionAccountGuesser
-	accountGuesser, err := accountguesser.NewLastTransactionAccountGuesser()
-	if err != nil {
-		return nil, err
-	}
-
-	// Function that syncs the state with the internal AccountGuesser state.
-	sync := func() {
-		transactionHistory := state.JournalMetadata.Transactions()
-		accountGuesser.SetTransactionHistory(transactionHistory)
-	}
-
-	// Runs first sync
-	sync()
-
-	// Run sync on state update
-	state.AddOnChangeHook(sync)
-
-	return accountGuesser, nil
+	return accountguesser.NewLastTransactionAccountGuesser()
 }
 
-func StatementAccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
-	// Creates a new StatementAccountGuesser
-	accountGuesser, err := accountguesser.NewStatementAccountGuesser()
-	if err != nil {
-		return nil, err
-	}
-
-	// Function that syncs the state with the internal AccountGuesser state.
-	sync := func() {
-		statementEntry, _ := state.CurrentStatementEntry()
-		accountGuesser.SetStatementEntry(statementEntry)
-		completedPostings := state.JournalEntryInput.GetCompletePostings()
-		accountGuesser.SetInputPostings(completedPostings)
-	}
-
-	// Runs first sync
-	sync()
-
-	// Run sync on state update
-	state.AddOnChangeHook(sync)
-
-	return accountGuesser, nil
+func StatementAccountGuesser(state *statemod.State) (accountguesser.AccountGuesser, error) {
+	return accountguesser.NewStatementAccountGuesser()
 }
 
-func AccountGuesser(state *statemod.State) (accountguesser.IAccountGuesser, error) {
+func AccountGuesser(state *statemod.State) (accountguesser.AccountGuesser, error) {
 	// Returns a composite of all account guessers
 	statementAccountGuesser, err := StatementAccountGuesser(state)
 	if err != nil {

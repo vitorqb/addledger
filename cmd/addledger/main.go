@@ -100,6 +100,7 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load account guesser")
 	}
+	app.LinkAccountGuesser(state, accountGuesser)
 
 	// Maybe load a CSV statement
 	err = app.MaybeLoadCsvStatement(config.CSVStatementLoaderConfig, state)
@@ -108,7 +109,7 @@ func main() {
 	}
 
 	// Starts a new layout
-	layout, err := display.NewLayout(controller, state, eventBus, accountGuesser)
+	layout, err := display.NewLayout(controller, state, eventBus)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instatiate layout")
 	}
