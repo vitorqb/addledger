@@ -11,21 +11,17 @@ amazing [hledger-iadd](https://github.com/hpdeifel/hledger-iadd).
 Result:
 
 ```
-2023-08-30 Gift to Mother
-    assets:bank-account    EUR -22
-    expenses:gifts    EUR 22
+2023-11-20 Taxi to airport
+    assets:bank:current:lacaixa    EUR -20
+    expenses:trips-and-travels    EUR 20
 
-2023-08-30 Restaurant
-    assets:bank-account    EUR -50
-    expenses:leisure:restaurants    EUR 50
+2023-11-25 Restaurant  ; trips:paris
+    liabilities:credit-cards:amex    EUR -25
+    expenses:leisure:restaurant-and-food    EUR 25
 
-2022-01-01 Plane tickets to Brasil
-    assets:bank-account    BRL -2000
-    expenses:trips    BRL 2000
-
-2022-12-31 Gift to Mother
-    assets:bank-account    EUR -22
-    expenses:gifts    EUR 22
+2023-11-26 Bus on Paris  ; trips:paris
+    liabilities:credit-cards:amex    EUR -20
+    expenses:public-transportation    EUR 20
 ```
 
 ## Installing
@@ -39,6 +35,8 @@ path and run it.
 ```
 $ addledger --help
 Usage of addledger:
+      --csv-statement-file string       CSV file to load as a statement.
+      --csv-statement-preset string     Preset to use for CSV statement. If a simple filename is given, it will be searched in ~/.config/addledger/presets (with a .json extension).
   -d, --destfile string                 Destination file (where we will write). Defaults to the ledger file.
       --hledger-executable string       Executable to use for HLedger (default "hledger")
       --ledger-file string              Ledger File to pass to HLedger commands. If empty let ledger executable find it.
@@ -63,6 +61,57 @@ $ addledger
 ```
 
 Note that the file must exist.
+
+### CSV Statements
+
+Most bank allow exporting statements using csv files. These statements
+usually have at least 3 columns that may interest us: date,
+description and value. AddLedger has a tool to read those statement
+files and suggest entries for a posting's date, description and
+ammounts.
+
+For example, take this example CSV:
+
+```
+"27/09/2023","PHARMACY",8
+"27/09/2023","SUPERMARKET",53.73
+"28/09/2023","CLOTHES",8.14
+```
+
+**NOTE**: This feature doesn't (yet) support CSV headers.
+
+We need to tell AddLedger how to read the information from this CSV. We will
+do so using a *json preset file*, like this:
+
+```js
+{
+  "separator": ",",           // CSV separator to use
+  "account": "assets:bank",   // Default account to use for all statements
+  "commodity": "EUR",         // Commodity to use for all statements
+  "dateFieldIndex": 0,        // 0-based index for which column to read date from
+  "dateFormat": "01/02/2006", // Date format to use. Based on the date 2006-02-01 (like golang)
+  "descriptionFieldIndex": 1, // 0-based index for which column to read the description from
+  "accountFieldIndex": -1,    // 0-based index for which column to read account from. (-1) means no column.
+  "ammountFieldIndex": 2      // 0-based index for which column to read the ammount from.
+}
+```
+
+Note that for any index, you can use `-1` for telling AddLedger not to
+read this information.
+
+New let's assume that:
+
+1. Your csv statement file is in `~/statement.csv`
+2. Your json preset file is in `~/presets/default.json`
+
+You can then tell AddLedger to start using this `.csv` and `.json` like this:
+
+```
+addledger --csv-statement-file=~/statement.csv --csv-statement-preset=default
+```
+
+**NOTE**: You your statement file is in other folder you can a full or relative
+path to it, like `--csv-statement-preset=~/preset.json`.
 
 ### Entering transactions with multiple commodities
 
