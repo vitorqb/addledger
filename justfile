@@ -32,24 +32,26 @@ resources := join(justfile_directory(), "resources")
 # Developing
 #
 
-# Set's up developer workspace
+# Set's up developer workspace. Must be ran once per runtime.
 setup:
     mkdir -p out bin    
     touch out/destfile
     ./scripts/setup-asdf.sh
     ./scripts/setup-envfile.sh
 
-# Runs the app
-run args="":
-    {{GO}} run cmd/addledger/main.go {{args}}
-
-# Runs the app with csv statement
-run-with-csv-statement:
+# Runs the app with a specific envfile and arguments
+run envfile="configs/default.env" args="":
     #!/bin/bash
-    export ADDLEDGER_CSV_STATEMENT_FILE={{join(resources, "sample-statement.csv")}}
-    export ADDLEDGER_CSV_STATEMENT_PRESET={{join(resources, "sample-preset.json")}}
-    echo "Running with csv statement ${ADDLEDGER_CSV_STATEMENT_FILE} and preset ${ADDLEDGER_CSV_STATEMENT_PRESET}"
-    {{GO}} run cmd/addledger/main.go    
+    if ! [ -z {{envfile}} ] && [ -f {{envfile}} ]
+    then
+        echo "Sourcing env file {{envfile}}"
+        set -a
+        source {{envfile}}
+        set +a
+    fi
+    cmd="{{GO}} run cmd/addledger/main.go {{args}}"
+    echo "Running command: ${cmd}"
+    eval "${cmd}"
 
 # Runs all tests
 test target="./...": mocks
