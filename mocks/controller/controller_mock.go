@@ -107,6 +107,18 @@ func (mr *MockIInputControllerMockRecorder) OnDescriptionListAction(action inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionListAction", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionListAction), action)
 }
 
+// OnDisplayShortcutModal mocks base method.
+func (m *MockIInputController) OnDisplayShortcutModal() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDisplayShortcutModal")
+}
+
+// OnDisplayShortcutModal indicates an expected call of OnDisplayShortcutModal.
+func (mr *MockIInputControllerMockRecorder) OnDisplayShortcutModal() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDisplayShortcutModal", reflect.TypeOf((*MockIInputController)(nil).OnDisplayShortcutModal))
+}
+
 // OnFinishPosting mocks base method.
 func (m *MockIInputController) OnFinishPosting() {
 	m.ctrl.T.Helper()
@@ -117,6 +129,18 @@ func (m *MockIInputController) OnFinishPosting() {
 func (mr *MockIInputControllerMockRecorder) OnFinishPosting() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnFinishPosting", reflect.TypeOf((*MockIInputController)(nil).OnFinishPosting))
+}
+
+// OnHideShortcutModal mocks base method.
+func (m *MockIInputController) OnHideShortcutModal() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnHideShortcutModal")
+}
+
+// OnHideShortcutModal indicates an expected call of OnHideShortcutModal.
+func (mr *MockIInputControllerMockRecorder) OnHideShortcutModal() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnHideShortcutModal", reflect.TypeOf((*MockIInputController)(nil).OnHideShortcutModal))
 }
 
 // OnInputConfirmation mocks base method.

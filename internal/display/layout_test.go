@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/testutils"
 	mock_controller "github.com/vitorqb/addledger/mocks/controller"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
 )
@@ -19,6 +20,7 @@ func TestNewLayout(t *testing.T) {
 		state      *statemod.State
 		eventbus   *mock_eventbus.MockIEventBus
 		layout     *Layout
+		app        *testutils.TestApp
 	}
 	type testcase struct {
 		name string
@@ -36,11 +38,40 @@ func TestNewLayout(t *testing.T) {
 			},
 		},
 		{
+			name: "Handles CTRL+ALT+Q",
+			run: func(c *testcontext, t *testing.T) {
+				c.controller.EXPECT().OnDisplayShortcutModal().Times(1)
+				key := tcell.KeyCtrlQ
+				event := tcell.NewEventKey(key, 'q', tcell.ModCtrl)
+				setFocus := func(tview.Primitive) {}
+				c.layout.InputHandler()(event, setFocus)
+
+			},
+		},
+		{
 			name: "Displays the tag picker",
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputTags)
 				_, page := c.layout.GetItem(3).(*tview.Pages).GetFrontPage()
 				assert.IsType(t, &TagsPicker{}, page)
+			},
+		},
+		{
+			name: "Displays and hides shortcut modal",
+			run: func(c *testcontext, t *testing.T) {
+				// Set the shortcut modal to be displayed
+				c.state.SetShortcutModalDisplayed(true)
+				c.layout.Refresh()
+				frontPage, _ := c.layout.GetFrontPage()
+				assert.Equal(t, "shortcutModal", frontPage)
+				assert.False(t, c.layout.Input.GetContent().HasFocus())
+
+				// Set the shortcut modal to be hidden
+				c.state.SetShortcutModalDisplayed(false)
+				c.layout.Refresh()
+				frontPage, _ = c.layout.GetFrontPage()
+				assert.Equal(t, "main", frontPage)
+				assert.True(t, c.layout.Input.GetContent().HasFocus())
 			},
 		},
 	}
@@ -58,7 +89,9 @@ func TestNewLayout(t *testing.T) {
 			c.eventbus.EXPECT().Subscribe(gomock.Any()).AnyTimes()
 			// Some controller methods are called on startup
 			c.controller.EXPECT().OnDateChanged("")
-			c.layout, err = NewLayout(c.controller, c.state, c.eventbus)
+			c.app = testutils.NewTestApp()
+			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.app.SetFocus)
+			go c.app.SetRoot(c.layout, true).Run() //nolint:errcheck
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)
 			}

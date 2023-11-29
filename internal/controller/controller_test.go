@@ -888,6 +888,19 @@ func TestInputController__OnUndo(t *testing.T) {
 				assert.Equal(t, anotherAmmountNeg, ammount)
 			},
 		},
+		{
+			name: "OnDisplayShortcutModal",
+			run: func(t *testing.T, c *testcontext) {
+				modalDisplayed := c.state.IsShortcutModalDisplayed()
+				assert.False(t, modalDisplayed)
+				c.controller.OnDisplayShortcutModal()
+				modalDisplayed = c.state.IsShortcutModalDisplayed()
+				assert.True(t, modalDisplayed)
+				c.controller.OnHideShortcutModal()
+				modalDisplayed = c.state.IsShortcutModalDisplayed()
+				assert.False(t, modalDisplayed)
+			},
+		},
 	}
 
 	for _, tc := range testcases {

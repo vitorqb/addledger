@@ -13,19 +13,27 @@ import (
 
 type (
 	Layout struct {
-		*tview.Flex
+		*tview.Pages
+		mainView         *tview.Flex
 		state            *state.State
 		View             *View
 		Input            *Input
 		Context          *Context
 		statementDisplay *StatementDisplay
+		setFocus         func(p tview.Primitive) *tview.Application
 	}
+)
+
+const (
+	modalWith   = 50
+	modalHeight = 10
 )
 
 func NewLayout(
 	controller controller.IInputController,
 	state *state.State,
 	eventBus eventbus.IEventBus,
+	setFocus func(p tview.Primitive) *tview.Application,
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)
@@ -69,39 +77,82 @@ func NewLayout(
 	// (if any). It starts hidden and is only shown when there are statements.
 	statementDisplay := NewStatementDisplay(state)
 
-	flex := tview.
+	mainView := tview.
 		NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(view.GetContent(), 0, 5, false).
 		AddItem(statementDisplay, 0, 0, false).
 		AddItem(input.GetContent(), 0, 1, false).
 		AddItem(context.GetContent(), 0, 10, false)
-	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		switch key := event.Key(); key {
-		case tcell.KeyCtrlZ:
-			controller.OnUndo()
-			return nil
-		}
-		return event
+
+	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
+
+	pages := tview.NewPages()
+	pages.AddAndSwitchToPage("main", mainView, true)
+	pages.AddPage("shortcutModal", shortcutModal, true, false)
+	pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		return HandleGlobalShortcuts(controller, event)
 	})
+
 	layout := &Layout{
-		Flex:             flex,
+		Pages:            pages,
+		mainView:         mainView,
 		state:            state,
 		View:             view,
 		Input:            input,
 		Context:          context,
 		statementDisplay: statementDisplay,
+		setFocus:         setFocus,
 	}
 	layout.Refresh()
 	state.AddOnChangeHook(layout.Refresh)
 	return layout, nil
 }
 
+// Expose ResizeItem from Main View
+func (l *Layout) ResizeItem(item tview.Primitive, width, height int) {
+	l.mainView.ResizeItem(item, width, height)
+}
+
+// Expose GetItem from Main View
+func (l *Layout) GetItem(index int) tview.Primitive {
+	return l.mainView.GetItem(index)
+}
+
 func (l *Layout) Refresh() {
-	// If there are statements, display the statement display
+	l.refreshStatementDisplay()
+	l.refreshShortcutModalDisplay()
+}
+
+func (l *Layout) refreshStatementDisplay() {
 	if len(l.state.StatementEntries) > 0 {
-		l.Flex.ResizeItem(l.statementDisplay, 0, 1)
+		l.ResizeItem(l.statementDisplay, 0, 1)
 		return
 	}
-	l.Flex.ResizeItem(l.statementDisplay, 0, 0)
+	l.ResizeItem(l.statementDisplay, 0, 0)
+}
+
+func (l *Layout) refreshShortcutModalDisplay() {
+	if l.state.ShortcutModalDisplayed {
+		l.ShowPage("shortcutModal")
+		return
+	}
+	l.HidePage("shortcutModal")
+	// Make sure that once the modal is hidden we focus back on the input field.
+	l.setFocus(l.Input.GetContent())
+}
+
+func HandleGlobalShortcuts(controller controller.IInputController, event *tcell.EventKey) *tcell.EventKey {
+	if event == nil {
+		return nil
+	}
+	switch key := event.Key(); key {
+	case tcell.KeyCtrlZ:
+		controller.OnUndo()
+		return nil
+	case tcell.KeyCtrlQ:
+		controller.OnDisplayShortcutModal()
+		return nil
+	}
+	return event
 }
