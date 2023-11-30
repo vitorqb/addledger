@@ -92,7 +92,9 @@ func TestNewLayout(t *testing.T) {
 			c.app = testutils.NewTestApp()
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.app.SetFocus)
 			go c.app.SetRoot(c.layout, true).Run() //nolint:errcheck
-			defer c.app.Stop()
+			// For some reason calling Stop() here causes the terminal
+			// output to be messed up. So we are commenting it out for now.
+			// defer c.app.Stop()
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)
 			}
