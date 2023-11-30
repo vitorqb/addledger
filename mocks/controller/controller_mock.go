@@ -107,6 +107,18 @@ func (mr *MockIInputControllerMockRecorder) OnDescriptionListAction(action inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionListAction", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionListAction), action)
 }
 
+// OnDiscardStatement mocks base method.
+func (m *MockIInputController) OnDiscardStatement() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDiscardStatement")
+}
+
+// OnDiscardStatement indicates an expected call of OnDiscardStatement.
+func (mr *MockIInputControllerMockRecorder) OnDiscardStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDiscardStatement", reflect.TypeOf((*MockIInputController)(nil).OnDiscardStatement))
+}
+
 // OnDisplayShortcutModal mocks base method.
 func (m *MockIInputController) OnDisplayShortcutModal() {
 	m.ctrl.T.Helper()

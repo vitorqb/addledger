@@ -901,6 +901,16 @@ func TestInputController__OnUndo(t *testing.T) {
 				assert.False(t, modalDisplayed)
 			},
 		},
+		{
+			name: "OnDiscardStatement",
+			run: func(t *testing.T, c *testcontext) {
+				stmEntries := []statementloader.StatementEntry{testutils.StatementEntry_1(t)}
+				c.state.SetStatementEntries(stmEntries)
+				assert.Len(t, c.state.StatementEntries, 1)
+				c.controller.OnDiscardStatement()
+				assert.Len(t, c.state.StatementEntries, 0)
+			},
+		},
 	}
 
 	for _, tc := range testcases {

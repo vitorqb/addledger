@@ -9,21 +9,28 @@ import (
 
 type ShortcutModalController interface {
 	OnHideShortcutModal()
+	OnDiscardStatement()
 }
 
 type ShortcutModal struct {
-	*tview.Box
+	*tview.TextView
 	controller ShortcutModalController
 }
 
 func NewShortcutModal(controller ShortcutModalController) *ShortcutModal {
-	modal := &ShortcutModal{tview.NewBox(), controller}
+	modal := &ShortcutModal{tview.NewTextView(), controller}
 	modal.SetBorder(true)
 	modal.SetTitle("Shortcuts")
+	modal.SetText("d - Discard statement\nq - Quit")
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyRune:
-			if event.Rune() == 'q' {
+			switch event.Rune() {
+			case 'd':
+				modal.controller.OnDiscardStatement()
+				modal.controller.OnHideShortcutModal()
+				return nil
+			case 'q':
 				modal.controller.OnHideShortcutModal()
 				return nil
 			}

@@ -38,7 +38,7 @@ func TestNewLayout(t *testing.T) {
 			},
 		},
 		{
-			name: "Handles CTRL+ALT+Q",
+			name: "Handles CTRL+Q",
 			run: func(c *testcontext, t *testing.T) {
 				c.controller.EXPECT().OnDisplayShortcutModal().Times(1)
 				key := tcell.KeyCtrlQ
@@ -92,6 +92,7 @@ func TestNewLayout(t *testing.T) {
 			c.app = testutils.NewTestApp()
 			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.app.SetFocus)
 			go c.app.SetRoot(c.layout, true).Run() //nolint:errcheck
+			defer c.app.Stop()
 			if err != nil {
 				t.Fatalf("Failed to create layout: %s", err)
 			}

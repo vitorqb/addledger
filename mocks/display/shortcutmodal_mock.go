@@ -33,6 +33,18 @@ func (m *MockShortcutModalController) EXPECT() *MockShortcutModalControllerMockR
 	return m.recorder
 }
 
+// OnDiscardStatement mocks base method.
+func (m *MockShortcutModalController) OnDiscardStatement() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnDiscardStatement")
+}
+
+// OnDiscardStatement indicates an expected call of OnDiscardStatement.
+func (mr *MockShortcutModalControllerMockRecorder) OnDiscardStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDiscardStatement", reflect.TypeOf((*MockShortcutModalController)(nil).OnDiscardStatement))
+}
+
 // OnHideShortcutModal mocks base method.
 func (m *MockShortcutModalController) OnHideShortcutModal() {
 	m.ctrl.T.Helper()

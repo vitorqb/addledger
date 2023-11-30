@@ -38,6 +38,16 @@ func TestShortcutModal(t *testing.T) {
 			name: "Calls controller exit on ctrl+q",
 			run:  testExitOnKey(tcell.KeyCtrlQ, 'q', tcell.ModNone),
 		},
+		{
+			name: "Calls discard statement on d",
+			run: func(t *testing.T, tc *testcase) {
+				event := tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone)
+				setFocus := func(tview.Primitive) {}
+				tc.controller.EXPECT().OnDiscardStatement().Times(1)
+				tc.controller.EXPECT().OnHideShortcutModal().Times(1)
+				tc.modal.InputHandler()(event, setFocus)
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
