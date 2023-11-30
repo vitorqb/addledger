@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
@@ -265,4 +267,17 @@ func TestDataPath(t *testing.T, path string) string {
 		t.Fatal(err)
 	}
 	return filepath.Join(wd, "testdata", path)
+}
+
+// A test tview application
+type TestApp struct {
+	*tview.Application
+	Screen tcell.Screen
+}
+
+func NewTestApp() *TestApp {
+	app := tview.NewApplication()
+	screen := tcell.NewSimulationScreen("UTF-8")
+	app.SetScreen(screen)
+	return &TestApp{Application: app, Screen: screen}
 }

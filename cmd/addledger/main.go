@@ -108,14 +108,14 @@ func main() {
 		logrus.WithError(err).Fatal("Failed to load csv statement")
 	}
 
+	// Starts a new tview App
+	app := tview.NewApplication()
+
 	// Starts a new layout
-	layout, err := display.NewLayout(controller, state, eventBus)
+	layout, err := display.NewLayout(controller, state, eventBus, app.SetFocus)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instatiate layout")
 	}
-
-	// Starts a new tview App
-	app := tview.NewApplication()
 
 	// Run!
 	err = app.

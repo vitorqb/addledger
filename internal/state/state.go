@@ -60,6 +60,8 @@ type (
 		// StatementEntries are entires loaded from a bank statement.
 		// They are used to help the user to create journal entries.
 		StatementEntries []statementloader.StatementEntry
+		// Controls whether the shortcut modal is displayed or not
+		ShortcutModalDisplayed bool
 	}
 
 	// MaybeValue is a helper container that may contain a value or not
@@ -110,6 +112,7 @@ func InitialState() *State {
 		inputMetadata,
 		journalMetadata,
 		[]statementloader.StatementEntry{},
+		false,
 	}
 	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
@@ -427,4 +430,15 @@ func (s *State) PopStatementEntry() {
 		s.StatementEntries = s.StatementEntries[1:]
 		s.NotifyChange()
 	}
+}
+
+// IsShortcutModalDisplayed returns whether the statement modal is displayed or not
+func (s *State) IsShortcutModalDisplayed() bool {
+	return s.ShortcutModalDisplayed
+}
+
+// SetShortcutModalDisplayed sets whether the statement modal is displayed or not
+func (s *State) SetShortcutModalDisplayed(x bool) {
+	s.ShortcutModalDisplayed = x
+	s.NotifyChange()
 }

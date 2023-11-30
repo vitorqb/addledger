@@ -54,6 +54,11 @@ type IInputController interface {
 	OnTagDone(source input.DoneSource)
 	OnTagInsertFromContext()
 	OnTagListAction(action listaction.ListAction)
+
+	// Controls shortcuts modal
+	OnDisplayShortcutModal()
+	OnHideShortcutModal()
+	OnDiscardStatement()
 }
 
 // InputController implements IInputController.
@@ -378,6 +383,20 @@ func (ic *InputController) OnTagListAction(action listaction.ListAction) {
 	if err != nil {
 		logrus.WithError(err).Warn("Failed to send event")
 	}
+}
+
+func (ic *InputController) OnDisplayShortcutModal() {
+	ic.state.SetShortcutModalDisplayed(true)
+}
+
+// OnHideShortcutModal implements IInputController.
+func (ic *InputController) OnHideShortcutModal() {
+	ic.state.SetShortcutModalDisplayed(false)
+}
+
+// OnDiscardStatement implements IInputController.
+func (ic *InputController) OnDiscardStatement() {
+	ic.state.PopStatementEntry()
 }
 
 func (ic *InputController) OnUndo() {
