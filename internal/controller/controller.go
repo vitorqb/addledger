@@ -55,10 +55,13 @@ type IInputController interface {
 	OnTagInsertFromContext()
 	OnTagListAction(action listaction.ListAction)
 
+	// Controls statement
+	OnDiscardStatement()
+	OnLoadStatement()
+
 	// Controls shortcuts modal
 	OnDisplayShortcutModal()
 	OnHideShortcutModal()
-	OnDiscardStatement()
 }
 
 // InputController implements IInputController.
@@ -397,6 +400,11 @@ func (ic *InputController) OnHideShortcutModal() {
 // OnDiscardStatement implements IInputController.
 func (ic *InputController) OnDiscardStatement() {
 	ic.state.PopStatementEntry()
+}
+
+// OnLoadStatement implements IInputController.
+func (*InputController) OnLoadStatement() {
+	panic("unimplemented")
 }
 
 func (ic *InputController) OnUndo() {

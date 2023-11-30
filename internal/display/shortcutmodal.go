@@ -1,6 +1,8 @@
 package display
 
 import (
+	"strings"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -9,7 +11,10 @@ import (
 
 type ShortcutModalController interface {
 	OnHideShortcutModal()
+	// Aciton to discard the current loaded statement.
 	OnDiscardStatement()
+	// Action to load a new statement.
+	OnLoadStatement()
 }
 
 type ShortcutModal struct {
@@ -17,15 +22,28 @@ type ShortcutModal struct {
 	controller ShortcutModalController
 }
 
+func getBodyText() string {
+	return strings.Trim(
+		"d - Discard statement\n"+
+			"l - Load statement\n"+
+			"q - Quit\n",
+		"\n",
+	)
+}
+
 func NewShortcutModal(controller ShortcutModalController) *ShortcutModal {
 	modal := &ShortcutModal{tview.NewTextView(), controller}
 	modal.SetBorder(true)
 	modal.SetTitle("Shortcuts")
-	modal.SetText("d - Discard statement\nq - Quit")
+	modal.SetText(getBodyText())
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyRune:
 			switch event.Rune() {
+			case 'l':
+				modal.controller.OnLoadStatement()
+				modal.controller.OnHideShortcutModal()
+				return nil
 			case 'd':
 				modal.controller.OnDiscardStatement()
 				modal.controller.OnHideShortcutModal()

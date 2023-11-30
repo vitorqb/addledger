@@ -179,6 +179,18 @@ func (mr *MockIInputControllerMockRecorder) OnInputRejection() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInputRejection", reflect.TypeOf((*MockIInputController)(nil).OnInputRejection))
 }
 
+// OnLoadStatement mocks base method.
+func (m *MockIInputController) OnLoadStatement() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnLoadStatement")
+}
+
+// OnLoadStatement indicates an expected call of OnLoadStatement.
+func (mr *MockIInputControllerMockRecorder) OnLoadStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatement", reflect.TypeOf((*MockIInputController)(nil).OnLoadStatement))
+}
+
 // OnPostingAccountChanged mocks base method.
 func (m *MockIInputController) OnPostingAccountChanged(newText string) {
 	m.ctrl.T.Helper()

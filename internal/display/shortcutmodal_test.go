@@ -17,36 +17,46 @@ func TestShortcutModal(t *testing.T) {
 		modal      *ShortcutModal
 		controller *MockShortcutModalController
 	}
-	var testExitOnKey = func(k tcell.Key, r rune, mod tcell.ModMask) func(t *testing.T, tc *testcase) {
+	var testExpectOnKey = func(k tcell.Key, r rune, mod tcell.ModMask, expect func(*MockShortcutModalController)) func(t *testing.T, tc *testcase) {
 		return func(t *testing.T, tc *testcase) {
 			event := tcell.NewEventKey(k, r, tcell.ModNone)
 			setFocus := func(tview.Primitive) {}
-			tc.controller.EXPECT().OnHideShortcutModal().Times(1)
+			expect(tc.controller)
 			tc.modal.InputHandler()(event, setFocus)
 		}
 	}
 	var testcases = []testcase{
 		{
 			name: "Calls controller exit on escape key",
-			run:  testExitOnKey(tcell.KeyEscape, ' ', tcell.ModNone),
+			run: testExpectOnKey(tcell.KeyEscape, ' ', tcell.ModNone, func(c *MockShortcutModalController) {
+				c.EXPECT().OnHideShortcutModal().Times(1)
+			}),
 		},
 		{
 			name: "Calls controller exit on q",
-			run:  testExitOnKey(tcell.KeyRune, 'q', tcell.ModNone),
+			run: testExpectOnKey(tcell.KeyRune, 'q', tcell.ModNone, func(c *MockShortcutModalController) {
+				c.EXPECT().OnHideShortcutModal().Times(1)
+			}),
 		},
 		{
 			name: "Calls controller exit on ctrl+q",
-			run:  testExitOnKey(tcell.KeyCtrlQ, 'q', tcell.ModNone),
+			run: testExpectOnKey(tcell.KeyCtrlQ, 'q', tcell.ModNone, func(c *MockShortcutModalController) {
+				c.EXPECT().OnHideShortcutModal().Times(1)
+			}),
 		},
 		{
 			name: "Calls discard statement on d",
-			run: func(t *testing.T, tc *testcase) {
-				event := tcell.NewEventKey(tcell.KeyRune, 'd', tcell.ModNone)
-				setFocus := func(tview.Primitive) {}
-				tc.controller.EXPECT().OnDiscardStatement().Times(1)
-				tc.controller.EXPECT().OnHideShortcutModal().Times(1)
-				tc.modal.InputHandler()(event, setFocus)
-			},
+			run: testExpectOnKey(tcell.KeyRune, 'd', tcell.ModNone, func(c *MockShortcutModalController) {
+				c.EXPECT().OnDiscardStatement().Times(1)
+				c.EXPECT().OnHideShortcutModal().Times(1)
+			}),
+		},
+		{
+			name: "Calls load statement on l",
+			run: testExpectOnKey(tcell.KeyRune, 'l', tcell.ModNone, func(c *MockShortcutModalController) {
+				c.EXPECT().OnLoadStatement().Times(1)
+				c.EXPECT().OnHideShortcutModal().Times(1)
+			}),
 		},
 	}
 	for _, tc := range testcases {
