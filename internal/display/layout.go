@@ -24,6 +24,14 @@ type (
 	}
 )
 
+type LayoutPage string
+
+var (
+	MainPage               LayoutPage = "main"
+	ShortcutModalPage      LayoutPage = "shortcutModal"
+	LoadStatementModalPage LayoutPage = "loadStatementModal"
+)
+
 const (
 	modalWith   = 50
 	modalHeight = 10
@@ -86,10 +94,12 @@ func NewLayout(
 		AddItem(context.GetContent(), 0, 10, false)
 
 	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
+	loadStatementModal := center(NewLoadStatementModal(), modalWith, modalHeight)
 
 	pages := tview.NewPages()
-	pages.AddAndSwitchToPage("main", mainView, true)
-	pages.AddPage("shortcutModal", shortcutModal, true, false)
+	pages.AddAndSwitchToPage(string(MainPage), mainView, true)
+	pages.AddPage(string(ShortcutModalPage), shortcutModal, true, false)
+	pages.AddPage(string(LoadStatementModalPage), loadStatementModal, true, false)
 	pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return HandleGlobalShortcuts(controller, event)
 	})
@@ -122,6 +132,11 @@ func (l *Layout) GetItem(index int) tview.Primitive {
 func (l *Layout) Refresh() {
 	l.refreshStatementDisplay()
 	l.refreshShortcutModalDisplay()
+	l.refreshLoadStatementModalDisplay()
+	// Make sure that once the modal is hidden we focus back on the input field.
+	if frontPage, _ := l.GetFrontPage(); frontPage == string(MainPage) {
+		l.setFocus(l.Input.GetContent())
+	}
 }
 
 func (l *Layout) refreshStatementDisplay() {
@@ -134,12 +149,18 @@ func (l *Layout) refreshStatementDisplay() {
 
 func (l *Layout) refreshShortcutModalDisplay() {
 	if l.state.Display.ShortcutModal() {
-		l.ShowPage("shortcutModal")
+		l.ShowPage(string(ShortcutModalPage))
 		return
 	}
-	l.HidePage("shortcutModal")
-	// Make sure that once the modal is hidden we focus back on the input field.
-	l.setFocus(l.Input.GetContent())
+	l.HidePage(string(ShortcutModalPage))
+}
+
+func (l *Layout) refreshLoadStatementModalDisplay() {
+	if l.state.Display.LoadStatementModal() {
+		l.ShowPage(string(LoadStatementModalPage))
+		return
+	}
+	l.HidePage(string(LoadStatementModalPage))
 }
 
 func HandleGlobalShortcuts(controller controller.IInputController, event *tcell.EventKey) *tcell.EventKey {
