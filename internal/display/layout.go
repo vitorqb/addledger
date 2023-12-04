@@ -133,7 +133,7 @@ func (l *Layout) refreshStatementDisplay() {
 }
 
 func (l *Layout) refreshShortcutModalDisplay() {
-	if l.state.ShortcutModalDisplayed {
+	if l.state.Display.ShortcutModal() {
 		l.ShowPage("shortcutModal")
 		return
 	}

@@ -891,13 +891,13 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnDisplayShortcutModal",
 			run: func(t *testing.T, c *testcontext) {
-				modalDisplayed := c.state.IsShortcutModalDisplayed()
+				modalDisplayed := c.state.Display.ShortcutModal()
 				assert.False(t, modalDisplayed)
 				c.controller.OnDisplayShortcutModal()
-				modalDisplayed = c.state.IsShortcutModalDisplayed()
+				modalDisplayed = c.state.Display.ShortcutModal()
 				assert.True(t, modalDisplayed)
 				c.controller.OnHideShortcutModal()
-				modalDisplayed = c.state.IsShortcutModalDisplayed()
+				modalDisplayed = c.state.Display.ShortcutModal()
 				assert.False(t, modalDisplayed)
 			},
 		},

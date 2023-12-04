@@ -389,12 +389,12 @@ func (ic *InputController) OnTagListAction(action listaction.ListAction) {
 }
 
 func (ic *InputController) OnDisplayShortcutModal() {
-	ic.state.SetShortcutModalDisplayed(true)
+	ic.state.Display.SetShortcutModal(true)
 }
 
 // OnHideShortcutModal implements IInputController.
 func (ic *InputController) OnHideShortcutModal() {
-	ic.state.SetShortcutModalDisplayed(false)
+	ic.state.Display.SetShortcutModal(false)
 }
 
 // OnDiscardStatement implements IInputController.
