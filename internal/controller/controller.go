@@ -404,7 +404,7 @@ func (ic *InputController) OnDiscardStatement() {
 
 // OnLoadStatementRequest implements IInputController.
 func (ic *InputController) OnLoadStatementRequest() {
-	ic.state.Display.SetStatementModal(true)
+	ic.state.Display.SetLoadStatementModal(true)
 }
 
 func (ic *InputController) OnUndo() {

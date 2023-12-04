@@ -914,9 +914,9 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnLoadStatementRequest",
 			run: func(t *testing.T, c *testcontext) {
-				assert.False(t, c.state.Display.StatementModal())
+				assert.False(t, c.state.Display.LoadStatementModal())
 				c.controller.OnLoadStatementRequest()
-				assert.True(t, c.state.Display.StatementModal())
+				assert.True(t, c.state.Display.LoadStatementModal())
 			},
 		},
 	}

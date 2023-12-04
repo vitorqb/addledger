@@ -74,6 +74,12 @@ func TestNewLayout(t *testing.T) {
 				assert.True(t, c.layout.Input.GetContent().HasFocus())
 			},
 		},
+		{
+			name: "Displays and hides the load statement modal",
+			run: func(c *testcontext, t *testing.T) {
+
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
