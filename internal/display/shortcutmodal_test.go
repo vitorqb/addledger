@@ -54,7 +54,7 @@ func TestShortcutModal(t *testing.T) {
 		{
 			name: "Calls load statement on l",
 			run: testExpectOnKey(tcell.KeyRune, 'l', tcell.ModNone, func(c *MockShortcutModalController) {
-				c.EXPECT().OnLoadStatement().Times(1)
+				c.EXPECT().OnLoadStatementRequest().Times(1)
 				c.EXPECT().OnHideShortcutModal().Times(1)
 			}),
 		},

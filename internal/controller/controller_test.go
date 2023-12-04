@@ -911,6 +911,14 @@ func TestInputController__OnUndo(t *testing.T) {
 				assert.Len(t, c.state.StatementEntries, 0)
 			},
 		},
+		{
+			name: "OnLoadStatementRequest",
+			run: func(t *testing.T, c *testcontext) {
+				assert.False(t, c.state.Display.StatementModal())
+				c.controller.OnLoadStatementRequest()
+				assert.True(t, c.state.Display.StatementModal())
+			},
+		},
 	}
 
 	for _, tc := range testcases {

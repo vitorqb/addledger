@@ -57,7 +57,7 @@ type IInputController interface {
 
 	// Controls statement
 	OnDiscardStatement()
-	OnLoadStatement()
+	OnLoadStatementRequest()
 
 	// Controls shortcuts modal
 	OnDisplayShortcutModal()
@@ -402,9 +402,9 @@ func (ic *InputController) OnDiscardStatement() {
 	ic.state.PopStatementEntry()
 }
 
-// OnLoadStatement implements IInputController.
-func (*InputController) OnLoadStatement() {
-	panic("unimplemented")
+// OnLoadStatementRequest implements IInputController.
+func (ic *InputController) OnLoadStatementRequest() {
+	ic.state.Display.SetStatementModal(true)
 }
 
 func (ic *InputController) OnUndo() {

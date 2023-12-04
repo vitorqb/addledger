@@ -55,7 +55,8 @@ type (
 		react.IReact
 
 		// Controls whether the shortcut modal is displayed or not
-		shortcutModal bool
+		shortcutModal  bool
+		statementModal bool
 	}
 
 	// State is the top-level app state
@@ -443,7 +444,11 @@ func (s *State) PopStatementEntry() {
 
 // NewDisplay returns a new Display
 func NewDisplay() *Display {
-	return &Display{react.New(), false}
+	return &Display{
+		IReact:         react.New(),
+		shortcutModal:  false,
+		statementModal: false,
+	}
 }
 
 // SetShortcutModal sets whether the statement modal is displayed or not
@@ -455,4 +460,15 @@ func (d *Display) SetShortcutModal(x bool) {
 // ShortcutModal returns whether the statement modal is displayed or not
 func (d *Display) ShortcutModal() bool {
 	return d.shortcutModal
+}
+
+// SetStatementModal sets whether the statement modal is displayed or not
+func (d *Display) SetStatementModal(x bool) {
+	d.statementModal = x
+	d.NotifyChange()
+}
+
+// StatementModal returns whether the statement modal is displayed or not
+func (d *Display) StatementModal() bool {
+	return d.statementModal
 }

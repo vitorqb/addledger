@@ -57,14 +57,14 @@ func (mr *MockShortcutModalControllerMockRecorder) OnHideShortcutModal() *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnHideShortcutModal", reflect.TypeOf((*MockShortcutModalController)(nil).OnHideShortcutModal))
 }
 
-// OnLoadStatement mocks base method.
-func (m *MockShortcutModalController) OnLoadStatement() {
+// OnLoadStatementRequest mocks base method.
+func (m *MockShortcutModalController) OnLoadStatementRequest() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnLoadStatement")
+	m.ctrl.Call(m, "OnLoadStatementRequest")
 }
 
-// OnLoadStatement indicates an expected call of OnLoadStatement.
-func (mr *MockShortcutModalControllerMockRecorder) OnLoadStatement() *gomock.Call {
+// OnLoadStatementRequest indicates an expected call of OnLoadStatementRequest.
+func (mr *MockShortcutModalControllerMockRecorder) OnLoadStatementRequest() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatement", reflect.TypeOf((*MockShortcutModalController)(nil).OnLoadStatement))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatementRequest", reflect.TypeOf((*MockShortcutModalController)(nil).OnLoadStatementRequest))
 }

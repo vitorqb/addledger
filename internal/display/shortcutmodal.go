@@ -14,7 +14,7 @@ type ShortcutModalController interface {
 	// Aciton to discard the current loaded statement.
 	OnDiscardStatement()
 	// Action to load a new statement.
-	OnLoadStatement()
+	OnLoadStatementRequest()
 }
 
 type ShortcutModal struct {
@@ -41,7 +41,7 @@ func NewShortcutModal(controller ShortcutModalController) *ShortcutModal {
 		case tcell.KeyRune:
 			switch event.Rune() {
 			case 'l':
-				modal.controller.OnLoadStatement()
+				modal.controller.OnLoadStatementRequest()
 				modal.controller.OnHideShortcutModal()
 				return nil
 			case 'd':
