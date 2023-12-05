@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/config"
 	. "github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -18,6 +19,7 @@ import (
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
+	. "github.com/vitorqb/addledger/mocks/controller"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
 	. "github.com/vitorqb/addledger/mocks/metaloader"
@@ -49,13 +51,14 @@ var anotherAmmountNegStr = "EUR -12.20"
 func TestInputController(t *testing.T) {
 
 	type testcontext struct {
-		state       *statemod.State
-		controller  *InputController
-		initError   error
-		bytesBuffer *bytes.Buffer
-		eventBus    *MockIEventBus
-		dateGuesser *MockIDateGuesser
-		metaLoader  *MockIMetaLoader
+		state              *statemod.State
+		controller         *InputController
+		initError          error
+		bytesBuffer        *bytes.Buffer
+		eventBus           *MockIEventBus
+		dateGuesser        *MockIDateGuesser
+		metaLoader         *MockIMetaLoader
+		csvStatementLoader *MockICSVStatementLoader
 		// Printer is simple enough for us to avoid using a mock.
 		printer printermod.IPrinter
 	}
@@ -73,6 +76,7 @@ func TestInputController(t *testing.T) {
 			WithDateGuesser(c.dateGuesser),
 			WithMetaLoader(c.metaLoader),
 			WithPrinter(c.printer),
+			WithCSVStatementLoader(c.csvStatementLoader),
 		}
 	}
 
@@ -734,6 +738,7 @@ func TestInputController(t *testing.T) {
 			c.eventBus = NewMockIEventBus(ctrl)
 			c.dateGuesser = NewMockIDateGuesser(ctrl)
 			c.metaLoader = NewMockIMetaLoader(ctrl)
+			c.csvStatementLoader = NewMockICSVStatementLoader(ctrl)
 			// Printer is simple enough for us to avoid using a mock.
 			c.printer = printermod.New(2, 2)
 			opts := tc.opts(t, c)
@@ -746,9 +751,10 @@ func TestInputController(t *testing.T) {
 func TestInputController__OnUndo(t *testing.T) {
 
 	type testcontext struct {
-		state      *statemod.State
-		controller *InputController
-		eventBus   *MockIEventBus
+		state              *statemod.State
+		controller         *InputController
+		eventBus           *MockIEventBus
+		csvStatementLoader *MockICSVStatementLoader
 	}
 
 	type testcase struct {
@@ -919,6 +925,21 @@ func TestInputController__OnUndo(t *testing.T) {
 				assert.True(t, c.state.Display.LoadStatementModal())
 			},
 		},
+		{
+			name: "OnLoadStatement loads statement",
+			run: func(t *testing.T, c *testcontext) {
+				// Ensure modal is opened before
+				c.state.Display.SetLoadStatementModal(true)
+				csvPath := testutils.TestDataPath(t, "statement.csv")
+				presetPath := testutils.TestDataPath(t, "preset.json")
+				expectedConfig, err := config.LoadCsvStatementLoaderConfig(csvPath, presetPath)
+				assert.NoError(t, err)
+				c.csvStatementLoader.EXPECT().Load(expectedConfig).Times(1)
+				c.controller.OnLoadStatement(csvPath, presetPath)
+				// Ensure modal is closed
+				assert.False(t, c.state.Display.LoadStatementModal())
+			},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -930,6 +951,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			var bytesBuffer bytes.Buffer
 			c.state = statemod.InitialState()
 			c.eventBus = NewMockIEventBus(ctrl)
+			c.csvStatementLoader = NewMockICSVStatementLoader(ctrl)
 			dateGuesser := NewMockIDateGuesser(ctrl)
 			dateGuesser.EXPECT().Guess(gomock.Any()).AnyTimes()
 			c.controller, err = NewController(c.state,
@@ -938,6 +960,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				WithDateGuesser(dateGuesser),
 				WithMetaLoader(NewMockIMetaLoader(ctrl)),
 				WithPrinter(printermod.New(2, 2)),
+				WithCSVStatementLoader(c.csvStatementLoader),
 			)
 			assert.NoError(t, err)
 			tc.run(t, c)

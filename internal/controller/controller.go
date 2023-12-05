@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/sirupsen/logrus"
+	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -17,6 +18,12 @@ import (
 )
 
 //go:generate $MOCKGEN --source=controller.go --destination=../../mocks/controller/controller_mock.go
+
+// ICSVStatementLoader represents a component that loads a CSV statement into
+// the app state.
+type ICSVStatementLoader interface {
+	Load(config configmod.CSVStatementLoaderConfig) error
+}
 
 // IInputController reacts to the user inputs and interactions.
 type IInputController interface {
@@ -67,12 +74,13 @@ type IInputController interface {
 
 // InputController implements IInputController.
 type InputController struct {
-	state       *statemod.State
-	output      io.Writer
-	eventBus    eventbus.IEventBus
-	dateGuesser dateguesser.IDateGuesser
-	metaLoader  metaloader.IMetaLoader
-	printer     printermod.IPrinter
+	state              *statemod.State
+	output             io.Writer
+	eventBus           eventbus.IEventBus
+	dateGuesser        dateguesser.IDateGuesser
+	metaLoader         metaloader.IMetaLoader
+	printer            printermod.IPrinter
+	csvStatementLoader ICSVStatementLoader
 }
 
 var _ IInputController = &InputController{}
@@ -100,13 +108,17 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 	if opts.printer == nil {
 		return nil, fmt.Errorf("missing printer")
 	}
+	if opts.csvStatementLoader == nil {
+		return nil, fmt.Errorf("missing csvStatementLoader")
+	}
 	return &InputController{
-		state:       state,
-		output:      opts.output,
-		eventBus:    opts.eventBus,
-		dateGuesser: opts.dateGuesser,
-		metaLoader:  opts.metaLoader,
-		printer:     opts.printer,
+		state:              state,
+		output:             opts.output,
+		eventBus:           opts.eventBus,
+		dateGuesser:        opts.dateGuesser,
+		metaLoader:         opts.metaLoader,
+		printer:            opts.printer,
+		csvStatementLoader: opts.csvStatementLoader,
 	}, nil
 }
 
@@ -410,7 +422,17 @@ func (ic *InputController) OnLoadStatementRequest() {
 
 // OnLoadStatement implements display.LoadStatementModalController.
 func (ic *InputController) OnLoadStatement(csvFile string, presetFile string) {
-	panic("unimplemented")
+	config, err := configmod.LoadCsvStatementLoaderConfig(csvFile, presetFile)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to load config")
+		return
+	}
+	err = ic.csvStatementLoader.Load(config)
+	if err != nil {
+		logrus.WithError(err).Error("Failed to load statement")
+		return
+	}
+	ic.state.Display.SetLoadStatementModal(false)
 }
 
 func (ic *InputController) OnUndo() {

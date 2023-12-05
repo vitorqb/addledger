@@ -8,9 +8,47 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	config "github.com/vitorqb/addledger/internal/config"
 	input "github.com/vitorqb/addledger/internal/input"
 	listaction "github.com/vitorqb/addledger/internal/listaction"
 )
+
+// MockICSVStatementLoader is a mock of ICSVStatementLoader interface.
+type MockICSVStatementLoader struct {
+	ctrl     *gomock.Controller
+	recorder *MockICSVStatementLoaderMockRecorder
+}
+
+// MockICSVStatementLoaderMockRecorder is the mock recorder for MockICSVStatementLoader.
+type MockICSVStatementLoaderMockRecorder struct {
+	mock *MockICSVStatementLoader
+}
+
+// NewMockICSVStatementLoader creates a new mock instance.
+func NewMockICSVStatementLoader(ctrl *gomock.Controller) *MockICSVStatementLoader {
+	mock := &MockICSVStatementLoader{ctrl: ctrl}
+	mock.recorder = &MockICSVStatementLoaderMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockICSVStatementLoader) EXPECT() *MockICSVStatementLoaderMockRecorder {
+	return m.recorder
+}
+
+// Load mocks base method.
+func (m *MockICSVStatementLoader) Load(config config.CSVStatementLoaderConfig) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Load", config)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Load indicates an expected call of Load.
+func (mr *MockICSVStatementLoaderMockRecorder) Load(config interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Load", reflect.TypeOf((*MockICSVStatementLoader)(nil).Load), config)
+}
 
 // MockIInputController is a mock of IInputController interface.
 type MockIInputController struct {
