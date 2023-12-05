@@ -56,6 +56,7 @@ type IInputController interface {
 	OnTagListAction(action listaction.ListAction)
 
 	// Controls statement
+	OnLoadStatement(csvFile string, presetFile string)
 	OnDiscardStatement()
 	OnLoadStatementRequest()
 
@@ -405,6 +406,11 @@ func (ic *InputController) OnDiscardStatement() {
 // OnLoadStatementRequest implements IInputController.
 func (ic *InputController) OnLoadStatementRequest() {
 	ic.state.Display.SetLoadStatementModal(true)
+}
+
+// OnLoadStatement implements display.LoadStatementModalController.
+func (ic *InputController) OnLoadStatement(csvFile string, presetFile string) {
+	panic("unimplemented")
 }
 
 func (ic *InputController) OnUndo() {

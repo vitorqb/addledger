@@ -179,6 +179,18 @@ func (mr *MockIInputControllerMockRecorder) OnInputRejection() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnInputRejection", reflect.TypeOf((*MockIInputController)(nil).OnInputRejection))
 }
 
+// OnLoadStatement mocks base method.
+func (m *MockIInputController) OnLoadStatement(csvFile, presetFile string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnLoadStatement", csvFile, presetFile)
+}
+
+// OnLoadStatement indicates an expected call of OnLoadStatement.
+func (mr *MockIInputControllerMockRecorder) OnLoadStatement(csvFile, presetFile interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatement", reflect.TypeOf((*MockIInputController)(nil).OnLoadStatement), csvFile, presetFile)
+}
+
 // OnLoadStatementRequest mocks base method.
 func (m *MockIInputController) OnLoadStatementRequest() {
 	m.ctrl.T.Helper()

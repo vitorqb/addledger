@@ -94,7 +94,7 @@ func NewLayout(
 		AddItem(context.GetContent(), 0, 10, false)
 
 	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
-	loadStatementModal := center(NewLoadStatementModal(), modalWith, modalHeight)
+	loadStatementModal := center(NewLoadStatementModal(controller), modalWith*2, modalHeight*2)
 
 	pages := tview.NewPages()
 	pages.AddAndSwitchToPage(string(MainPage), mainView, true)
