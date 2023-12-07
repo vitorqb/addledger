@@ -1,4 +1,4 @@
-package statementloader_test
+package statementreader_test
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorqb/addledger/internal/finance"
-	. "github.com/vitorqb/addledger/internal/statementloader"
+	. "github.com/vitorqb/addledger/internal/statementreader"
 )
 
 func TestDateImporter(t *testing.T) {

@@ -10,7 +10,7 @@ import (
 	"github.com/vitorqb/addledger/internal/injector"
 	. "github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
@@ -63,7 +63,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 	type testcase struct {
 		name            string
 		config          config.CSVStatementLoaderConfig
-		expectedOptions []statementloader.CSVLoaderOption
+		expectedOptions []statementreader.CSVLoaderOption
 	}
 	testcases := []testcase{
 		{
@@ -74,8 +74,8 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				AccountFieldIndex:     -1,
 				AmmountFieldIndex:     -1,
 			},
-			expectedOptions: []statementloader.CSVLoaderOption{
-				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{}),
+			expectedOptions: []statementreader.CSVLoaderOption{
+				statementreader.WithCSVLoaderMapping([]statementreader.CSVColumnMapping{}),
 			},
 		},
 		{
@@ -90,23 +90,23 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				AccountFieldIndex:     2,
 				AmmountFieldIndex:     3,
 			},
-			expectedOptions: []statementloader.CSVLoaderOption{
-				statementloader.WithCSVSeparator(';'),
-				statementloader.WithCSVLoaderAccountName("acc"),
-				statementloader.WithCSVLoaderDefaultCommodity("com"),
-				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{
-					{Column: 0, Importer: statementloader.DateImporter{Format: "01/02/2006"}},
-					{Column: 1, Importer: statementloader.DescriptionImporter{}},
-					{Column: 2, Importer: statementloader.AccountImporter{}},
-					{Column: 3, Importer: statementloader.AmmountImporter{}},
+			expectedOptions: []statementreader.CSVLoaderOption{
+				statementreader.WithCSVSeparator(';'),
+				statementreader.WithCSVLoaderAccountName("acc"),
+				statementreader.WithCSVLoaderDefaultCommodity("com"),
+				statementreader.WithCSVLoaderMapping([]statementreader.CSVColumnMapping{
+					{Column: 0, Importer: statementreader.DateImporter{Format: "01/02/2006"}},
+					{Column: 1, Importer: statementreader.DescriptionImporter{}},
+					{Column: 2, Importer: statementreader.AccountImporter{}},
+					{Column: 3, Importer: statementreader.AmmountImporter{}},
 				}),
 			},
 		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			actualConfig := statementloader.CSVLoaderConfig{}
-			expectedConfig := statementloader.CSVLoaderConfig{}
+			actualConfig := statementreader.CSVLoaderConfig{}
+			expectedConfig := statementreader.CSVLoaderConfig{}
 			options, err := CSVStatementLoaderOptions(testcase.config)
 			assert.Nil(t, err)
 			for _, option := range options {

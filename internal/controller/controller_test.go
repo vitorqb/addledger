@@ -17,7 +17,7 @@ import (
 	"github.com/vitorqb/addledger/internal/listaction"
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/controller"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
@@ -168,7 +168,7 @@ func TestInputController(t *testing.T) {
 			name: "On date change with empty input and statement",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				statementEntries := []statementloader.StatementEntry{{Date: otherTime}}
+				statementEntries := []statementreader.StatementEntry{{Date: otherTime}}
 				c.state.SetStatementEntries(statementEntries)
 				c.controller.OnDateChanged("")
 				guess, success := c.state.InputMetadata.GetDateGuess()
@@ -307,7 +307,7 @@ func TestInputController(t *testing.T) {
 			name: "OnInputConfirmation pops statement entry",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.state.SetStatementEntries([]statementloader.StatementEntry{{}})
+				c.state.SetStatementEntries([]statementreader.StatementEntry{{}})
 				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
@@ -324,7 +324,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				date1 := testutils.Date1(t)
 				date2 := testutils.Date2(t)
-				stmEntries := []statementloader.StatementEntry{
+				stmEntries := []statementreader.StatementEntry{
 					{Date: date1},
 					{Date: date2},
 				}
@@ -910,7 +910,7 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnDiscardStatement",
 			run: func(t *testing.T, c *testcontext) {
-				stmEntries := []statementloader.StatementEntry{testutils.StatementEntry_1(t)}
+				stmEntries := []statementreader.StatementEntry{testutils.StatementEntry_1(t)}
 				c.state.SetStatementEntries(stmEntries)
 				assert.Len(t, c.state.StatementEntries, 1)
 				c.controller.OnDiscardStatement()

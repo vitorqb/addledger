@@ -9,7 +9,7 @@ import (
 	. "github.com/vitorqb/addledger/internal/display"
 	"github.com/vitorqb/addledger/internal/finance"
 	statemod "github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 )
 
 func TestStatementDisplay(t *testing.T) {
@@ -26,7 +26,7 @@ func TestStatementDisplay(t *testing.T) {
 			name: "Displays statement when available",
 			run: func(c *testcontext, t *testing.T) {
 				assert.Equal(t, "", c.statementDisplay.GetText(false))
-				c.state.SetStatementEntries([]statementloader.StatementEntry{
+				c.state.SetStatementEntries([]statementreader.StatementEntry{
 					{
 						Account:     "ACC",
 						Date:        time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),

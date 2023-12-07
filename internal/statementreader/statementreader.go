@@ -1,4 +1,4 @@
-package statementloader
+package statementreader
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/vitorqb/addledger/internal/input"
 )
 
-//go:generate $MOCKGEN --source=statementloader.go --destination=../../mocks/statementloader/statementloader_mock.go
+//go:generate $MOCKGEN --source=statementreader.go --destination=../../mocks/statementreader/statementreader_mock.go
 
 // StatementEntry represents a single entry in a bank statement.
 type StatementEntry struct {

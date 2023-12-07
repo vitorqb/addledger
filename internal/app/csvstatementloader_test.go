@@ -7,7 +7,7 @@ import (
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/config"
 	statemod "github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 )
 
 func TestMaybeLoadCsvStatement(t *testing.T) {
@@ -16,7 +16,7 @@ func TestMaybeLoadCsvStatement(t *testing.T) {
 		loader := NewCSVStatementLoader(state)
 		err := loader.Load(config.CSVStatementLoaderConfig{})
 		assert.Nil(t, err)
-		assert.Equal(t, []statementloader.StatementEntry{}, state.GetStatementEntries())
+		assert.Equal(t, []statementreader.StatementEntry{}, state.GetStatementEntries())
 	})
 	t.Run("Fails to load statement", func(t *testing.T) {
 		state := statemod.InitialState()

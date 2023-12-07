@@ -1,4 +1,4 @@
-package statementloader
+package statementreader
 
 import (
 	"encoding/csv"

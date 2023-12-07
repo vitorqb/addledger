@@ -11,7 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/metaloader"
 	"github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/stringmatcher"
 	"github.com/vitorqb/addledger/internal/transactionmatcher"
 	"github.com/vitorqb/addledger/pkg/hledger"
@@ -78,50 +78,50 @@ func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
 	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }
 
-func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementloader.CSVLoaderOption, error) {
-	options := []statementloader.CSVLoaderOption{}
+func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.CSVLoaderOption, error) {
+	options := []statementreader.CSVLoaderOption{}
 	if acc := config.Account; acc != "" {
-		options = append(options, statementloader.WithCSVLoaderAccountName(acc))
+		options = append(options, statementreader.WithCSVLoaderAccountName(acc))
 	}
 	if comm := config.Commodity; comm != "" {
-		options = append(options, statementloader.WithCSVLoaderDefaultCommodity(comm))
+		options = append(options, statementreader.WithCSVLoaderDefaultCommodity(comm))
 	}
 	if sep := config.Separator; sep != "" {
 		if len(sep) != 1 {
 			return nil, fmt.Errorf("invalid csv separator: %s", sep)
 		}
-		options = append(options, statementloader.WithCSVSeparator([]rune(sep)[0]))
+		options = append(options, statementreader.WithCSVSeparator([]rune(sep)[0]))
 	}
-	mapping := []statementloader.CSVColumnMapping{}
+	mapping := []statementreader.CSVColumnMapping{}
 	if idate := config.DateFieldIndex; idate != -1 {
-		importer := statementloader.DateImporter{Format: config.DateFormat}
-		mapping = append(mapping, statementloader.CSVColumnMapping{Column: idate, Importer: importer})
+		importer := statementreader.DateImporter{Format: config.DateFormat}
+		mapping = append(mapping, statementreader.CSVColumnMapping{Column: idate, Importer: importer})
 	}
 	if idescription := config.DescriptionFieldIndex; idescription != -1 {
-		mapping = append(mapping, statementloader.CSVColumnMapping{
-			Column: idescription, Importer: statementloader.DescriptionImporter{},
+		mapping = append(mapping, statementreader.CSVColumnMapping{
+			Column: idescription, Importer: statementreader.DescriptionImporter{},
 		})
 	}
 	if iaccount := config.AccountFieldIndex; iaccount != -1 {
-		mapping = append(mapping, statementloader.CSVColumnMapping{
-			Column: iaccount, Importer: statementloader.AccountImporter{},
+		mapping = append(mapping, statementreader.CSVColumnMapping{
+			Column: iaccount, Importer: statementreader.AccountImporter{},
 		})
 	}
 	if iammount := config.AmmountFieldIndex; iammount != -1 {
-		mapping = append(mapping, statementloader.CSVColumnMapping{
-			Column: iammount, Importer: statementloader.AmmountImporter{},
+		mapping = append(mapping, statementreader.CSVColumnMapping{
+			Column: iammount, Importer: statementreader.AmmountImporter{},
 		})
 	}
-	options = append(options, statementloader.WithCSVLoaderMapping(mapping))
+	options = append(options, statementreader.WithCSVLoaderMapping(mapping))
 	return options, nil
 }
 
-func CSVStatementLoader(config configmod.CSVStatementLoaderConfig) (*statementloader.CSVLoader, error) {
+func CSVStatementLoader(config configmod.CSVStatementLoaderConfig) (*statementreader.CSVLoader, error) {
 	options, err := CSVStatementLoaderOptions(config)
 	if err != nil {
 		return nil, err
 	}
-	return statementloader.NewCSVLoader(options...), nil
+	return statementreader.NewCSVLoader(options...), nil
 }
 
 func TransactionMatcher() (transactionmatcher.ITransactionMatcher, error) {

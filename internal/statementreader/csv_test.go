@@ -1,4 +1,4 @@
-package statementloader_test
+package statementreader_test
 
 import (
 	"strings"
@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/finance"
-	. "github.com/vitorqb/addledger/internal/statementloader"
+	. "github.com/vitorqb/addledger/internal/statementreader"
 )
 
 func TestCSVLoader(t *testing.T) {

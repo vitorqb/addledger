@@ -13,7 +13,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
 )
 
@@ -165,8 +165,8 @@ func PostingInput_1(t *testing.T) input.PostingInput {
 	return *out
 }
 
-func StatementEntry_1(t *testing.T) statementloader.StatementEntry {
-	return statementloader.StatementEntry{
+func StatementEntry_1(t *testing.T) statementreader.StatementEntry {
+	return statementreader.StatementEntry{
 		Date:        Date1(t),
 		Description: "Description1",
 		Ammount:     *Ammount_1(t),

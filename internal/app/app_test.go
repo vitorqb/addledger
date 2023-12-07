@@ -15,11 +15,11 @@ import (
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	accountguesser_mock "github.com/vitorqb/addledger/mocks/accountguesser"
 	ammountguesser_mock "github.com/vitorqb/addledger/mocks/ammountguesser"
-	. "github.com/vitorqb/addledger/mocks/statementloader"
+	. "github.com/vitorqb/addledger/mocks/statementreader"
 	. "github.com/vitorqb/addledger/mocks/transactionmatcher"
 )
 
@@ -31,7 +31,7 @@ func TestLoadStatement(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		loader := NewMockStatementLoader(ctrl)
-		statementEntries := []statementloader.StatementEntry{
+		statementEntries := []statementreader.StatementEntry{
 			{Account: "ACC", Description: "FOO"},
 			{Account: "ACC", Description: "BAR"},
 		}
@@ -124,7 +124,7 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		// All input used for guessing
 		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
 		userInput := "EUR 12.20"
-		statementEntry := statementloader.StatementEntry{}
+		statementEntry := statementreader.StatementEntry{}
 
 		// The expected guess
 		expectedGuess := *testutils.Ammount_1(t)
@@ -133,7 +133,7 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.InputMetadata.SetPostingAmmountText(userInput)
 		state.JournalEntryInput.AddPosting()
-		state.SetStatementEntries([]statementloader.StatementEntry{statementEntry})
+		state.SetStatementEntries([]statementreader.StatementEntry{statementEntry})
 		// Assertions & behavior for engine
 		guesser.EXPECT().Guess(gomock.Any()).DoAndReturn(func(inputs ammountguesser.Inputs) (finance.Ammount, bool) {
 			assert.Equal(t, userInput, inputs.UserInput)
@@ -163,7 +163,7 @@ func TestLinkAccountGuesser(t *testing.T) {
 
 		// Input used for guessing
 		statementEntry := testutils.StatementEntry_1(t)
-		statamentEntries := []statementloader.StatementEntry{statementEntry}
+		statamentEntries := []statementreader.StatementEntry{statementEntry}
 		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
 		postings := []journal.Posting{testutils.Posting_1(t)}
 		postingInput := testutils.PostingInput_1(t)
