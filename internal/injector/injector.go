@@ -2,8 +2,6 @@
 package injector
 
 import (
-	"fmt"
-
 	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	configmod "github.com/vitorqb/addledger/internal/config"
@@ -78,46 +76,8 @@ func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
 	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }
 
-func StatementReaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.Option, error) {
-	options := []statementreader.Option{}
-	if acc := config.Account; acc != "" {
-		options = append(options, statementreader.WithAccountName(acc))
-	}
-	if comm := config.Commodity; comm != "" {
-		options = append(options, statementreader.WithDefaultCommodity(comm))
-	}
-	if sep := config.Separator; sep != "" {
-		if len(sep) != 1 {
-			return nil, fmt.Errorf("invalid csv separator: %s", sep)
-		}
-		options = append(options, statementreader.WithSeparator([]rune(sep)[0]))
-	}
-	mapping := []statementreader.CSVColumnMapping{}
-	if idate := config.DateFieldIndex; idate != -1 {
-		importer := statementreader.DateImporter{Format: config.DateFormat}
-		mapping = append(mapping, statementreader.CSVColumnMapping{Column: idate, Importer: importer})
-	}
-	if idescription := config.DescriptionFieldIndex; idescription != -1 {
-		mapping = append(mapping, statementreader.CSVColumnMapping{
-			Column: idescription, Importer: statementreader.DescriptionImporter{},
-		})
-	}
-	if iaccount := config.AccountFieldIndex; iaccount != -1 {
-		mapping = append(mapping, statementreader.CSVColumnMapping{
-			Column: iaccount, Importer: statementreader.AccountImporter{},
-		})
-	}
-	if iammount := config.AmmountFieldIndex; iammount != -1 {
-		mapping = append(mapping, statementreader.CSVColumnMapping{
-			Column: iammount, Importer: statementreader.AmmountImporter{},
-		})
-	}
-	options = append(options, statementreader.WithLoaderMapping(mapping))
-	return options, nil
-}
-
-func StatementReader(config configmod.CSVStatementLoaderConfig) (*statementreader.StatementReader, error) {
-	return statementreader.NewStatementReader(), nil
+func StatementReader() statementreader.IStatementReader {
+	return statementreader.NewStatementReader()
 }
 
 func TransactionMatcher() (transactionmatcher.ITransactionMatcher, error) {

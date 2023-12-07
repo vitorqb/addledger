@@ -19,37 +19,10 @@ import (
 	"github.com/vitorqb/addledger/internal/testutils"
 	accountguesser_mock "github.com/vitorqb/addledger/mocks/accountguesser"
 	ammountguesser_mock "github.com/vitorqb/addledger/mocks/ammountguesser"
-	. "github.com/vitorqb/addledger/mocks/statementreader"
 	. "github.com/vitorqb/addledger/mocks/transactionmatcher"
 )
 
 var account = journal.Account("ACC")
-
-func TestLoadStatement(t *testing.T) {
-
-	t.Run("Success", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		loader := NewMockIStatementReader(ctrl)
-		options := []statementreader.Option{statementreader.WithSeparator(';')}
-		statementEntries := []statementreader.StatementEntry{
-			{Account: "ACC", Description: "FOO"},
-			{Account: "ACC", Description: "BAR"},
-		}
-		filePath := testutils.TestDataPath(t, "file")
-		loader.EXPECT().
-			Read(gomock.Any(), gomock.Any()).
-			Do(func(file *os.File, opts ...statementreader.Option) {
-				assert.Equal(t, filePath, file.Name())
-				assert.Len(t, opts, 1)
-			}).Return(statementEntries, nil)
-		state := statemod.InitialState()
-		err := LoadStatement(loader, options, filePath, state)
-		assert.Nil(t, err)
-		assert.Equal(t, statementEntries, state.GetStatementEntries())
-	})
-
-}
 
 func TestConfigureLogger(t *testing.T) {
 

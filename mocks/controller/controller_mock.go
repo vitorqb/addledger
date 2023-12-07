@@ -13,31 +13,31 @@ import (
 	listaction "github.com/vitorqb/addledger/internal/listaction"
 )
 
-// MockICSVStatementLoader is a mock of ICSVStatementLoader interface.
-type MockICSVStatementLoader struct {
+// MockStatementLoader is a mock of StatementLoader interface.
+type MockStatementLoader struct {
 	ctrl     *gomock.Controller
-	recorder *MockICSVStatementLoaderMockRecorder
+	recorder *MockStatementLoaderMockRecorder
 }
 
-// MockICSVStatementLoaderMockRecorder is the mock recorder for MockICSVStatementLoader.
-type MockICSVStatementLoaderMockRecorder struct {
-	mock *MockICSVStatementLoader
+// MockStatementLoaderMockRecorder is the mock recorder for MockStatementLoader.
+type MockStatementLoaderMockRecorder struct {
+	mock *MockStatementLoader
 }
 
-// NewMockICSVStatementLoader creates a new mock instance.
-func NewMockICSVStatementLoader(ctrl *gomock.Controller) *MockICSVStatementLoader {
-	mock := &MockICSVStatementLoader{ctrl: ctrl}
-	mock.recorder = &MockICSVStatementLoaderMockRecorder{mock}
+// NewMockStatementLoader creates a new mock instance.
+func NewMockStatementLoader(ctrl *gomock.Controller) *MockStatementLoader {
+	mock := &MockStatementLoader{ctrl: ctrl}
+	mock.recorder = &MockStatementLoaderMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockICSVStatementLoader) EXPECT() *MockICSVStatementLoaderMockRecorder {
+func (m *MockStatementLoader) EXPECT() *MockStatementLoaderMockRecorder {
 	return m.recorder
 }
 
 // Load mocks base method.
-func (m *MockICSVStatementLoader) Load(config config.CSVStatementLoaderConfig) error {
+func (m *MockStatementLoader) Load(config config.StatementLoaderConfig) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Load", config)
 	ret0, _ := ret[0].(error)
@@ -45,9 +45,9 @@ func (m *MockICSVStatementLoader) Load(config config.CSVStatementLoaderConfig) e
 }
 
 // Load indicates an expected call of Load.
-func (mr *MockICSVStatementLoaderMockRecorder) Load(config interface{}) *gomock.Call {
+func (mr *MockStatementLoaderMockRecorder) Load(config interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Load", reflect.TypeOf((*MockICSVStatementLoader)(nil).Load), config)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Load", reflect.TypeOf((*MockStatementLoader)(nil).Load), config)
 }
 
 // MockIInputController is a mock of IInputController interface.
