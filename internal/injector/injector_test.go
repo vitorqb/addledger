@@ -63,7 +63,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 	type testcase struct {
 		name            string
 		config          config.CSVStatementLoaderConfig
-		expectedOptions []statementreader.CSVLoaderOption
+		expectedOptions []statementreader.CSVReaderOption
 	}
 	testcases := []testcase{
 		{
@@ -74,7 +74,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				AccountFieldIndex:     -1,
 				AmmountFieldIndex:     -1,
 			},
-			expectedOptions: []statementreader.CSVLoaderOption{
+			expectedOptions: []statementreader.CSVReaderOption{
 				statementreader.WithCSVLoaderMapping([]statementreader.CSVColumnMapping{}),
 			},
 		},
@@ -90,10 +90,10 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				AccountFieldIndex:     2,
 				AmmountFieldIndex:     3,
 			},
-			expectedOptions: []statementreader.CSVLoaderOption{
+			expectedOptions: []statementreader.CSVReaderOption{
 				statementreader.WithCSVSeparator(';'),
-				statementreader.WithCSVLoaderAccountName("acc"),
-				statementreader.WithCSVLoaderDefaultCommodity("com"),
+				statementreader.WithCSVReaderAccountName("acc"),
+				statementreader.WithCSVReaderDefaultCommodity("com"),
 				statementreader.WithCSVLoaderMapping([]statementreader.CSVColumnMapping{
 					{Column: 0, Importer: statementreader.DateImporter{Format: "01/02/2006"}},
 					{Column: 1, Importer: statementreader.DescriptionImporter{}},
@@ -105,8 +105,8 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			actualConfig := statementreader.CSVLoaderConfig{}
-			expectedConfig := statementreader.CSVLoaderConfig{}
+			actualConfig := statementreader.CSVReaderConfig{}
+			expectedConfig := statementreader.CSVReaderConfig{}
 			options, err := CSVStatementLoaderOptions(testcase.config)
 			assert.Nil(t, err)
 			for _, option := range options {

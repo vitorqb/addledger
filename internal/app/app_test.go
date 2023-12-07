@@ -30,12 +30,12 @@ func TestLoadStatement(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		loader := NewMockStatementLoader(ctrl)
+		loader := NewMockStatementReader(ctrl)
 		statementEntries := []statementreader.StatementEntry{
 			{Account: "ACC", Description: "FOO"},
 			{Account: "ACC", Description: "BAR"},
 		}
-		loader.EXPECT().Load(gomock.Any()).Return(statementEntries, nil)
+		loader.EXPECT().Read(gomock.Any()).Return(statementEntries, nil)
 		filePath := testutils.TestDataPath(t, "file")
 		state := statemod.InitialState()
 		err := LoadStatement(loader, filePath, state)

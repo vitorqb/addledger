@@ -78,13 +78,13 @@ func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
 	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }
 
-func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.CSVLoaderOption, error) {
-	options := []statementreader.CSVLoaderOption{}
+func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.CSVReaderOption, error) {
+	options := []statementreader.CSVReaderOption{}
 	if acc := config.Account; acc != "" {
-		options = append(options, statementreader.WithCSVLoaderAccountName(acc))
+		options = append(options, statementreader.WithCSVReaderAccountName(acc))
 	}
 	if comm := config.Commodity; comm != "" {
-		options = append(options, statementreader.WithCSVLoaderDefaultCommodity(comm))
+		options = append(options, statementreader.WithCSVReaderDefaultCommodity(comm))
 	}
 	if sep := config.Separator; sep != "" {
 		if len(sep) != 1 {
@@ -116,7 +116,7 @@ func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]sta
 	return options, nil
 }
 
-func CSVStatementLoader(config configmod.CSVStatementLoaderConfig) (*statementreader.CSVLoader, error) {
+func CSVStatementLoader(config configmod.CSVStatementLoaderConfig) (*statementreader.CSVStatementReader, error) {
 	options, err := CSVStatementLoaderOptions(config)
 	if err != nil {
 		return nil, err

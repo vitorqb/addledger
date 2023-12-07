@@ -23,12 +23,10 @@ type StatementEntry struct {
 	Ammount finance.Ammount
 }
 
-// StatementLoader is an interface representing a bank statement loader.
-type StatementLoader interface {
-	// Load loads a bank statement from a file, and returns a list of
-	// statement entries. Those entires contain infromation that will help
-	// the user to create journal entries.
-	Load(file io.Reader) ([]StatementEntry, error)
+// StatementReader is an interface for reading a bank statement from a file and
+// converting it to a list of statement entries.
+type StatementReader interface {
+	Read(file io.Reader) ([]StatementEntry, error)
 }
 
 // A FieldImporter knows how to import a field from a string.

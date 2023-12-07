@@ -14,7 +14,7 @@ import (
 func TestCSVLoader(t *testing.T) {
 	type testCase struct {
 		name          string
-		options       []CSVLoaderOption
+		options       []CSVReaderOption
 		csvInput      string
 		expected      []StatementEntry
 		expectedError string
@@ -22,9 +22,9 @@ func TestCSVLoader(t *testing.T) {
 	testCases := []testCase{
 		{
 			name: "Simple",
-			options: []CSVLoaderOption{
-				WithCSVLoaderAccountName("ACC"),
-				WithCSVLoaderDefaultCommodity("EUR"),
+			options: []CSVReaderOption{
+				WithCSVReaderAccountName("ACC"),
+				WithCSVReaderDefaultCommodity("EUR"),
 				WithCSVLoaderMapping([]CSVColumnMapping{
 					{Column: 0, Importer: DateImporter{"2006-01-02"}},
 					{Column: 1, Importer: DescriptionImporter{}},
@@ -47,14 +47,14 @@ func TestCSVLoader(t *testing.T) {
 		},
 		{
 			name: "Two entries",
-			options: []CSVLoaderOption{
+			options: []CSVReaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
 					{Column: 0, Importer: AccountImporter{}},
 					{Column: 1, Importer: DateImporter{"02/01/2006"}},
 					{Column: 2, Importer: DescriptionImporter{}},
 					{Column: 3, Importer: AmmountImporter{}},
 				}),
-				WithCSVLoaderDefaultCommodity(""),
+				WithCSVReaderDefaultCommodity(""),
 			},
 			csvInput: "ACC,31/10/2023,FOO,12.21\nACC,30/10/2023,BAR,12.00",
 			expected: []StatementEntry{
@@ -80,7 +80,7 @@ func TestCSVLoader(t *testing.T) {
 		},
 		{
 			name: "Column out of range",
-			options: []CSVLoaderOption{
+			options: []CSVReaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
 					{Column: 10, Importer: DateImporter{}},
 				}),
@@ -90,7 +90,7 @@ func TestCSVLoader(t *testing.T) {
 		},
 		{
 			name: "Invalid date",
-			options: []CSVLoaderOption{
+			options: []CSVReaderOption{
 				WithCSVLoaderMapping([]CSVColumnMapping{
 					{Column: 0, Importer: DateImporter{"2006-01-02"}},
 				}),
@@ -103,7 +103,7 @@ func TestCSVLoader(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			loader := NewCSVLoader(tc.options...)
 			reader := strings.NewReader(tc.csvInput)
-			entries, err := loader.Load(reader)
+			entries, err := loader.Read(reader)
 			if tc.expectedError != "" {
 				assert.ErrorContains(t, err, tc.expectedError)
 			} else {

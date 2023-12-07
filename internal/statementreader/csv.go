@@ -14,13 +14,13 @@ type CSVColumnMapping struct {
 	Importer FieldImporter
 }
 
-// CSVLoader loads a bank statement from a csv file.
-type CSVLoader struct {
-	config CSVLoaderConfig
+// CSVStatementReader loads a bank statement from a csv file.
+type CSVStatementReader struct {
+	config CSVReaderConfig
 }
 
-// Load implements StatementLoader.Load.
-func (l *CSVLoader) Load(reader io.Reader) ([]StatementEntry, error) {
+// Read implements StatementLoader.Read.
+func (l *CSVStatementReader) Read(reader io.Reader) ([]StatementEntry, error) {
 	csvReader := csv.NewReader(reader)
 	csvReader.Comma = l.config.Separator
 
@@ -61,8 +61,8 @@ func (l *CSVLoader) Load(reader io.Reader) ([]StatementEntry, error) {
 	return statementEntries, nil
 }
 
-// CSVLoaderConfig represents the options for a CSVLoader.
-type CSVLoaderConfig struct {
+// CSVReaderConfig represents the options for a CSVReader.
+type CSVReaderConfig struct {
 	// AccountName is the default account name for the statement entries.
 	AccountName string
 	// DefaultCommodity is the default commodity for the statement entries.
@@ -73,50 +73,50 @@ type CSVLoaderConfig struct {
 	ColumnMappings []CSVColumnMapping
 }
 
-// DefaultCSVLoaderConfig set the default CSVLoaderConfig.
-var DefaultCSVLoaderConfig = CSVLoaderConfig{
+// DefaultCSVReaderConfig set the default CSVLoaderConfig.
+var DefaultCSVReaderConfig = CSVReaderConfig{
 	AccountName:      "",
 	DefaultCommodity: "EUR",
 	Separator:        ',',
 	ColumnMappings:   []CSVColumnMapping{},
 }
 
-// CSVLoaderOption is a function that configures a CSVLoaderConfig.
-type CSVLoaderOption func(*CSVLoaderConfig)
+// CSVReaderOption is a function that configures a CSVLoaderConfig.
+type CSVReaderOption func(*CSVReaderConfig)
 
-// WithCSVLoaderAccountName returns a CSVLoaderOption that sets the account name.
-func WithCSVLoaderAccountName(accountName string) CSVLoaderOption {
-	return func(o *CSVLoaderConfig) {
+// WithCSVReaderAccountName returns a CSVLoaderOption that sets the account name.
+func WithCSVReaderAccountName(accountName string) CSVReaderOption {
+	return func(o *CSVReaderConfig) {
 		o.AccountName = accountName
 	}
 }
 
-// WithCSVLoaderDefaultCommodity returns a CSVLoaderOption that sets the default commodity.
-func WithCSVLoaderDefaultCommodity(defaultCommodity string) CSVLoaderOption {
-	return func(o *CSVLoaderConfig) {
+// WithCSVReaderDefaultCommodity returns a CSVLoaderOption that sets the default commodity.
+func WithCSVReaderDefaultCommodity(defaultCommodity string) CSVReaderOption {
+	return func(o *CSVReaderConfig) {
 		o.DefaultCommodity = defaultCommodity
 	}
 }
 
 // WithCSVSeparator returns a CSVLoaderOption that sets the separator.
-func WithCSVSeparator(separator rune) CSVLoaderOption {
-	return func(o *CSVLoaderConfig) {
+func WithCSVSeparator(separator rune) CSVReaderOption {
+	return func(o *CSVReaderConfig) {
 		o.Separator = separator
 	}
 }
 
 // WithCSVLoaderMapping returns a CSVLoaderOption that sets the column mappings.
-func WithCSVLoaderMapping(columnMappings []CSVColumnMapping) CSVLoaderOption {
-	return func(o *CSVLoaderConfig) {
+func WithCSVLoaderMapping(columnMappings []CSVColumnMapping) CSVReaderOption {
+	return func(o *CSVReaderConfig) {
 		o.ColumnMappings = columnMappings
 	}
 }
 
 // NewCSVLoader creates a new CSVStatementLoader.
-func NewCSVLoader(options ...CSVLoaderOption) *CSVLoader {
-	config := DefaultCSVLoaderConfig
+func NewCSVLoader(options ...CSVReaderOption) *CSVStatementReader {
+	config := DefaultCSVReaderConfig
 	for _, option := range options {
 		option(&config)
 	}
-	return &CSVLoader{config: config}
+	return &CSVStatementReader{config: config}
 }

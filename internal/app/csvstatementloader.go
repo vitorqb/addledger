@@ -30,7 +30,7 @@ func (c *CSVStatementLoader) Load(config config.CSVStatementLoaderConfig) error 
 		return fmt.Errorf("failed to open file: %w", err)
 	}
 	defer csvFile.Close()
-	statmntEntries, err := loader.Load(csvFile)
+	statmntEntries, err := loader.Read(csvFile)
 	if err != nil {
 		return fmt.Errorf("failed to load statement: %w", err)
 	}
