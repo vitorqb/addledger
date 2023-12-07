@@ -204,9 +204,9 @@ func TestCSVLoader(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			loader := NewStatementReader(tc.options...)
+			loader := NewStatementReader()
 			reader := strings.NewReader(tc.csvInput)
-			entries, err := loader.Read(reader)
+			entries, err := loader.Read(reader, tc.options...)
 			if tc.expectedError != "" {
 				assert.ErrorContains(t, err, tc.expectedError)
 			} else {

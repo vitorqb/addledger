@@ -107,7 +107,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			actualConfig := statementreader.Config{}
 			expectedConfig := statementreader.Config{}
-			options, err := CSVStatementLoaderOptions(testcase.config)
+			options, err := StatementReaderOptions(testcase.config)
 			assert.Nil(t, err)
 			for _, option := range options {
 				option(&actualConfig)

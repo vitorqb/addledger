@@ -17,6 +17,7 @@ import (
 // LoadStatement loads a statement from a file and saves it to the state.
 func LoadStatement(
 	loader statementreader.IStatementReader,
+	options []statementreader.Option,
 	file string,
 	state *statemod.State,
 ) error {
@@ -26,7 +27,7 @@ func LoadStatement(
 	}
 	defer f.Close()
 
-	entries, err := loader.Read(f)
+	entries, err := loader.Read(f, options...)
 	if err != nil {
 		return fmt.Errorf("failed to load statement: %w", err)
 	}

@@ -78,7 +78,7 @@ func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
 	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }
 
-func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.Option, error) {
+func StatementReaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.Option, error) {
 	options := []statementreader.Option{}
 	if acc := config.Account; acc != "" {
 		options = append(options, statementreader.WithAccountName(acc))
@@ -117,11 +117,7 @@ func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]sta
 }
 
 func StatementReader(config configmod.CSVStatementLoaderConfig) (*statementreader.StatementReader, error) {
-	options, err := CSVStatementLoaderOptions(config)
-	if err != nil {
-		return nil, err
-	}
-	return statementreader.NewStatementReader(options...), nil
+	return statementreader.NewStatementReader(), nil
 }
 
 func TransactionMatcher() (transactionmatcher.ITransactionMatcher, error) {

@@ -21,7 +21,11 @@ func (c *CSVStatementLoader) Load(config config.CSVStatementLoaderConfig) error 
 	if config.File == "" {
 		return nil
 	}
-	loader, err := injector.StatementReader(config)
+	reader, err := injector.StatementReader(config)
+	if err != nil {
+		return fmt.Errorf("failed to load csv statement loader: %w", err)
+	}
+	options, err := injector.StatementReaderOptions(config)
 	if err != nil {
 		return fmt.Errorf("failed to load csv statement loader: %w", err)
 	}
@@ -30,7 +34,7 @@ func (c *CSVStatementLoader) Load(config config.CSVStatementLoaderConfig) error 
 		return fmt.Errorf("failed to open file: %w", err)
 	}
 	defer csvFile.Close()
-	statmntEntries, err := loader.Read(csvFile)
+	statmntEntries, err := reader.Read(csvFile, options...)
 	if err != nil {
 		return fmt.Errorf("failed to load statement: %w", err)
 	}

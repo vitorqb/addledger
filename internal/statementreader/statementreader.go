@@ -26,7 +26,7 @@ type StatementEntry struct {
 // IStatementReader is an interface for reading a bank statement from a file and
 // converting it to a list of statement entries.
 type IStatementReader interface {
-	Read(file io.Reader) ([]StatementEntry, error)
+	Read(file io.Reader, options ...Option) ([]StatementEntry, error)
 }
 
 // CSVColumnMapping maps a csv column to a statement entry field.
@@ -37,15 +37,12 @@ type CSVColumnMapping struct {
 	Importer FieldImporter
 }
 
-// StatementReader implements IStatementReader.
-type StatementReader struct {
-	config Config
-}
+type StatementReader struct{}
 
-// Read implements StatementLoader.Read.
-func (l *StatementReader) Read(reader io.Reader) ([]StatementEntry, error) {
+func (s *StatementReader) Read(reader io.Reader, options ...Option) ([]StatementEntry, error) {
+	config := parseOptions(options)
 	csvReader := csv.NewReader(reader)
-	csvReader.Comma = l.config.Separator
+	csvReader.Comma = config.Separator
 
 	// Parse statement entries
 	var statementEntries []StatementEntry
@@ -58,7 +55,7 @@ func (l *StatementReader) Read(reader io.Reader) ([]StatementEntry, error) {
 			return nil, fmt.Errorf("error reading csv file: %w", err)
 		}
 		var statementEntry StatementEntry
-		for _, columnMapping := range l.config.ColumnMappings {
+		for _, columnMapping := range config.ColumnMappings {
 			if columnMapping.Column >= len(record) {
 				return nil, fmt.Errorf("column index out of range for field %T", columnMapping.Importer)
 			}
@@ -73,10 +70,10 @@ func (l *StatementReader) Read(reader io.Reader) ([]StatementEntry, error) {
 	// Set default values
 	for i, statementEntry := range statementEntries {
 		if statementEntry.Account == "" {
-			statementEntry.Account = l.config.AccountName
+			statementEntry.Account = config.AccountName
 		}
 		if statementEntry.Ammount.Commodity == "" {
-			statementEntry.Ammount.Commodity = l.config.DefaultCommodity
+			statementEntry.Ammount.Commodity = config.DefaultCommodity
 		}
 		statementEntries[i] = statementEntry
 	}
@@ -130,10 +127,12 @@ func WithLoaderMapping(columnMappings []CSVColumnMapping) Option {
 	}
 }
 
-func NewStatementReader(options ...Option) *StatementReader {
+func NewStatementReader() *StatementReader { return &StatementReader{} }
+
+func parseOptions(options []Option) Config {
 	config := DefaultConfig
 	for _, option := range options {
 		option(&config)
 	}
-	return &StatementReader{config: config}
+	return config
 }

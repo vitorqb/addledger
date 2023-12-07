@@ -31,14 +31,20 @@ func TestLoadStatement(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		loader := NewMockIStatementReader(ctrl)
+		options := []statementreader.Option{statementreader.WithSeparator(';')}
 		statementEntries := []statementreader.StatementEntry{
 			{Account: "ACC", Description: "FOO"},
 			{Account: "ACC", Description: "BAR"},
 		}
-		loader.EXPECT().Read(gomock.Any()).Return(statementEntries, nil)
 		filePath := testutils.TestDataPath(t, "file")
+		loader.EXPECT().
+			Read(gomock.Any(), gomock.Any()).
+			Do(func(file *os.File, opts ...statementreader.Option) {
+				assert.Equal(t, filePath, file.Name())
+				assert.Len(t, opts, 1)
+			}).Return(statementEntries, nil)
 		state := statemod.InitialState()
-		err := LoadStatement(loader, filePath, state)
+		err := LoadStatement(loader, options, filePath, state)
 		assert.Nil(t, err)
 		assert.Equal(t, statementEntries, state.GetStatementEntries())
 	})

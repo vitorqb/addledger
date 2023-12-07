@@ -36,16 +36,21 @@ func (m *MockIStatementReader) EXPECT() *MockIStatementReaderMockRecorder {
 }
 
 // Read mocks base method.
-func (m *MockIStatementReader) Read(file io.Reader) ([]statementreader.StatementEntry, error) {
+func (m *MockIStatementReader) Read(file io.Reader, options ...statementreader.Option) ([]statementreader.StatementEntry, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Read", file)
+	varargs := []interface{}{file}
+	for _, a := range options {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Read", varargs...)
 	ret0, _ := ret[0].([]statementreader.StatementEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockIStatementReaderMockRecorder) Read(file interface{}) *gomock.Call {
+func (mr *MockIStatementReaderMockRecorder) Read(file interface{}, options ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockIStatementReader)(nil).Read), file)
+	varargs := append([]interface{}{file}, options...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockIStatementReader)(nil).Read), varargs...)
 }
