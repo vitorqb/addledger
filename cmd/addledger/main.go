@@ -78,6 +78,9 @@ func main() {
 	}
 	app.LinkTransactionMatcher(state, transactionMatcher)
 
+	// Prepares a statement loader
+	csvStatmentLoader := app.NewCSVStatementLoader(state)
+
 	// Starts a new controller
 	controller, err := controller.NewController(state,
 		controller.WithOutput(destFile),
@@ -85,6 +88,7 @@ func main() {
 		controller.WithDateGuesser(dateGuesser),
 		controller.WithMetaLoader(metaLoader),
 		controller.WithPrinter(printer),
+		controller.WithCSVStatementLoader(csvStatmentLoader),
 	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
@@ -103,7 +107,7 @@ func main() {
 	app.LinkAccountGuesser(state, accountGuesser)
 
 	// Maybe load a CSV statement
-	err = app.MaybeLoadCsvStatement(config.CSVStatementLoaderConfig, state)
+	err = csvStatmentLoader.Load(config.CSVStatementLoaderConfig)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load csv statement")
 	}

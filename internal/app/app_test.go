@@ -11,7 +11,6 @@ import (
 	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	. "github.com/vitorqb/addledger/internal/app"
-	"github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
@@ -82,20 +81,6 @@ func TestConfigureLogger(t *testing.T) {
 		assert.Equal(t, 1, len(logHook.Entries))
 		assert.Equal(t, logrus.FatalLevel, logHook.LastEntry().Level)
 		assert.Contains(t, logHook.LastEntry().Message, "Failed to parse log level")
-	})
-}
-
-func TestMaybeLoadCsvStatement(t *testing.T) {
-	t.Run("No file", func(t *testing.T) {
-		state := statemod.InitialState()
-		err := MaybeLoadCsvStatement(config.CSVStatementLoaderConfig{}, state)
-		assert.Nil(t, err)
-		assert.Equal(t, []statementloader.StatementEntry{}, state.GetStatementEntries())
-	})
-	t.Run("Fails to load statement", func(t *testing.T) {
-		state := statemod.InitialState()
-		err := MaybeLoadCsvStatement(config.CSVStatementLoaderConfig{File: "dont-exist"}, state)
-		assert.ErrorContains(t, err, "failed to load statement")
 	})
 }
 

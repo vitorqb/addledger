@@ -38,6 +38,13 @@ func TestState(t *testing.T) {
 			},
 		},
 		{
+			name: "Notify on change of Display",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.Display.SetShortcutModal(false)
+				assert.Equal(t, 1, c.hookCallCounter)
+			},
+		},
+		{
 			name: "NextPhase",
 			run: func(t *testing.T, c *testcontext) {
 				assert.Equal(t, c.state.CurrentPhase(), InputDate)
@@ -256,4 +263,41 @@ func TestJournalMetadata(t *testing.T) {
 		})
 	}
 
+}
+
+func TestDisplay(t *testing.T) {
+	{
+		type testcontext struct {
+			hookCallCounter int
+			display         *Display
+		}
+
+		type testcase struct {
+			name string
+			run  func(t *testing.T, c *testcontext)
+		}
+
+		testcases := []testcase{
+			{
+				name: "Manipulate ShortcutModal",
+				run: func(t *testing.T, c *testcontext) {
+					assert.False(t, c.display.ShortcutModal())
+					c.display.SetShortcutModal(true)
+					assert.True(t, c.display.ShortcutModal())
+					assert.Equal(t, 1, c.hookCallCounter)
+				},
+			},
+		}
+
+		for _, tc := range testcases {
+			t.Run(tc.name, func(t *testing.T) {
+				c := new(testcontext)
+				c.hookCallCounter = 0
+				c.display = NewDisplay()
+				c.display.AddOnChangeHook(func() { c.hookCallCounter++ })
+				tc.run(t, c)
+			})
+		}
+
+	}
 }

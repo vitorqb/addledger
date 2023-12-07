@@ -21,6 +21,8 @@ type Opts struct {
 	metaLoader metaloader.IMetaLoader
 	// The instance of IPrinter to use
 	printer printermod.IPrinter
+	// The instance of ICSVStatementLoader to use
+	csvStatementLoader ICSVStatementLoader
 }
 
 // Opt configures options for an InputController
@@ -72,6 +74,14 @@ func WithMetaLoader(metaLoader metaloader.IMetaLoader) Opt {
 func WithPrinter(printer printermod.IPrinter) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.printer = printer
+		return nil
+	})
+}
+
+// WithCSVStatementLoader configures which ICSVStatementLoader to use.
+func WithCSVStatementLoader(csvStatementLoader ICSVStatementLoader) Opt {
+	return OptFn(func(opts *Opts) error {
+		opts.csvStatementLoader = csvStatementLoader
 		return nil
 	})
 }

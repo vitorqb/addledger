@@ -50,6 +50,15 @@ type (
 		matchingTransactions []journal.Transaction
 	}
 
+	// Display is the state relative to the display.
+	Display struct {
+		react.IReact
+
+		// Controls whether the shortcut modal is displayed or not
+		shortcutModal      bool
+		loadStatementModal bool
+	}
+
 	// State is the top-level app state
 	State struct {
 		react.IReact
@@ -60,8 +69,7 @@ type (
 		// StatementEntries are entires loaded from a bank statement.
 		// They are used to help the user to create journal entries.
 		StatementEntries []statementloader.StatementEntry
-		// Controls whether the shortcut modal is displayed or not
-		ShortcutModalDisplayed bool
+		Display          *Display
 	}
 
 	// MaybeValue is a helper container that may contain a value or not
@@ -105,18 +113,20 @@ func InitialState() *State {
 		matchingTransactions:   []journal.Transaction{},
 	}
 	journalMetadata := NewJournalMetadata()
+	display := NewDisplay()
 	state := &State{
-		react.New(),
-		InputDate,
-		journalEntryInput,
-		inputMetadata,
-		journalMetadata,
-		[]statementloader.StatementEntry{},
-		false,
+		IReact:            react.New(),
+		currentPhase:      InputDate,
+		JournalEntryInput: journalEntryInput,
+		InputMetadata:     inputMetadata,
+		JournalMetadata:   journalMetadata,
+		StatementEntries:  []statementloader.StatementEntry{},
+		Display:           display,
 	}
 	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
 	journalMetadata.AddOnChangeHook(state.NotifyChange)
+	display.AddOnChangeHook(state.NotifyChange)
 	return state
 }
 
@@ -432,13 +442,33 @@ func (s *State) PopStatementEntry() {
 	}
 }
 
-// IsShortcutModalDisplayed returns whether the statement modal is displayed or not
-func (s *State) IsShortcutModalDisplayed() bool {
-	return s.ShortcutModalDisplayed
+// NewDisplay returns a new Display
+func NewDisplay() *Display {
+	return &Display{
+		IReact:             react.New(),
+		shortcutModal:      false,
+		loadStatementModal: false,
+	}
 }
 
-// SetShortcutModalDisplayed sets whether the statement modal is displayed or not
-func (s *State) SetShortcutModalDisplayed(x bool) {
-	s.ShortcutModalDisplayed = x
-	s.NotifyChange()
+// SetShortcutModal sets whether the statement modal is displayed or not
+func (d *Display) SetShortcutModal(x bool) {
+	d.shortcutModal = x
+	d.NotifyChange()
+}
+
+// ShortcutModal returns whether the statement modal is displayed or not
+func (d *Display) ShortcutModal() bool {
+	return d.shortcutModal
+}
+
+// SetLoadStatementModal sets whether the statement modal is displayed or not
+func (d *Display) SetLoadStatementModal(x bool) {
+	d.loadStatementModal = x
+	d.NotifyChange()
+}
+
+// LoadStatementModal returns whether the statement modal is displayed or not
+func (d *Display) LoadStatementModal() bool {
+	return d.loadStatementModal
 }

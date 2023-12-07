@@ -60,17 +60,35 @@ func TestNewLayout(t *testing.T) {
 			name: "Displays and hides shortcut modal",
 			run: func(c *testcontext, t *testing.T) {
 				// Set the shortcut modal to be displayed
-				c.state.SetShortcutModalDisplayed(true)
+				c.state.Display.SetShortcutModal(true)
 				c.layout.Refresh()
 				frontPage, _ := c.layout.GetFrontPage()
-				assert.Equal(t, "shortcutModal", frontPage)
+				assert.Equal(t, string(ShortcutModalPage), frontPage)
 				assert.False(t, c.layout.Input.GetContent().HasFocus())
 
 				// Set the shortcut modal to be hidden
-				c.state.SetShortcutModalDisplayed(false)
+				c.state.Display.SetShortcutModal(false)
 				c.layout.Refresh()
 				frontPage, _ = c.layout.GetFrontPage()
-				assert.Equal(t, "main", frontPage)
+				assert.Equal(t, string(MainPage), frontPage)
+				assert.True(t, c.layout.Input.GetContent().HasFocus())
+			},
+		},
+		{
+			name: "Displays and hides the load statement modal",
+			run: func(c *testcontext, t *testing.T) {
+				// Set the shortcut modal to be displayed
+				c.state.Display.SetLoadStatementModal(true)
+				c.layout.Refresh()
+				frontPage, _ := c.layout.GetFrontPage()
+				assert.Equal(t, string(LoadStatementModalPage), frontPage)
+				assert.False(t, c.layout.Input.GetContent().HasFocus())
+
+				// Set the shortcut modal to be hidden
+				c.state.Display.SetLoadStatementModal(false)
+				c.layout.Refresh()
+				frontPage, _ = c.layout.GetFrontPage()
+				assert.Equal(t, string(MainPage), frontPage)
 				assert.True(t, c.layout.Input.GetContent().HasFocus())
 			},
 		},
