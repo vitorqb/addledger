@@ -22,7 +22,7 @@ type Opts struct {
 	// The instance of IPrinter to use
 	printer printermod.IPrinter
 	// The instance of ICSVStatementLoader to use
-	csvStatementLoader ICSVStatementLoader
+	csvStatementLoader StatementLoader
 }
 
 // Opt configures options for an InputController
@@ -79,7 +79,7 @@ func WithPrinter(printer printermod.IPrinter) Opt {
 }
 
 // WithCSVStatementLoader configures which ICSVStatementLoader to use.
-func WithCSVStatementLoader(csvStatementLoader ICSVStatementLoader) Opt {
+func WithCSVStatementLoader(csvStatementLoader StatementLoader) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.csvStatementLoader = csvStatementLoader
 		return nil

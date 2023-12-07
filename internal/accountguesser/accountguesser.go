@@ -4,7 +4,7 @@ package accountguesser
 
 import (
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 )
 
 //go:generate $MOCKGEN --source=accountguesser.go --destination=../../mocks/accountguesser/accountguesser_mock.go
@@ -28,7 +28,7 @@ type Inputs struct {
 	TransactionHistory TransactionHistory
 	// StatementEntry is the statement entry that has been loaded and is being used
 	// for the current journal entry.
-	StatementEntry statementloader.StatementEntry
+	StatementEntry statementreader.StatementEntry
 }
 
 // AccountGuesser is a strategy for guessing the account an user may want for an journal entry.

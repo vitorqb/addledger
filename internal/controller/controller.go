@@ -19,10 +19,9 @@ import (
 
 //go:generate $MOCKGEN --source=controller.go --destination=../../mocks/controller/controller_mock.go
 
-// ICSVStatementLoader represents a component that loads a CSV statement into
-// the app state.
-type ICSVStatementLoader interface {
-	Load(config configmod.CSVStatementLoaderConfig) error
+// StatementLoader represents a component that loads a statement into the app state.
+type StatementLoader interface {
+	Load(config configmod.StatementLoaderConfig) error
 }
 
 // IInputController reacts to the user inputs and interactions.
@@ -80,7 +79,7 @@ type InputController struct {
 	dateGuesser        dateguesser.IDateGuesser
 	metaLoader         metaloader.IMetaLoader
 	printer            printermod.IPrinter
-	csvStatementLoader ICSVStatementLoader
+	csvStatementLoader StatementLoader
 }
 
 var _ IInputController = &InputController{}
@@ -422,7 +421,7 @@ func (ic *InputController) OnLoadStatementRequest() {
 
 // OnLoadStatement implements display.LoadStatementModalController.
 func (ic *InputController) OnLoadStatement(csvFile string, presetFile string) {
-	config, err := configmod.LoadCsvStatementLoaderConfig(csvFile, presetFile)
+	config, err := configmod.LoadStatementLoaderConfig(csvFile, presetFile)
 	if err != nil {
 		logrus.WithError(err).Error("Failed to load config")
 		return

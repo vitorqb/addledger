@@ -6,7 +6,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementloader"
+	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
@@ -68,7 +68,7 @@ type (
 		JournalMetadata   *JournalMetadata
 		// StatementEntries are entires loaded from a bank statement.
 		// They are used to help the user to create journal entries.
-		StatementEntries []statementloader.StatementEntry
+		StatementEntries []statementreader.StatementEntry
 		Display          *Display
 	}
 
@@ -120,7 +120,7 @@ func InitialState() *State {
 		JournalEntryInput: journalEntryInput,
 		InputMetadata:     inputMetadata,
 		JournalMetadata:   journalMetadata,
-		StatementEntries:  []statementloader.StatementEntry{},
+		StatementEntries:  []statementreader.StatementEntry{},
 		Display:           display,
 	}
 	journalEntryInput.AddOnChangeHook(state.NotifyChange)
@@ -416,20 +416,20 @@ func (jm *JournalMetadata) Tags() []journal.Tag {
 }
 
 // GetStatementEntries returns the current statement entries
-func (s *State) GetStatementEntries() []statementloader.StatementEntry {
+func (s *State) GetStatementEntries() []statementreader.StatementEntry {
 	return s.StatementEntries
 }
 
 // SetStatementEntries sets the current statement entries
-func (s *State) SetStatementEntries(x []statementloader.StatementEntry) {
+func (s *State) SetStatementEntries(x []statementreader.StatementEntry) {
 	s.StatementEntries = x
 	s.NotifyChange()
 }
 
 // CurrentStatementEntry returns the current statement entry
-func (s *State) CurrentStatementEntry() (e statementloader.StatementEntry, found bool) {
+func (s *State) CurrentStatementEntry() (e statementreader.StatementEntry, found bool) {
 	if len(s.StatementEntries) == 0 {
-		return statementloader.StatementEntry{}, false
+		return statementreader.StatementEntry{}, false
 	}
 	return s.StatementEntries[0], true
 }

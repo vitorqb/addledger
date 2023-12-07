@@ -10,7 +10,6 @@ import (
 	"github.com/vitorqb/addledger/internal/injector"
 	. "github.com/vitorqb/addledger/internal/injector"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementloader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	hledger_mock "github.com/vitorqb/addledger/mocks/hledger"
 )
@@ -57,65 +56,4 @@ func TestTransactionMatcher(t *testing.T) {
 	matcher.SetDescriptionInput("test")
 	matchedTransactions := matcher.Match()
 	assert.Equal(t, expectedMatchedTransactions, matchedTransactions)
-}
-
-func TestCSVStatementLoaderOptions(t *testing.T) {
-	type testcase struct {
-		name            string
-		config          config.CSVStatementLoaderConfig
-		expectedOptions []statementloader.CSVLoaderOption
-	}
-	testcases := []testcase{
-		{
-			name: "empty",
-			config: config.CSVStatementLoaderConfig{
-				DateFieldIndex:        -1,
-				DescriptionFieldIndex: -1,
-				AccountFieldIndex:     -1,
-				AmmountFieldIndex:     -1,
-			},
-			expectedOptions: []statementloader.CSVLoaderOption{
-				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{}),
-			},
-		},
-		{
-			name: "full",
-			config: config.CSVStatementLoaderConfig{
-				Separator:             ";",
-				Account:               "acc",
-				Commodity:             "com",
-				DateFieldIndex:        0,
-				DateFormat:            "01/02/2006",
-				DescriptionFieldIndex: 1,
-				AccountFieldIndex:     2,
-				AmmountFieldIndex:     3,
-			},
-			expectedOptions: []statementloader.CSVLoaderOption{
-				statementloader.WithCSVSeparator(';'),
-				statementloader.WithCSVLoaderAccountName("acc"),
-				statementloader.WithCSVLoaderDefaultCommodity("com"),
-				statementloader.WithCSVLoaderMapping([]statementloader.CSVColumnMapping{
-					{Column: 0, Importer: statementloader.DateImporter{Format: "01/02/2006"}},
-					{Column: 1, Importer: statementloader.DescriptionImporter{}},
-					{Column: 2, Importer: statementloader.AccountImporter{}},
-					{Column: 3, Importer: statementloader.AmmountImporter{}},
-				}),
-			},
-		},
-	}
-	for _, testcase := range testcases {
-		t.Run(testcase.name, func(t *testing.T) {
-			actualConfig := statementloader.CSVLoaderConfig{}
-			expectedConfig := statementloader.CSVLoaderConfig{}
-			options, err := CSVStatementLoaderOptions(testcase.config)
-			assert.Nil(t, err)
-			for _, option := range options {
-				option(&actualConfig)
-			}
-			for _, option := range testcase.expectedOptions {
-				option(&expectedConfig)
-			}
-			assert.Equal(t, expectedConfig, actualConfig)
-		})
-	}
 }

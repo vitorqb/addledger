@@ -59,6 +59,7 @@ test target="./...": mocks
 
 # Creates all mocks
 mocks: install-mockgen
+    rm -rf ./mocks
     MOCKGEN={{MOCKGEN}} {{GO}} generate --run=MOCKGEN -x ./...
 
 # Lints the code

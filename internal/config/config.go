@@ -18,8 +18,8 @@ type PrinterConfig struct {
 	NumLineBreaksAfter  int // Number of empty lines to print after a transaction.
 }
 
-// CSVStatementLoaderConfig represents the value for configuring a statementloader.CSVLoader.
-type CSVStatementLoaderConfig struct {
+// StatementLoaderConfig represents the value for configuring a Statement Loader Svc.
+type StatementLoaderConfig struct {
 	// File to load.
 	File string
 	// Separator to use.
@@ -54,8 +54,8 @@ type Config struct {
 	LogLevel string
 	// Configures the transaction printer
 	PrinterConfig PrinterConfig
-	// Configures a CSV statement loader
-	CSVStatementLoaderConfig CSVStatementLoaderConfig
+	// Configures a statement loader svc
+	StatementLoaderConfig StatementLoaderConfig
 }
 
 func SetupFlags(flagSet *pflag.FlagSet) {
@@ -69,7 +69,7 @@ func SetupFlags(flagSet *pflag.FlagSet) {
 	flagSet.Int("printer-line-break-before", 1, "Number of line breaks to print before a transaction.")
 	flagSet.Int("printer-line-break-after", 1, "Number of line breaks to print after a transaction.")
 
-	// CSV Statement Loader config
+	// Statement Loader config
 	flagSet.String("csv-statement-file", "", "CSV file to load as a statement.")
 	flagSet.String("csv-statement-preset", "", "Preset to use for CSV statement. If a simple filename is given, it will be searched in ~/.config/addledger/presets (with a .json extension).")
 }
@@ -100,8 +100,8 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 		return &Config{}, fmt.Errorf("failed to bind env: %w", err)
 	}
 
-	// Loads the CSVStatementLoaderConfig
-	csvStatementLoaderConfig, err := LoadCsvStatementLoaderConfig(
+	// Loads the config for the statement loader
+	statementLoaderConfig, err := LoadStatementLoaderConfig(
 		viper.GetString("csv-statement-file"),
 		viper.GetString("csv-statement-preset"),
 	)
@@ -120,7 +120,7 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 			NumLineBreaksBefore: viper.GetInt("printer-line-break-before"),
 			NumLineBreaksAfter:  viper.GetInt("printer-line-break-after"),
 		},
-		CSVStatementLoaderConfig: csvStatementLoaderConfig,
+		StatementLoaderConfig: statementLoaderConfig,
 	}
 
 	// Load dynamic values
@@ -145,12 +145,12 @@ func LoadFromCommandLine() (*Config, error) {
 	return Load(pflag.CommandLine, os.Args, loader)
 }
 
-func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig, error) {
+func LoadStatementLoaderConfig(file, preset string) (StatementLoaderConfig, error) {
 	if file == "" {
-		return CSVStatementLoaderConfig{}, nil
+		return StatementLoaderConfig{}, nil
 	}
 	if preset == "" {
-		return CSVStatementLoaderConfig{}, fmt.Errorf("missing preset")
+		return StatementLoaderConfig{}, fmt.Errorf("missing preset")
 	}
 	if !utils.LooksLikePath(preset) {
 		preset = fmt.Sprintf("%s/.config/addledger/presets/%s", os.Getenv("HOME"), preset)
@@ -160,9 +160,9 @@ func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig
 	}
 	presetBytes, err := os.ReadFile(preset)
 	if err != nil {
-		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to open preset file %s: %w", preset, err)
+		return StatementLoaderConfig{}, fmt.Errorf("failed to open preset file %s: %w", preset, err)
 	}
-	var config CSVStatementLoaderConfig
+	var config StatementLoaderConfig
 	config.AccountFieldIndex = -1
 	config.AmmountFieldIndex = -1
 	config.DateFieldIndex = -1
@@ -170,7 +170,7 @@ func LoadCsvStatementLoaderConfig(file, preset string) (CSVStatementLoaderConfig
 	config.DateFormat = "02/01/2006"
 	err = json.Unmarshal(presetBytes, &config)
 	if err != nil {
-		return CSVStatementLoaderConfig{}, fmt.Errorf("failed to unmarshal preset file: %w", err)
+		return StatementLoaderConfig{}, fmt.Errorf("failed to unmarshal preset file: %w", err)
 	}
 	config.File = file
 	return config, nil

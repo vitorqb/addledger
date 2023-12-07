@@ -11,6 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/display"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/injector"
+	"github.com/vitorqb/addledger/internal/services"
 )
 
 func main() {
@@ -79,7 +80,8 @@ func main() {
 	app.LinkTransactionMatcher(state, transactionMatcher)
 
 	// Prepares a statement loader
-	csvStatmentLoader := app.NewCSVStatementLoader(state)
+	statementReader := injector.StatementReader()
+	statementLoaderSvc := services.NewStatementLoaderSvc(state, statementReader)
 
 	// Starts a new controller
 	controller, err := controller.NewController(state,
@@ -88,7 +90,7 @@ func main() {
 		controller.WithDateGuesser(dateGuesser),
 		controller.WithMetaLoader(metaLoader),
 		controller.WithPrinter(printer),
-		controller.WithCSVStatementLoader(csvStatmentLoader),
+		controller.WithCSVStatementLoader(statementLoaderSvc),
 	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
@@ -107,7 +109,7 @@ func main() {
 	app.LinkAccountGuesser(state, accountGuesser)
 
 	// Maybe load a CSV statement
-	err = csvStatmentLoader.Load(config.CSVStatementLoaderConfig)
+	err = statementLoaderSvc.Load(config.StatementLoaderConfig)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load csv statement")
 	}
