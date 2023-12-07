@@ -12,31 +12,31 @@ import (
 	statementreader "github.com/vitorqb/addledger/internal/statementreader"
 )
 
-// MockStatementReader is a mock of StatementReader interface.
-type MockStatementReader struct {
+// MockIStatementReader is a mock of IStatementReader interface.
+type MockIStatementReader struct {
 	ctrl     *gomock.Controller
-	recorder *MockStatementReaderMockRecorder
+	recorder *MockIStatementReaderMockRecorder
 }
 
-// MockStatementReaderMockRecorder is the mock recorder for MockStatementReader.
-type MockStatementReaderMockRecorder struct {
-	mock *MockStatementReader
+// MockIStatementReaderMockRecorder is the mock recorder for MockIStatementReader.
+type MockIStatementReaderMockRecorder struct {
+	mock *MockIStatementReader
 }
 
-// NewMockStatementReader creates a new mock instance.
-func NewMockStatementReader(ctrl *gomock.Controller) *MockStatementReader {
-	mock := &MockStatementReader{ctrl: ctrl}
-	mock.recorder = &MockStatementReaderMockRecorder{mock}
+// NewMockIStatementReader creates a new mock instance.
+func NewMockIStatementReader(ctrl *gomock.Controller) *MockIStatementReader {
+	mock := &MockIStatementReader{ctrl: ctrl}
+	mock.recorder = &MockIStatementReaderMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockStatementReader) EXPECT() *MockStatementReaderMockRecorder {
+func (m *MockIStatementReader) EXPECT() *MockIStatementReaderMockRecorder {
 	return m.recorder
 }
 
 // Read mocks base method.
-func (m *MockStatementReader) Read(file io.Reader) ([]statementreader.StatementEntry, error) {
+func (m *MockIStatementReader) Read(file io.Reader) ([]statementreader.StatementEntry, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Read", file)
 	ret0, _ := ret[0].([]statementreader.StatementEntry)
@@ -45,44 +45,7 @@ func (m *MockStatementReader) Read(file io.Reader) ([]statementreader.StatementE
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockStatementReaderMockRecorder) Read(file interface{}) *gomock.Call {
+func (mr *MockIStatementReaderMockRecorder) Read(file interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockStatementReader)(nil).Read), file)
-}
-
-// MockFieldImporter is a mock of FieldImporter interface.
-type MockFieldImporter struct {
-	ctrl     *gomock.Controller
-	recorder *MockFieldImporterMockRecorder
-}
-
-// MockFieldImporterMockRecorder is the mock recorder for MockFieldImporter.
-type MockFieldImporterMockRecorder struct {
-	mock *MockFieldImporter
-}
-
-// NewMockFieldImporter creates a new mock instance.
-func NewMockFieldImporter(ctrl *gomock.Controller) *MockFieldImporter {
-	mock := &MockFieldImporter{ctrl: ctrl}
-	mock.recorder = &MockFieldImporterMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockFieldImporter) EXPECT() *MockFieldImporterMockRecorder {
-	return m.recorder
-}
-
-// Import mocks base method.
-func (m *MockFieldImporter) Import(statementEntry *statementreader.StatementEntry, value string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Import", statementEntry, value)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Import indicates an expected call of Import.
-func (mr *MockFieldImporterMockRecorder) Import(statementEntry, value interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Import", reflect.TypeOf((*MockFieldImporter)(nil).Import), statementEntry, value)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockIStatementReader)(nil).Read), file)
 }

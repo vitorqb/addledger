@@ -30,7 +30,7 @@ func TestLoadStatement(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
-		loader := NewMockStatementReader(ctrl)
+		loader := NewMockIStatementReader(ctrl)
 		statementEntries := []statementreader.StatementEntry{
 			{Account: "ACC", Description: "FOO"},
 			{Account: "ACC", Description: "BAR"},

@@ -1,12 +1,12 @@
 package statementreader
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 )
 
 //go:generate $MOCKGEN --source=statementreader.go --destination=../../mocks/statementreader/statementreader_mock.go
@@ -23,66 +23,117 @@ type StatementEntry struct {
 	Ammount finance.Ammount
 }
 
-// StatementReader is an interface for reading a bank statement from a file and
+// IStatementReader is an interface for reading a bank statement from a file and
 // converting it to a list of statement entries.
-type StatementReader interface {
+type IStatementReader interface {
 	Read(file io.Reader) ([]StatementEntry, error)
 }
 
-// A FieldImporter knows how to import a field from a string.
-type FieldImporter interface {
-	// Import imports the field from the string.
-	Import(statementEntry *StatementEntry, value string) error
+// CSVColumnMapping maps a csv column to a statement entry field.
+type CSVColumnMapping struct {
+	// Column is the column index.
+	Column int
+	// Importer is the field importer.
+	Importer FieldImporter
 }
 
-// AccountImporter imports the account field.
-type AccountImporter struct{}
-
-func (a AccountImporter) Import(statementEntry *StatementEntry, value string) error {
-	statementEntry.Account = value
-	return nil
+// StatementReader implements IStatementReader.
+type StatementReader struct {
+	config Config
 }
 
-var _ FieldImporter = AccountImporter{}
+// Read implements StatementLoader.Read.
+func (l *StatementReader) Read(reader io.Reader) ([]StatementEntry, error) {
+	csvReader := csv.NewReader(reader)
+	csvReader.Comma = l.config.Separator
 
-// DateImporter imports the date field.
-type DateImporter struct {
-	Format string
-}
-
-func (d DateImporter) Import(statementEntry *StatementEntry, value string) error {
-	// Note: we are hardcoding the date formats here, which is not ideal.
-	// We should probably allow the user to configure the date formats.
-	if d.Format != "" {
-		if parsed, err := time.Parse(d.Format, value); err == nil {
-			statementEntry.Date = parsed
-			return nil
+	// Parse statement entries
+	var statementEntries []StatementEntry
+	for {
+		record, err := csvReader.Read()
+		if err == io.EOF {
+			break
 		}
+		if err != nil {
+			return nil, fmt.Errorf("error reading csv file: %w", err)
+		}
+		var statementEntry StatementEntry
+		for _, columnMapping := range l.config.ColumnMappings {
+			if columnMapping.Column >= len(record) {
+				return nil, fmt.Errorf("column index out of range for field %T", columnMapping.Importer)
+			}
+			value := record[columnMapping.Column]
+			if err := columnMapping.Importer.Import(&statementEntry, value); err != nil {
+				return nil, fmt.Errorf("error importing field %T: %w", columnMapping.Importer, err)
+			}
+		}
+		statementEntries = append(statementEntries, statementEntry)
 	}
-	return fmt.Errorf("invalid date (from format %s): %s", d.Format, value)
-}
 
-var _ FieldImporter = DateImporter{}
-
-// DescriptionImporter imports the description field.
-type DescriptionImporter struct{}
-
-func (d DescriptionImporter) Import(statementEntry *StatementEntry, value string) error {
-	statementEntry.Description = value
-	return nil
-}
-
-var _ FieldImporter = DescriptionImporter{}
-
-// AmmountImporter imports the amount field.
-type AmmountImporter struct{}
-
-func (a AmmountImporter) Import(statementEntry *StatementEntry, value string) error {
-	if parsed, err := input.TextToAmmount(value); err == nil {
-		statementEntry.Ammount = parsed
-		return nil
+	// Set default values
+	for i, statementEntry := range statementEntries {
+		if statementEntry.Account == "" {
+			statementEntry.Account = l.config.AccountName
+		}
+		if statementEntry.Ammount.Commodity == "" {
+			statementEntry.Ammount.Commodity = l.config.DefaultCommodity
+		}
+		statementEntries[i] = statementEntry
 	}
-	return fmt.Errorf("invalid amount format: %s", value)
+
+	return statementEntries, nil
 }
 
-var _ FieldImporter = AmmountImporter{}
+// Config represents the options for a CSVReader.
+type Config struct {
+	// AccountName is the default account name for the statement entries.
+	AccountName string
+	// DefaultCommodity is the default commodity for the statement entries.
+	DefaultCommodity string
+	// Separator is the csv separator.
+	Separator rune
+	// ColumnMappings is the csv column mappings.
+	ColumnMappings []CSVColumnMapping
+}
+
+var DefaultConfig = Config{
+	AccountName:      "",
+	DefaultCommodity: "EUR",
+	Separator:        ',',
+	ColumnMappings:   []CSVColumnMapping{},
+}
+
+// Option is a function that configures a CSVLoaderConfig.
+type Option func(*Config)
+
+func WithAccountName(accountName string) Option {
+	return func(o *Config) {
+		o.AccountName = accountName
+	}
+}
+
+func WithDefaultCommodity(defaultCommodity string) Option {
+	return func(o *Config) {
+		o.DefaultCommodity = defaultCommodity
+	}
+}
+
+func WithSeparator(separator rune) Option {
+	return func(o *Config) {
+		o.Separator = separator
+	}
+}
+
+func WithLoaderMapping(columnMappings []CSVColumnMapping) Option {
+	return func(o *Config) {
+		o.ColumnMappings = columnMappings
+	}
+}
+
+func NewStatementReader(options ...Option) *StatementReader {
+	config := DefaultConfig
+	for _, option := range options {
+		option(&config)
+	}
+	return &StatementReader{config: config}
+}

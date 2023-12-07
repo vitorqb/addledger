@@ -78,19 +78,19 @@ func Printer(config configmod.PrinterConfig) (printer.IPrinter, error) {
 	return printer.New(config.NumLineBreaksBefore, config.NumLineBreaksAfter), nil
 }
 
-func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.CSVReaderOption, error) {
-	options := []statementreader.CSVReaderOption{}
+func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]statementreader.Option, error) {
+	options := []statementreader.Option{}
 	if acc := config.Account; acc != "" {
-		options = append(options, statementreader.WithCSVReaderAccountName(acc))
+		options = append(options, statementreader.WithAccountName(acc))
 	}
 	if comm := config.Commodity; comm != "" {
-		options = append(options, statementreader.WithCSVReaderDefaultCommodity(comm))
+		options = append(options, statementreader.WithDefaultCommodity(comm))
 	}
 	if sep := config.Separator; sep != "" {
 		if len(sep) != 1 {
 			return nil, fmt.Errorf("invalid csv separator: %s", sep)
 		}
-		options = append(options, statementreader.WithCSVSeparator([]rune(sep)[0]))
+		options = append(options, statementreader.WithSeparator([]rune(sep)[0]))
 	}
 	mapping := []statementreader.CSVColumnMapping{}
 	if idate := config.DateFieldIndex; idate != -1 {
@@ -112,16 +112,16 @@ func CSVStatementLoaderOptions(config configmod.CSVStatementLoaderConfig) ([]sta
 			Column: iammount, Importer: statementreader.AmmountImporter{},
 		})
 	}
-	options = append(options, statementreader.WithCSVLoaderMapping(mapping))
+	options = append(options, statementreader.WithLoaderMapping(mapping))
 	return options, nil
 }
 
-func CSVStatementLoader(config configmod.CSVStatementLoaderConfig) (*statementreader.CSVStatementReader, error) {
+func StatementReader(config configmod.CSVStatementLoaderConfig) (*statementreader.StatementReader, error) {
 	options, err := CSVStatementLoaderOptions(config)
 	if err != nil {
 		return nil, err
 	}
-	return statementreader.NewCSVLoader(options...), nil
+	return statementreader.NewStatementReader(options...), nil
 }
 
 func TransactionMatcher() (transactionmatcher.ITransactionMatcher, error) {

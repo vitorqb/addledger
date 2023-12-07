@@ -21,7 +21,7 @@ func (c *CSVStatementLoader) Load(config config.CSVStatementLoaderConfig) error 
 	if config.File == "" {
 		return nil
 	}
-	loader, err := injector.CSVStatementLoader(config)
+	loader, err := injector.StatementReader(config)
 	if err != nil {
 		return fmt.Errorf("failed to load csv statement loader: %w", err)
 	}

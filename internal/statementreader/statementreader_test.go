@@ -2,6 +2,7 @@ package statementreader_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -110,5 +111,108 @@ func TestAmmountImporter(t *testing.T) {
 		} else {
 			assert.NoError(t, err)
 		}
+	}
+}
+
+func TestCSVLoader(t *testing.T) {
+	type testCase struct {
+		name          string
+		options       []Option
+		csvInput      string
+		expected      []StatementEntry
+		expectedError string
+	}
+	testCases := []testCase{
+		{
+			name: "Simple",
+			options: []Option{
+				WithAccountName("ACC"),
+				WithDefaultCommodity("EUR"),
+				WithLoaderMapping([]CSVColumnMapping{
+					{Column: 0, Importer: DateImporter{"2006-01-02"}},
+					{Column: 1, Importer: DescriptionImporter{}},
+					{Column: 2, Importer: AmmountImporter{}},
+				}),
+			},
+			csvInput: `2023-10-31,FOO,12.21`,
+			expected: []StatementEntry{
+				{
+					Account:     "ACC",
+					Date:        time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),
+					Description: "FOO",
+					Ammount: finance.Ammount{
+						Commodity: "EUR",
+						Quantity:  decimal.New(1221, -2),
+					},
+				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Two entries",
+			options: []Option{
+				WithLoaderMapping([]CSVColumnMapping{
+					{Column: 0, Importer: AccountImporter{}},
+					{Column: 1, Importer: DateImporter{"02/01/2006"}},
+					{Column: 2, Importer: DescriptionImporter{}},
+					{Column: 3, Importer: AmmountImporter{}},
+				}),
+				WithDefaultCommodity(""),
+			},
+			csvInput: "ACC,31/10/2023,FOO,12.21\nACC,30/10/2023,BAR,12.00",
+			expected: []StatementEntry{
+				{
+					Account:     "ACC",
+					Date:        time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),
+					Description: "FOO",
+					Ammount: finance.Ammount{
+						Commodity: "",
+						Quantity:  decimal.New(1221, -2),
+					},
+				},
+				{
+					Account:     "ACC",
+					Date:        time.Date(2023, 10, 30, 0, 0, 0, 0, time.UTC),
+					Description: "BAR",
+					Ammount: finance.Ammount{
+						Commodity: "",
+						Quantity:  decimal.New(1200, -2),
+					},
+				},
+			},
+		},
+		{
+			name: "Column out of range",
+			options: []Option{
+				WithLoaderMapping([]CSVColumnMapping{
+					{Column: 10, Importer: DateImporter{}},
+				}),
+			},
+			csvInput:      `10/31/2023`,
+			expectedError: "column index out of range",
+		},
+		{
+			name: "Invalid date",
+			options: []Option{
+				WithLoaderMapping([]CSVColumnMapping{
+					{Column: 0, Importer: DateImporter{"2006-01-02"}},
+				}),
+			},
+			csvInput:      `10/31/2023`,
+			expectedError: "invalid date (from format 2006-01-02): 10/31/2023",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			loader := NewStatementReader(tc.options...)
+			reader := strings.NewReader(tc.csvInput)
+			entries, err := loader.Read(reader)
+			if tc.expectedError != "" {
+				assert.ErrorContains(t, err, tc.expectedError)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.Equal(t, tc.expected, entries)
+		})
 	}
 }

@@ -63,7 +63,7 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 	type testcase struct {
 		name            string
 		config          config.CSVStatementLoaderConfig
-		expectedOptions []statementreader.CSVReaderOption
+		expectedOptions []statementreader.Option
 	}
 	testcases := []testcase{
 		{
@@ -74,8 +74,8 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				AccountFieldIndex:     -1,
 				AmmountFieldIndex:     -1,
 			},
-			expectedOptions: []statementreader.CSVReaderOption{
-				statementreader.WithCSVLoaderMapping([]statementreader.CSVColumnMapping{}),
+			expectedOptions: []statementreader.Option{
+				statementreader.WithLoaderMapping([]statementreader.CSVColumnMapping{}),
 			},
 		},
 		{
@@ -90,11 +90,11 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 				AccountFieldIndex:     2,
 				AmmountFieldIndex:     3,
 			},
-			expectedOptions: []statementreader.CSVReaderOption{
-				statementreader.WithCSVSeparator(';'),
-				statementreader.WithCSVReaderAccountName("acc"),
-				statementreader.WithCSVReaderDefaultCommodity("com"),
-				statementreader.WithCSVLoaderMapping([]statementreader.CSVColumnMapping{
+			expectedOptions: []statementreader.Option{
+				statementreader.WithSeparator(';'),
+				statementreader.WithAccountName("acc"),
+				statementreader.WithDefaultCommodity("com"),
+				statementreader.WithLoaderMapping([]statementreader.CSVColumnMapping{
 					{Column: 0, Importer: statementreader.DateImporter{Format: "01/02/2006"}},
 					{Column: 1, Importer: statementreader.DescriptionImporter{}},
 					{Column: 2, Importer: statementreader.AccountImporter{}},
@@ -105,8 +105,8 @@ func TestCSVStatementLoaderOptions(t *testing.T) {
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
-			actualConfig := statementreader.CSVReaderConfig{}
-			expectedConfig := statementreader.CSVReaderConfig{}
+			actualConfig := statementreader.Config{}
+			expectedConfig := statementreader.Config{}
 			options, err := CSVStatementLoaderOptions(testcase.config)
 			assert.Nil(t, err)
 			for _, option := range options {

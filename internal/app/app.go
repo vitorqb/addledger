@@ -16,7 +16,7 @@ import (
 
 // LoadStatement loads a statement from a file and saves it to the state.
 func LoadStatement(
-	loader statementreader.StatementReader,
+	loader statementreader.IStatementReader,
 	file string,
 	state *statemod.State,
 ) error {
