@@ -15,9 +15,9 @@ import (
 type (
 	PageName string
 	Input    struct {
+		*tview.Pages
 		controller          controllermod.IInputController
 		state               *statemod.State
-		pages               *tview.Pages
 		dateField           *tview.InputField
 		descriptionField    *widgets.InputField
 		postingAccountField *widgets.InputField
@@ -57,9 +57,9 @@ func NewInput(
 	pages.AddPage(string(INPUT_TAGS), tagsField, true, false)
 
 	inputBox := &Input{
+		Pages:               pages,
 		controller:          controller,
 		state:               state,
-		pages:               pages,
 		dateField:           dateField,
 		postingAmmountField: postingAmmountField,
 		descriptionField:    descriptionField,
@@ -79,7 +79,7 @@ func (i *Input) refresh() {
 			if i.dateField.GetText() != "" {
 				i.dateField.SetText("")
 			}
-			i.pages.SwitchToPage(string(INPUT_DATE))
+			i.SwitchToPage(string(INPUT_DATE))
 			i.controller.OnDateChanged("")
 		}
 	case statemod.InputDescription:
@@ -87,25 +87,25 @@ func (i *Input) refresh() {
 			if i.descriptionField.GetText() != "" {
 				i.descriptionField.SetText("")
 			}
-			i.pages.SwitchToPage(string(INPUT_DESCRIPTION))
+			i.SwitchToPage(string(INPUT_DESCRIPTION))
 		}
 	case statemod.InputTags:
 		if i.CurrentPageName() != string(INPUT_TAGS) {
-			i.pages.SwitchToPage(string(INPUT_TAGS))
+			i.SwitchToPage(string(INPUT_TAGS))
 		}
 	case statemod.InputPostingAccount:
 		if i.CurrentPageName() != string(INPUT_POSTING_ACCOUNT) {
 			i.postingAccountField.SetText("")
-			i.pages.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
+			i.SwitchToPage(string(INPUT_POSTING_ACCOUNT))
 		}
 	case statemod.InputPostingAmmount:
 		if i.CurrentPageName() != string(INPUT_POSTING_AMMOUNT) {
 			i.postingAmmountField.SetText("")
-			i.pages.SwitchToPage(string(INPUT_POSTING_AMMOUNT))
+			i.SwitchToPage(string(INPUT_POSTING_AMMOUNT))
 		}
 	case statemod.Confirmation:
 		if i.CurrentPageName() != string(INPUT_CONFIRMATION) {
-			i.pages.SwitchToPage(string(INPUT_CONFIRMATION))
+			i.SwitchToPage(string(INPUT_CONFIRMATION))
 		}
 	default:
 	}
@@ -182,12 +182,8 @@ func inputConfirmationField(controller controllermod.IInputController) *tview.Te
 }
 
 func (i *Input) CurrentPageName() string {
-	out, _ := i.pages.GetFrontPage()
+	out, _ := i.GetFrontPage()
 	return out
-}
-
-func (i *Input) GetContent() tview.Primitive {
-	return i.pages
 }
 
 func NewTagsField(

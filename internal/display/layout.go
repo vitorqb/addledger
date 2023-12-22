@@ -66,7 +66,7 @@ func NewMainView(view *View, input *Input, context *Context, statementDisplay *S
 	mainView.SetDirection(tview.FlexRow)
 	mainView.AddItem(view.GetContent(), 0, 5, false)
 	mainView.AddItem(statementDisplay, 0, 0, false)
-	mainView.AddItem(input.GetContent(), 0, 1, false)
+	mainView.AddItem(input, 0, 1, false)
 	mainView.AddItem(context.GetContent(), 0, 10, false)
 	state.AddOnChangeHook(mainView.Refresh)
 	return mainView
@@ -74,11 +74,11 @@ func NewMainView(view *View, input *Input, context *Context, statementDisplay *S
 
 func (m *MainView) Focus(delegate func(p tview.Primitive)) {
 	// Focusing on the MainView should always focus on the input field.
-	delegate(m.input.GetContent())
+	delegate(m.input)
 }
 
 func (m *MainView) InputHasFocus() bool {
-	return m.input.GetContent().HasFocus()
+	return m.input.HasFocus()
 }
 
 func (m *MainView) RefreshStatementDisplay() {
