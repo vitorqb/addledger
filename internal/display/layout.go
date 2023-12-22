@@ -12,15 +12,32 @@ import (
 )
 
 type (
+	// MainView represents the main view of the application, which contains
+	// 3 parts:
+	// - View: the main view, which displays the current journal entry
+	// - Input: the input field, where the user can type new entries
+	// - Context: a context box, which displays information about the current
+	//   input and helps the user to fill it.
+	// The MainView may also contain a StatementDisplay, which displays
+	// information about the current statement (if any).
+	MainView struct {
+		*tview.Flex
+		view             *View
+		input            *Input
+		context          *Context
+		statementDisplay *StatementDisplay
+		state            *state.State
+	}
+
+	// Layout represents the layout visible to the user.
+	// The layout inherits from tview.Pages, which allows to switch between
+	// the main view of the application (containing View, Input and Context)
+	// and other modal views (such as the ShortcutModal).
 	Layout struct {
 		*tview.Pages
-		mainView         *tview.Flex
-		state            *state.State
-		View             *View
-		Input            *Input
-		Context          *Context
-		statementDisplay *StatementDisplay
-		setFocus         func(p tview.Primitive) *tview.Application
+		mainView *MainView
+		state    *state.State
+		setFocus func(p tview.Primitive) *tview.Application
 	}
 )
 
@@ -36,6 +53,45 @@ const (
 	modalWith   = 50
 	modalHeight = 10
 )
+
+func NewMainView(view *View, input *Input, context *Context, statementDisplay *StatementDisplay, state *state.State) *MainView {
+	mainView := &MainView{
+		Flex:             tview.NewFlex(),
+		view:             view,
+		input:            input,
+		context:          context,
+		statementDisplay: statementDisplay,
+		state:            state,
+	}
+	mainView.SetDirection(tview.FlexRow)
+	mainView.AddItem(view.GetContent(), 0, 5, false)
+	mainView.AddItem(statementDisplay, 0, 0, false)
+	mainView.AddItem(input.GetContent(), 0, 1, false)
+	mainView.AddItem(context.GetContent(), 0, 10, false)
+	state.AddOnChangeHook(mainView.Refresh)
+	return mainView
+}
+
+func (m *MainView) Focus(delegate func(p tview.Primitive)) {
+	// Focusing on the MainView should always focus on the input field.
+	delegate(m.input.GetContent())
+}
+
+func (m *MainView) InputHasFocus() bool {
+	return m.input.GetContent().HasFocus()
+}
+
+func (m *MainView) RefreshStatementDisplay() {
+	if len(m.state.StatementEntries) > 0 {
+		m.ResizeItem(m.statementDisplay, 0, 1)
+		return
+	}
+	m.ResizeItem(m.statementDisplay, 0, 0)
+}
+
+func (m *MainView) Refresh() {
+	m.RefreshStatementDisplay()
+}
 
 func NewLayout(
 	controller controller.IInputController,
@@ -85,14 +141,7 @@ func NewLayout(
 	// (if any). It starts hidden and is only shown when there are statements.
 	statementDisplay := NewStatementDisplay(state)
 
-	mainView := tview.
-		NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(view.GetContent(), 0, 5, false).
-		AddItem(statementDisplay, 0, 0, false).
-		AddItem(input.GetContent(), 0, 1, false).
-		AddItem(context.GetContent(), 0, 10, false)
-
+	mainView := NewMainView(view, input, context, statementDisplay, state)
 	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
 	loadStatementModal := center(NewLoadStatementModal(controller), modalWith*2, modalHeight*2)
 
@@ -105,18 +154,18 @@ func NewLayout(
 	})
 
 	layout := &Layout{
-		Pages:            pages,
-		mainView:         mainView,
-		state:            state,
-		View:             view,
-		Input:            input,
-		Context:          context,
-		statementDisplay: statementDisplay,
-		setFocus:         setFocus,
+		Pages:    pages,
+		mainView: mainView,
+		state:    state,
+		setFocus: setFocus,
 	}
 	layout.Refresh()
 	state.AddOnChangeHook(layout.Refresh)
 	return layout, nil
+}
+
+func (l *Layout) InputHasFocus() bool {
+	return l.mainView.InputHasFocus()
 }
 
 // Expose ResizeItem from Main View
@@ -130,21 +179,12 @@ func (l *Layout) GetItem(index int) tview.Primitive {
 }
 
 func (l *Layout) Refresh() {
-	l.refreshStatementDisplay()
 	l.refreshShortcutModalDisplay()
 	l.refreshLoadStatementModalDisplay()
-	// Make sure that once the modal is hidden we focus back on the input field.
+	// Make sure that once the modal is hidden we focus back on the main view.
 	if frontPage, _ := l.GetFrontPage(); frontPage == string(MainPage) {
-		l.setFocus(l.Input.GetContent())
+		l.setFocus(l.mainView)
 	}
-}
-
-func (l *Layout) refreshStatementDisplay() {
-	if len(l.state.StatementEntries) > 0 {
-		l.ResizeItem(l.statementDisplay, 0, 1)
-		return
-	}
-	l.ResizeItem(l.statementDisplay, 0, 0)
 }
 
 func (l *Layout) refreshShortcutModalDisplay() {

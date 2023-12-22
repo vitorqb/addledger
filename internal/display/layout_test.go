@@ -64,14 +64,14 @@ func TestNewLayout(t *testing.T) {
 				c.layout.Refresh()
 				frontPage, _ := c.layout.GetFrontPage()
 				assert.Equal(t, string(ShortcutModalPage), frontPage)
-				assert.False(t, c.layout.Input.GetContent().HasFocus())
+				assert.False(t, c.layout.InputHasFocus())
 
 				// Set the shortcut modal to be hidden
 				c.state.Display.SetShortcutModal(false)
 				c.layout.Refresh()
 				frontPage, _ = c.layout.GetFrontPage()
 				assert.Equal(t, string(MainPage), frontPage)
-				assert.True(t, c.layout.Input.GetContent().HasFocus())
+				assert.True(t, c.layout.InputHasFocus())
 			},
 		},
 		{
@@ -82,14 +82,14 @@ func TestNewLayout(t *testing.T) {
 				c.layout.Refresh()
 				frontPage, _ := c.layout.GetFrontPage()
 				assert.Equal(t, string(LoadStatementModalPage), frontPage)
-				assert.False(t, c.layout.Input.GetContent().HasFocus())
+				assert.False(t, c.layout.InputHasFocus())
 
 				// Set the shortcut modal to be hidden
 				c.state.Display.SetLoadStatementModal(false)
 				c.layout.Refresh()
 				frontPage, _ = c.layout.GetFrontPage()
 				assert.Equal(t, string(MainPage), frontPage)
-				assert.True(t, c.layout.Input.GetContent().HasFocus())
+				assert.True(t, c.layout.InputHasFocus())
 			},
 		},
 	}
