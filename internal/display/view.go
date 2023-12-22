@@ -8,8 +8,8 @@ import (
 
 type (
 	View struct {
-		textView *tview.TextView
-		state    *state.State
+		*tview.TextView
+		state *state.State
 	}
 )
 
@@ -23,18 +23,14 @@ func NewView(state *state.State) *View {
 	textView.SetBorderPadding(1, 1, 1, 1)
 	textView.SetBorder(true)
 
-	view := &View{textView: textView, state: state}
+	view := &View{TextView: textView, state: state}
 
 	state.AddOnChangeHook(view.refresh)
 
 	return view
 }
 
-func (v *View) GetContent() tview.Primitive {
-	return v.textView
-}
-
 func (v *View) refresh() {
 	text := v.state.JournalEntryInput.Repr()
-	v.textView.SetText(text)
+	v.SetText(text)
 }

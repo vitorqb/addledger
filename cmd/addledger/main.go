@@ -124,10 +124,7 @@ func main() {
 	}
 
 	// Run!
-	err = app.
-		SetRoot(layout, true).
-		SetFocus(layout.Input.GetContent()).
-		Run()
+	err = app.SetRoot(layout, true).SetFocus(layout).Run()
 	if err != nil {
 		logrus.Fatal(err)
 	}

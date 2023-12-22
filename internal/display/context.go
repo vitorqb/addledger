@@ -16,8 +16,8 @@ type Refreshable interface {
 }
 
 type Context struct {
+	*tview.Pages
 	state *statemod.State
-	pages *tview.Pages
 }
 
 // ContextEntry represents a widget inside the context
@@ -34,18 +34,18 @@ func NewContext(state *statemod.State, widgets []ContextWidget) (*Context, error
 	context.state = state
 
 	// Add all pages to the context
-	context.pages = tview.NewPages()
-	context.pages.SetBorder(true)
+	context.Pages = tview.NewPages()
+	context.SetBorder(true)
 	for _, widget := range widgets {
-		context.pages.AddPage(widget.PageName, widget.Widget, true, false)
+		context.AddPage(widget.PageName, widget.Widget, true, false)
 	}
 
 	// Switch to the initial page
-	context.pages.SwitchToPage("dateGuesser")
+	context.SwitchToPage("dateGuesser")
 
 	// Add a hook to refresh the widgets when the current page changes.
-	context.pages.SetChangedFunc(func() {
-		_, page := context.pages.GetFrontPage()
+	context.SetChangedFunc(func() {
+		_, page := context.GetFrontPage()
 		if refreshablePage, ok := page.(Refreshable); ok {
 			refreshablePage.Refresh()
 		}
@@ -57,22 +57,20 @@ func NewContext(state *statemod.State, widgets []ContextWidget) (*Context, error
 	return context, nil
 }
 
-func (c Context) GetContent() *tview.Pages { return c.pages }
-
 func (c Context) Refresh() {
 	switch c.state.CurrentPhase() {
 	case statemod.InputDate:
-		c.pages.SwitchToPage("dateGuesser")
+		c.SwitchToPage("dateGuesser")
 	case statemod.InputPostingAccount:
-		c.pages.SwitchToPage("accountList")
+		c.SwitchToPage("accountList")
 	case statemod.InputDescription:
-		c.pages.SwitchToPage("descriptionPicker")
+		c.SwitchToPage("descriptionPicker")
 	case statemod.InputPostingAmmount:
-		c.pages.SwitchToPage("ammountGuesser")
+		c.SwitchToPage("ammountGuesser")
 	case statemod.InputTags:
-		c.pages.SwitchToPage("tagsPicker")
+		c.SwitchToPage("tagsPicker")
 	default:
-		c.pages.SwitchToPage("empty")
+		c.SwitchToPage("empty")
 	}
 }
 

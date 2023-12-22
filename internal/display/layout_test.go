@@ -7,6 +7,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/display"
 	. "github.com/vitorqb/addledger/internal/display"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
@@ -52,7 +53,7 @@ func TestNewLayout(t *testing.T) {
 			name: "Displays the tag picker",
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputTags)
-				_, page := c.layout.GetItem(3).(*tview.Pages).GetFrontPage()
+				_, page := c.layout.GetItem(3).(*display.Context).GetFrontPage()
 				assert.IsType(t, &TagsPicker{}, page)
 			},
 		},
@@ -64,14 +65,14 @@ func TestNewLayout(t *testing.T) {
 				c.layout.Refresh()
 				frontPage, _ := c.layout.GetFrontPage()
 				assert.Equal(t, string(ShortcutModalPage), frontPage)
-				assert.False(t, c.layout.Input.GetContent().HasFocus())
+				assert.False(t, c.layout.InputHasFocus())
 
 				// Set the shortcut modal to be hidden
 				c.state.Display.SetShortcutModal(false)
 				c.layout.Refresh()
 				frontPage, _ = c.layout.GetFrontPage()
 				assert.Equal(t, string(MainPage), frontPage)
-				assert.True(t, c.layout.Input.GetContent().HasFocus())
+				assert.True(t, c.layout.InputHasFocus())
 			},
 		},
 		{
@@ -82,14 +83,14 @@ func TestNewLayout(t *testing.T) {
 				c.layout.Refresh()
 				frontPage, _ := c.layout.GetFrontPage()
 				assert.Equal(t, string(LoadStatementModalPage), frontPage)
-				assert.False(t, c.layout.Input.GetContent().HasFocus())
+				assert.False(t, c.layout.InputHasFocus())
 
 				// Set the shortcut modal to be hidden
 				c.state.Display.SetLoadStatementModal(false)
 				c.layout.Refresh()
 				frontPage, _ = c.layout.GetFrontPage()
 				assert.Equal(t, string(MainPage), frontPage)
-				assert.True(t, c.layout.Input.GetContent().HasFocus())
+				assert.True(t, c.layout.InputHasFocus())
 			},
 		},
 	}

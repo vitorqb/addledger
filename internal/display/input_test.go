@@ -226,7 +226,7 @@ func TestInput(t *testing.T) {
 			name: "Set up a page for Tags",
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputTags)
-				_, page := c.input.GetContent().(*tview.Pages).GetFrontPage()
+				_, page := c.input.GetFrontPage()
 				field, ok := page.(*widgets.InputField)
 				assert.True(t, ok)
 				assert.Equal(t, "Tags: ", field.GetLabel())
@@ -237,7 +237,7 @@ func TestInput(t *testing.T) {
 			run: func(c *testcontext, t *testing.T) {
 				c.state.SetPhase(statemod.InputDescription)
 				c.state.NextPhase()
-				_, page := c.input.GetContent().(*tview.Pages).GetFrontPage()
+				_, page := c.input.GetFrontPage()
 				field, ok := page.(*widgets.InputField)
 				assert.True(t, ok)
 				assert.Equal(t, "Tags: ", field.GetLabel())
