@@ -54,3 +54,80 @@ func (mr *MockIStatementReaderMockRecorder) Read(file interface{}, options ...in
 	varargs := append([]interface{}{file}, options...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockIStatementReader)(nil).Read), varargs...)
 }
+
+// MockSortStrategy is a mock of SortStrategy interface.
+type MockSortStrategy struct {
+	ctrl     *gomock.Controller
+	recorder *MockSortStrategyMockRecorder
+}
+
+// MockSortStrategyMockRecorder is the mock recorder for MockSortStrategy.
+type MockSortStrategyMockRecorder struct {
+	mock *MockSortStrategy
+}
+
+// NewMockSortStrategy creates a new mock instance.
+func NewMockSortStrategy(ctrl *gomock.Controller) *MockSortStrategy {
+	mock := &MockSortStrategy{ctrl: ctrl}
+	mock.recorder = &MockSortStrategyMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockSortStrategy) EXPECT() *MockSortStrategyMockRecorder {
+	return m.recorder
+}
+
+// Clone mocks base method.
+func (m *MockSortStrategy) Clone(arg0 []statementreader.StatementEntry) statementreader.SortStrategy {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Clone", arg0)
+	ret0, _ := ret[0].(statementreader.SortStrategy)
+	return ret0
+}
+
+// Clone indicates an expected call of Clone.
+func (mr *MockSortStrategyMockRecorder) Clone(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clone", reflect.TypeOf((*MockSortStrategy)(nil).Clone), arg0)
+}
+
+// Len mocks base method.
+func (m *MockSortStrategy) Len() int {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Len")
+	ret0, _ := ret[0].(int)
+	return ret0
+}
+
+// Len indicates an expected call of Len.
+func (mr *MockSortStrategyMockRecorder) Len() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Len", reflect.TypeOf((*MockSortStrategy)(nil).Len))
+}
+
+// Less mocks base method.
+func (m *MockSortStrategy) Less(i, j int) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Less", i, j)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// Less indicates an expected call of Less.
+func (mr *MockSortStrategyMockRecorder) Less(i, j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Less", reflect.TypeOf((*MockSortStrategy)(nil).Less), i, j)
+}
+
+// Swap mocks base method.
+func (m *MockSortStrategy) Swap(i, j int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Swap", i, j)
+}
+
+// Swap indicates an expected call of Swap.
+func (mr *MockSortStrategyMockRecorder) Swap(i, j interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Swap", reflect.TypeOf((*MockSortStrategy)(nil).Swap), i, j)
+}

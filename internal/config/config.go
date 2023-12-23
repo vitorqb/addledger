@@ -28,6 +28,9 @@ type StatementLoaderConfig struct {
 	Account string `json:"account"`
 	// Default commodity to use for all entries.
 	Commodity string `json:"commodity"`
+	// SortBy defines a stratgy for sorting. As of now either empty (no sorting)
+	// or date are supported.
+	SortBy string `json:"sortBy"`
 	// Index of the date field in the CSV file.
 	DateFieldIndex int `json:"dateFieldIndex"`
 	// Date format to use for parsing the date field.

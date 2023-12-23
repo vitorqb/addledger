@@ -1,5 +1,6 @@
 {
   "separator": ",",
+  "sortBy": "date",
   "account": "assets:bank:current-account",
   "commodity": "EUR",
   "dateFieldIndex": 0,

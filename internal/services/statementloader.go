@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	configmod "github.com/vitorqb/addledger/internal/config"
 	statemod "github.com/vitorqb/addledger/internal/state"
@@ -56,6 +57,14 @@ func ParseStatementLoaderConfig(config configmod.StatementLoaderConfig) ([]state
 			return nil, fmt.Errorf("invalid csv separator: %s", sep)
 		}
 		options = append(options, statementreader.WithSeparator([]rune(sep)[0]))
+	}
+	if sortByStr := config.SortBy; sortByStr != "" {
+		switch strings.ToLower(sortByStr) {
+		case "date":
+			options = append(options, statementreader.WithSortStrategy(statementreader.SortByDate{}))
+		default:
+			return nil, fmt.Errorf("invalid SortBy: " + sortByStr)
+		}
 	}
 	mapping := []statementreader.CSVColumnMapping{}
 	if idate := config.DateFieldIndex; idate != -1 {
