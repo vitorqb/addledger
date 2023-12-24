@@ -72,6 +72,7 @@ func TestParseStatementLoaderConfig(t *testing.T) {
 		name            string
 		config          configmod.StatementLoaderConfig
 		expectedOptions []statementreader.Option
+		expectedError   string
 	}
 	testcases := []testcase{
 		{
@@ -97,11 +98,13 @@ func TestParseStatementLoaderConfig(t *testing.T) {
 				DescriptionFieldIndex: 1,
 				AccountFieldIndex:     2,
 				AmmountFieldIndex:     3,
+				SortBy:                "date",
 			},
 			expectedOptions: []statementreader.Option{
 				statementreader.WithSeparator(';'),
 				statementreader.WithAccountName("acc"),
 				statementreader.WithDefaultCommodity("com"),
+				statementreader.WithSortStrategy(statementreader.SortByDate{}),
 				statementreader.WithLoaderMapping([]statementreader.CSVColumnMapping{
 					{Column: 0, Importer: statementreader.DateImporter{Format: "01/02/2006"}},
 					{Column: 1, Importer: statementreader.DescriptionImporter{}},
@@ -110,12 +113,23 @@ func TestParseStatementLoaderConfig(t *testing.T) {
 				}),
 			},
 		},
+		{
+			name: "invalid sortBy",
+			config: configmod.StatementLoaderConfig{
+				SortBy: "invalid",
+			},
+			expectedError: "invalid SortBy: invalid",
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			actualConfig := statementreader.Config{}
 			expectedConfig := statementreader.Config{}
 			options, err := ParseStatementLoaderConfig(testcase.config)
+			if expError := testcase.expectedError; expError != "" {
+				assert.ErrorContains(t, err, expError)
+				return
+			}
 			assert.Nil(t, err)
 			for _, option := range options {
 				option(&actualConfig)

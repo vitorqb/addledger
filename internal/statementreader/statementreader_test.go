@@ -120,6 +120,7 @@ func TestCSVLoader(t *testing.T) {
 		options       []Option
 		csvInput      string
 		expected      []StatementEntry
+		expectFn      func([]StatementEntry)
 		expectedError string
 	}
 	testCases := []testCase{
@@ -145,6 +146,21 @@ func TestCSVLoader(t *testing.T) {
 						Quantity:  decimal.New(1221, -2),
 					},
 				},
+			},
+			expectedError: "",
+		},
+		{
+			name: "Sort by date",
+			options: []Option{
+				WithLoaderMapping([]CSVColumnMapping{
+					{Column: 0, Importer: DateImporter{"2006-01-02"}},
+				}),
+				WithSortStrategy(SortByDate{}),
+			},
+			csvInput: "2023-10-30\n2023-10-29",
+			expectFn: func(x []StatementEntry) {
+				assert.Equal(t, time.Date(2023, 10, 29, 0, 0, 0, 0, time.UTC), x[0].Date)
+				assert.Equal(t, time.Date(2023, 10, 30, 0, 0, 0, 0, time.UTC), x[1].Date)
 			},
 			expectedError: "",
 		},
@@ -212,7 +228,14 @@ func TestCSVLoader(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-			assert.Equal(t, tc.expected, entries)
+			if tc.expectFn != nil {
+				if len(tc.expected) > 0 {
+					panic("only one of expected or expectFn should be set")
+				}
+				tc.expectFn(entries)
+			} else {
+				assert.Equal(t, tc.expected, entries)
+			}
 		})
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"sort"
 	"time"
 
 	"github.com/vitorqb/addledger/internal/finance"
@@ -78,6 +79,11 @@ func (s *StatementReader) Read(reader io.Reader, options ...Option) ([]Statement
 		statementEntries[i] = statementEntry
 	}
 
+	// Sort
+	if config.SortStrategy != nil {
+		sort.Sort(config.SortStrategy.Clone(statementEntries))
+	}
+
 	return statementEntries, nil
 }
 
@@ -91,6 +97,8 @@ type Config struct {
 	Separator rune
 	// ColumnMappings is the csv column mappings.
 	ColumnMappings []CSVColumnMapping
+	// Sort strategy to use (if any)
+	SortStrategy SortStrategy
 }
 
 var DefaultConfig = Config{
@@ -99,6 +107,21 @@ var DefaultConfig = Config{
 	Separator:        ',',
 	ColumnMappings:   []CSVColumnMapping{},
 }
+
+// A SortStrategy represents a strategy for sorting an array of StatementEntry.
+// The `Clone` method must return a new SortStrategy of the same implementation
+// but wrapping the given array.
+type SortStrategy interface {
+	sort.Interface
+	Clone([]StatementEntry) SortStrategy
+}
+
+type SortByDate []StatementEntry
+
+func (x SortByDate) Len() int                            { return len(x) }
+func (x SortByDate) Swap(i, j int)                       { x[i], x[j] = x[j], x[i] }
+func (x SortByDate) Less(i, j int) bool                  { return x[i].Date.Before(x[j].Date) }
+func (SortByDate) Clone(x []StatementEntry) SortStrategy { return SortByDate(x) }
 
 // Option is a function that configures a CSVLoaderConfig.
 type Option func(*Config)
@@ -124,6 +147,12 @@ func WithSeparator(separator rune) Option {
 func WithLoaderMapping(columnMappings []CSVColumnMapping) Option {
 	return func(o *Config) {
 		o.ColumnMappings = columnMappings
+	}
+}
+
+func WithSortStrategy(strategy SortStrategy) Option {
+	return func(o *Config) {
+		o.SortStrategy = strategy
 	}
 }
 
