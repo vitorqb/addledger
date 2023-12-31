@@ -107,66 +107,6 @@ func (i *JournalEntryInput) CountPostings() int {
 	return 0
 }
 
-// PostingBalance returns the balance left for all postings
-func (i *JournalEntryInput) PostingBalance() []finance.Ammount {
-	postings := i.GetPostings()
-	var ammounts []finance.Ammount
-	for _, posting := range postings {
-		ammount, found := posting.GetAmmount()
-		if found {
-			ammounts = append(ammounts, ammount)
-		}
-	}
-	return finance.Balance(ammounts)
-}
-
-// PostingHasZeroBalance returns true if there is no left balance
-func (i *JournalEntryInput) PostingHasZeroBalance() bool {
-	for _, ammount := range i.PostingBalance() {
-		if !ammount.Quantity.Equal(decimal.Zero) {
-			return false
-		}
-	}
-	return true
-}
-
-// HasSingleCurrency returns true if all postings have the same currency
-func (i *JournalEntryInput) HasSingleCurrency() bool {
-	return len(i.PostingBalance()) <= 1
-}
-
-func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
-	if postingsInputs, found := i.inputs["postings"]; found {
-		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
-			if index <= len(postingsInputs)-1 {
-				return postingsInputs[index], true
-			}
-		}
-	}
-	return NewPostingInput(), false
-}
-
-func (i *JournalEntryInput) GetPostings() []*PostingInput {
-	if postingsInputs, found := i.inputs["postings"]; found {
-		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
-			return postingsInputs
-		}
-	}
-	return []*PostingInput{}
-}
-
-// GetCompletePostings returns all postings that are complete.
-func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
-	var postings []journal.Posting
-	for _, postingInput := range i.GetPostings() {
-		if postingInput.IsComplete() {
-			posting := postingInput.ToPosting()
-			postings = append(postings, posting)
-		}
-	}
-	return postings
-}
-
 func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	postInput = NewPostingInput()
 	postInput.AddOnChangeHook(i.NotifyChange)
@@ -196,6 +136,66 @@ func (i *JournalEntryInput) DeleteLastPosting() {
 			}
 		}
 	}
+}
+
+func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
+	if postingsInputs, found := i.inputs["postings"]; found {
+		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
+			if index <= len(postingsInputs)-1 {
+				return postingsInputs[index], true
+			}
+		}
+	}
+	return NewPostingInput(), false
+}
+
+func (i *JournalEntryInput) GetPostings() []*PostingInput {
+	if postingsInputs, found := i.inputs["postings"]; found {
+		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
+			return postingsInputs
+		}
+	}
+	return []*PostingInput{}
+}
+
+// PostingBalance returns the balance left for all postings
+func (i *JournalEntryInput) PostingBalance() []finance.Ammount {
+	postings := i.GetPostings()
+	var ammounts []finance.Ammount
+	for _, posting := range postings {
+		ammount, found := posting.GetAmmount()
+		if found {
+			ammounts = append(ammounts, ammount)
+		}
+	}
+	return finance.Balance(ammounts)
+}
+
+// PostingHasZeroBalance returns true if there is no left balance
+func (i *JournalEntryInput) PostingHasZeroBalance() bool {
+	for _, ammount := range i.PostingBalance() {
+		if !ammount.Quantity.Equal(decimal.Zero) {
+			return false
+		}
+	}
+	return true
+}
+
+// HasSingleCurrency returns true if all postings have the same currency
+func (i *JournalEntryInput) HasSingleCurrency() bool {
+	return len(i.PostingBalance()) <= 1
+}
+
+// GetCompletePostings returns all postings that are complete.
+func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
+	var postings []journal.Posting
+	for _, postingInput := range i.GetPostings() {
+		if postingInput.IsComplete() {
+			posting := postingInput.ToPosting()
+			postings = append(postings, posting)
+		}
+	}
+	return postings
 }
 
 // Repr transforms the JournalEntryInput into a string.

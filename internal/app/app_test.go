@@ -112,6 +112,8 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.InputMetadata.SetPostingAmmountText(userInput)
 		state.JournalEntryInput.AddPosting()
+		newPosting := statemod.NewPostingData()
+		state.Transaction.Postings.Append(newPosting)
 		state.SetStatementEntries([]statementreader.StatementEntry{statementEntry})
 		// Assertions & behavior for engine
 		guesser.EXPECT().Guess(gomock.Any()).DoAndReturn(func(inputs ammountguesser.Inputs) (finance.Ammount, bool) {
@@ -147,6 +149,8 @@ func TestLinkAccountGuesser(t *testing.T) {
 		postings := []journal.Posting{testutils.Posting_1(t)}
 		postingInput := testutils.PostingInput_1(t)
 		postingsInputs := []*input.PostingInput{&postingInput}
+		postingData := testutils.PostingData_1(t)
+		postingsData := []*statemod.PostingData{&postingData}
 		transationHistory := []journal.Transaction{*testutils.Transaction_2(t)}
 		userInput := "User input"
 		inputs := accountguesser.Inputs{
@@ -162,6 +166,7 @@ func TestLinkAccountGuesser(t *testing.T) {
 		state.SetStatementEntries(statamentEntries)
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.JournalEntryInput.SetPostings(postingsInputs)
+		state.Transaction.Postings.Set(postingsData)
 		state.JournalEntryInput.SetDescription(userInput)
 		state.JournalMetadata.SetTransactions(transationHistory)
 

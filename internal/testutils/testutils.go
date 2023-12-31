@@ -13,6 +13,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
 )
@@ -162,6 +163,13 @@ func PostingInput_1(t *testing.T) input.PostingInput {
 	out := input.NewPostingInput()
 	out.SetAccount("ACC1")
 	out.SetAmmount(*Ammount_1(t))
+	return *out
+}
+
+func PostingData_1(t *testing.T) state.PostingData {
+	out := state.NewPostingData()
+	out.Account.Set("ACC1")
+	out.Ammount.Set(*Ammount_1(t))
 	return *out
 }
 
