@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/state"
 )
 
@@ -33,6 +34,16 @@ func TestTransactionData(t *testing.T) {
 				ctx.data.Description.Set("foo")
 				assert.Equal(t, 1, ctx.onChangeCallCount)
 				ctx.data.Description.Clear()
+				assert.Equal(t, 2, ctx.onChangeCallCount)
+			},
+		},
+		{
+			name: "Notifies when tags change",
+			run: func(t *testing.T, ctx *testcontext) {
+				tag := journal.Tag{Name: "foo", Value: "bar"}
+				ctx.data.Tags.Append(tag)
+				assert.Equal(t, 1, ctx.onChangeCallCount)
+				ctx.data.Tags.Pop()
 				assert.Equal(t, 2, ctx.onChangeCallCount)
 			},
 		},

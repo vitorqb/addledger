@@ -367,6 +367,7 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 
 	// We have tag - move on to next tag
 	ic.state.JournalEntryInput.AppendTag(tag)
+	ic.state.Transaction.Tags.Append(tag)
 	ic.state.InputMetadata.SetTagText("")
 	err := ic.eventBus.Send(eventbus.Event{
 		Topic: "input.tag.settext",
@@ -454,6 +455,7 @@ func (ic *InputController) OnUndo() {
 		if ic.state.JournalEntryInput.CountPostings() == 0 {
 			// We don't have any postings - clear tags and go back
 			ic.state.JournalEntryInput.ClearTags()
+			ic.state.Transaction.Tags.Clear()
 			ic.state.InputMetadata.SetTagText("")
 			ic.state.PrevPhase()
 		} else {
