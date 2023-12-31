@@ -115,19 +115,6 @@ func TestJournalEntryInput(t *testing.T) {
 			},
 		},
 		{
-			"Current Posting",
-			func(t *testing.T, c *context) {
-				_, found := c.input.LastPosting()
-				assert.False(t, found)
-				assert.Equal(t, 0, c.onChangeCallCount)
-				posting := c.input.AddPosting()
-				foundPosting, found := c.input.LastPosting()
-				assert.True(t, found)
-				assert.Same(t, posting, foundPosting)
-				assert.Equal(t, 1, c.onChangeCallCount)
-			},
-		},
-		{
 			"Manipulate tags",
 			func(t *testing.T, c *context) {
 				assert.Equal(t, []journal.Tag{}, c.input.GetTags())

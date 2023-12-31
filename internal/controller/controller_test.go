@@ -228,10 +228,10 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAccountDone(input.Context)
 
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
-				posting, found := c.state.JournalEntryInput.LastPosting()
+				posting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
-				account, _ := posting.GetAccount()
-				assert.Equal(t, "FOO", account)
+				account, _ := posting.Account.Get()
+				assert.Equal(t, journal.Account("FOO"), account)
 			},
 		},
 		{
@@ -258,10 +258,10 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAccountDone(input.Input)
 
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
-				posting, found := c.state.JournalEntryInput.LastPosting()
+				posting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
-				account, _ := posting.GetAccount()
-				assert.Equal(t, "FOO", account)
+				account, _ := posting.Account.Get()
+				assert.Equal(t, journal.Account("FOO"), account)
 			},
 		},
 		{
@@ -372,8 +372,8 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
 				c.controller.OnPostingAmmountDone(input.Input)
-				posting, _ := c.state.JournalEntryInput.GetPosting(0)
-				ammount, _ := posting.GetAmmount()
+				posting := c.state.Transaction.Postings.Get()[0]
+				ammount, _ := posting.Ammount.Get()
 				assert.Equal(t, anAmmount, ammount)
 			},
 		},
@@ -383,8 +383,8 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAmmountGuess(anAmmount)
 				c.controller.OnPostingAmmountDone(input.Context)
-				posting, _ := c.state.JournalEntryInput.GetPosting(0)
-				ammount, _ := posting.GetAmmount()
+				posting := c.state.Transaction.Postings.Get()[0]
+				ammount, _ := posting.Ammount.Get()
 				assert.Equal(t, anAmmount, ammount)
 			},
 		},
@@ -418,11 +418,11 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetPostingAccountText("BAR")
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
 				c.controller.OnPostingAccountDone(input.Context)
-				posting, found := c.state.JournalEntryInput.LastPosting()
+				posting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
-				acc, ok := posting.GetAccount()
+				acc, ok := posting.Account.Get()
 				assert.True(t, ok)
-				assert.Equal(t, "FOO", acc)
+				assert.Equal(t, journal.Account("FOO"), acc)
 			},
 		},
 		{
@@ -490,17 +490,17 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 
 				// First posting
-				firstPosting, _ := c.state.JournalEntryInput.GetPosting(0)
-				firstPostingAccount, _ := firstPosting.GetAccount()
-				assert.Equal(t, "FOO", firstPostingAccount)
-				firstPostingAmmount, _ := firstPosting.GetAmmount()
+				firstPosting := c.state.Transaction.Postings.Get()[0]
+				firstPostingAccount, _ := firstPosting.Account.Get()
+				assert.Equal(t, journal.Account("FOO"), firstPostingAccount)
+				firstPostingAmmount, _ := firstPosting.Ammount.Get()
 				assert.Equal(t, anAmmountNeg, firstPostingAmmount)
 
 				// Second posting
-				secondPosting, _ := c.state.JournalEntryInput.GetPosting(1)
-				secondPostingAccount, _ := secondPosting.GetAccount()
-				assert.Equal(t, "BAR", secondPostingAccount)
-				secondPostingAmmount, _ := secondPosting.GetAmmount()
+				secondPosting := c.state.Transaction.Postings.Get()[1]
+				secondPostingAccount, _ := secondPosting.Account.Get()
+				assert.Equal(t, journal.Account("BAR"), secondPostingAccount)
+				secondPostingAmmount, _ := secondPosting.Ammount.Get()
 				assert.Equal(t, anotherAmmountNeg, secondPostingAmmount)
 			},
 		},
@@ -527,11 +527,11 @@ func TestInputController(t *testing.T) {
 				// Should have 2 filled postings and be on confirmation page
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
-				lastPosting, found := c.state.JournalEntryInput.LastPosting()
+				lastPosting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
-				acc, _ := lastPosting.GetAccount()
-				assert.Equal(t, "BAR2", acc)
-				ammount, _ := lastPosting.GetAmmount()
+				acc, _ := lastPosting.Account.Get()
+				assert.Equal(t, journal.Account("BAR2"), acc)
+				ammount, _ := lastPosting.Ammount.Get()
 				assert.Equal(t, anotherAmmountNeg, ammount)
 
 				// Confirms submission
@@ -575,11 +575,11 @@ func TestInputController(t *testing.T) {
 
 				// Should have 3 postings, 2 filled + 1 empty
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 3)
-				lastPosting, found := c.state.JournalEntryInput.LastPosting()
+				lastPosting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
-				_, accFound := lastPosting.GetAccount()
+				_, accFound := lastPosting.Account.Get()
 				assert.False(t, accFound)
-				_, ammountFound := lastPosting.GetAmmount()
+				_, ammountFound := lastPosting.Ammount.Get()
 				assert.False(t, ammountFound)
 			},
 		},
@@ -598,9 +598,8 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAmmountDone(input.Input)
 
 				// The ammount has been saved to the posting
-				posting, found := c.state.JournalEntryInput.GetPosting(0)
-				assert.True(t, found)
-				ammount, found := posting.GetAmmount()
+				posting := c.state.Transaction.Postings.Get()[0]
+				ammount, found := posting.Ammount.Get()
 				assert.True(t, found)
 				assert.Equal(t, anAmmount, ammount)
 
@@ -702,7 +701,7 @@ func TestInputController(t *testing.T) {
 				// The user should be able to force the next phase
 				c.controller.OnFinishPosting()
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
-				assert.Equal(t, 2, c.state.JournalEntryInput.CountPostings())
+				assert.Equal(t, 2, len(c.state.Transaction.Postings.Get()))
 			},
 		},
 		{
@@ -733,7 +732,7 @@ func TestInputController(t *testing.T) {
 				// The user should NOT be able to force the next phase
 				c.controller.OnFinishPosting()
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
-				assert.Equal(t, 3, c.state.JournalEntryInput.CountPostings()) // 2 + 1 incomplete
+				assert.Equal(t, 3, len(c.state.Transaction.Postings.Get())) // 2 + 1 incomplete
 			},
 		},
 	}
@@ -870,9 +869,9 @@ func TestInputController__OnUndo(t *testing.T) {
 
 				// Must not have a single posting without value
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 1)
-				posting, postingFound := c.state.JournalEntryInput.LastPosting()
+				posting, postingFound := c.state.Transaction.Postings.Last()
 				assert.True(t, postingFound)
-				_, ammountFound := posting.GetAmmount()
+				_, ammountFound := posting.Ammount.Get()
 				assert.False(t, ammountFound)
 			},
 		},
@@ -903,11 +902,11 @@ func TestInputController__OnUndo(t *testing.T) {
 
 				// Should have 2 filled postings
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
-				lastPosting, lastPostingFound := c.state.JournalEntryInput.LastPosting()
+				lastPosting, lastPostingFound := c.state.Transaction.Postings.Last()
 				assert.True(t, lastPostingFound)
-				acc, _ := lastPosting.GetAccount()
-				assert.Equal(t, "BAR2", acc)
-				ammount, _ := lastPosting.GetAmmount()
+				acc, _ := lastPosting.Account.Get()
+				assert.Equal(t, journal.Account("BAR2"), acc)
+				ammount, _ := lastPosting.Ammount.Get()
 				assert.Equal(t, anotherAmmountNeg, ammount)
 			},
 		},

@@ -89,15 +89,6 @@ func (i *JournalEntryInput) ClearTags() {
 	i.NotifyChange()
 }
 
-// LastPosting returns the current posting being edited.
-func (i *JournalEntryInput) LastPosting() (p *PostingInput, found bool) {
-	postings := i.GetPostings()
-	if len(postings) > 0 {
-		return postings[len(postings)-1], true
-	}
-	return NewPostingInput(), false
-}
-
 func (i *JournalEntryInput) CountPostings() int {
 	if postingsInputs, found := i.inputs["postings"]; found {
 		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
