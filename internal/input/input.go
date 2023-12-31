@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -22,20 +21,6 @@ type (
 func NewJournalEntryInput() *JournalEntryInput {
 	m := make(map[string]interface{})
 	return &JournalEntryInput{react.New(), m}
-}
-
-func (i *JournalEntryInput) SetDate(x time.Time) {
-	i.inputs["date"] = x
-	i.NotifyChange()
-
-}
-func (i *JournalEntryInput) GetDate() (time.Time, bool) {
-	if rawValue, found := i.inputs["date"]; found {
-		if value, ok := rawValue.(time.Time); ok {
-			return value, true
-		}
-	}
-	return time.Time{}, false
 }
 
 func TextToAmmount(x string) (finance.Ammount, error) {

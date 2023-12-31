@@ -161,7 +161,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				assert.Equal(t, statemod.InputDescription, c.state.CurrentPhase())
-				foundDate, _ := c.state.JournalEntryInput.GetDate()
+				foundDate, _ := c.state.Transaction.Date.Get()
 				assert.Equal(t, aTime, foundDate)
 			},
 		},
@@ -186,7 +186,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDateChanged("aaa")
 				c.controller.OnDateDone()
 				assert.Equal(t, statemod.InputDate, c.state.CurrentPhase())
-				_, dateFound := c.state.JournalEntryInput.GetDate()
+				_, dateFound := c.state.Transaction.Date.Get()
 				assert.False(t, dateFound)
 			},
 		},
@@ -198,10 +198,10 @@ func TestInputController(t *testing.T) {
 				c.dateGuesser.EXPECT().Guess("2023-01-01").Return(aTime, true)
 				c.dateGuesser.EXPECT().Guess("aaa").Return(time.Time{}, false)
 				c.controller.OnDateChanged("2023-01-01")
-				foundDate, _ := c.state.JournalEntryInput.GetDate()
+				foundDate, _ := c.state.Transaction.Date.Get()
 				assert.Equal(t, aTime, foundDate)
 				c.controller.OnDateChanged("aaa")
-				_, dateFound := c.state.JournalEntryInput.GetDate()
+				_, dateFound := c.state.Transaction.Date.Get()
 				assert.False(t, dateFound)
 			},
 		},
@@ -300,7 +300,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnInputConfirmation()
 				assert.Equal(t, expected, c.bytesBuffer.String())
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
-				_, dateFound := c.state.JournalEntryInput.GetDate()
+				_, dateFound := c.state.Transaction.Date.Get()
 				assert.False(t, dateFound)
 
 				// Must have added the transaction to the state
@@ -442,7 +442,6 @@ func TestInputController(t *testing.T) {
 			name: "OnDescriptionSelectedFromContext ignores context if empty",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("")
@@ -457,7 +456,6 @@ func TestInputController(t *testing.T) {
 			name: "OnDescriptionSelectedFromContext uses context if not empty",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
@@ -794,7 +792,6 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnUndo cleans up the last user input",
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.controller.OnUndo()
@@ -805,7 +802,6 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnUndo cleans up the description",
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
@@ -820,7 +816,6 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnUndo cleans up date ",
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDate(aTime)
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.controller.OnUndo()

@@ -142,7 +142,6 @@ func (ic *InputController) OnDateChanged(x string) {
 
 func (ic *InputController) OnDateDone() {
 	if date, found := ic.state.InputMetadata.GetDateGuess(); found {
-		ic.state.JournalEntryInput.SetDate(date)
 		ic.state.Transaction.Date.Set(date)
 		ic.state.NextPhase()
 	}
