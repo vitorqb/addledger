@@ -76,9 +76,9 @@ func TestLinkTransactionMatcher(t *testing.T) {
 		// Prepares the matcher with expected calls
 		matchedTransactions := []journal.Transaction{{Comment: "two"}}
 		matcher := NewMockITransactionMatcher(ctrl)
-		matcher.EXPECT().SetDescriptionInput(description)
-		matcher.EXPECT().SetTransactionHistory(transactionHistory)
-		matcher.EXPECT().Match().Return(matchedTransactions)
+		matcher.EXPECT().SetDescriptionInput(description).Times(2)
+		matcher.EXPECT().SetTransactionHistory(transactionHistory).Times(2)
+		matcher.EXPECT().Match().Return(matchedTransactions).Times(2)
 
 		// Links
 		LinkTransactionMatcher(state, matcher)
@@ -86,6 +86,7 @@ func TestLinkTransactionMatcher(t *testing.T) {
 		// Set the state variables
 		state.JournalMetadata.SetTransactions(transactionHistory)
 		state.JournalEntryInput.SetDescription(description)
+		state.Transaction.Description.Set(description)
 
 		// Check state was properly set
 		resultMatchingTransactions := state.InputMetadata.MatchingTransactions()
@@ -168,6 +169,7 @@ func TestLinkAccountGuesser(t *testing.T) {
 		state.JournalEntryInput.SetPostings(postingsInputs)
 		state.Transaction.Postings.Set(postingsData)
 		state.JournalEntryInput.SetDescription(userInput)
+		state.Transaction.Description.Set(userInput)
 		state.JournalMetadata.SetTransactions(transationHistory)
 
 		// The expected call to guesser

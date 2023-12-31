@@ -168,6 +168,7 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 		newPosting := statemod.NewPostingData()
 		ic.state.Transaction.Postings.Append(newPosting)
 	}
+
 	posting.SetAccount(account)
 
 	// Go to ammount
@@ -336,6 +337,7 @@ func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
 
 	description := ic.state.InputMetadata.DescriptionText()
 	ic.state.JournalEntryInput.SetDescription(description)
+	ic.state.Transaction.Description.Set(description)
 	if ic.state.JournalEntryInput.CountPostings() == 0 {
 		ic.state.JournalEntryInput.AddPosting()
 		newPosting := statemod.NewPostingData()
