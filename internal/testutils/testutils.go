@@ -45,6 +45,14 @@ func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {
 	})
 }
 
+func FillPostingData_1(t *testing.T, posting *state.PostingData) {
+	posting.Account.Set("ACC1")
+	posting.Ammount.Set(finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(1220, -2),
+	})
+}
+
 func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {
 	posting.SetAccount("ACC2")
 	posting.SetAmmount(finance.Ammount{

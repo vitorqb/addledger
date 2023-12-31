@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/ammountguesser"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
@@ -88,10 +88,10 @@ func TestAmmountGuesser(t *testing.T) {
 				tc.inputs.StatementEntry = statementreader.StatementEntry{Ammount: anotherAmmount}
 
 				// Set some pending balance
-				postingInput := input.NewPostingInput()
-				tu.FillPostingInput_1(t, postingInput)
-				postingInput.SetAmmount(anAmmount)
-				tc.inputs.PostingInputs = []*input.PostingInput{postingInput}
+				postingData := state.NewPostingData()
+				tu.FillPostingData_1(t, postingData)
+				postingData.Ammount.Set(anAmmount)
+				tc.inputs.PostingsData = []*state.PostingData{postingData}
 			},
 			guess:   anAmmount.InvertSign(),
 			success: true,

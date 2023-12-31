@@ -71,7 +71,7 @@ func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IAmmountGu
 		currentStatementEntry, _ := state.CurrentStatementEntry()
 		inputs := ammountguesser.Inputs{
 			UserInput:            state.InputMetadata.GetPostingAmmountText(),
-			PostingInputs:        state.JournalEntryInput.GetPostings(),
+			PostingsData:         state.Transaction.Postings.Get(),
 			StatementEntry:       currentStatementEntry,
 			MatchingTransactions: state.InputMetadata.MatchingTransactions(),
 		}

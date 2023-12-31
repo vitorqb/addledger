@@ -121,7 +121,7 @@ func TestLinkAmmountGuesser(t *testing.T) {
 			assert.Equal(t, userInput, inputs.UserInput)
 			assert.Equal(t, statementEntry, inputs.StatementEntry)
 			assert.Equal(t, matchingTransactions, inputs.MatchingTransactions)
-			assert.Equal(t, state.JournalEntryInput.GetPostings(), inputs.PostingInputs)
+			assert.Equal(t, state.Transaction.Postings.Get(), inputs.PostingsData)
 			return expectedGuess, true
 		})
 
