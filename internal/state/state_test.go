@@ -73,6 +73,13 @@ func TestState(t *testing.T) {
 			},
 		},
 		{
+			name: "Notify on change on Transaction",
+			run: func(t *testing.T, c *testcontext) {
+				c.state.Transaction.Date.Set(time.Now())
+				assert.Equal(t, 1, c.hookCallCounter)
+			},
+		},
+		{
 			name: "Notify on change of Display",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.Display.SetShortcutModal(false)

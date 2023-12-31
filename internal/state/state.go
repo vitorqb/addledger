@@ -64,6 +64,7 @@ type (
 		react.IReact
 		currentPhase      Phase
 		JournalEntryInput *input.JournalEntryInput
+		Transaction       *TransactionData
 		InputMetadata     *InputMetadata
 		JournalMetadata   *JournalMetadata
 		// StatementEntries are entires loaded from a bank statement.
@@ -129,6 +130,7 @@ func InitialState() *State {
 		IReact:            react.New(),
 		currentPhase:      InputDate,
 		JournalEntryInput: journalEntryInput,
+		Transaction:       NewTransactionData(),
 		InputMetadata:     inputMetadata,
 		JournalMetadata:   journalMetadata,
 		StatementEntries:  []statementreader.StatementEntry{},
@@ -138,6 +140,7 @@ func InitialState() *State {
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
 	journalMetadata.AddOnChangeHook(state.NotifyChange)
 	display.AddOnChangeHook(state.NotifyChange)
+	state.Transaction.AddOnChangeHook(state.NotifyChange)
 	return state
 }
 
