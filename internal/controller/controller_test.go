@@ -213,7 +213,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(input.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
-				foundDescription, _ := c.state.JournalEntryInput.GetDescription()
+				foundDescription, _ := c.state.Transaction.Description.Get()
 				assert.Equal(t, "FOO", foundDescription)
 			},
 		},
@@ -448,7 +448,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetSelectedDescription("")
 				c.state.InputMetadata.SetDescriptionText("FOO")
 				c.controller.OnDescriptionDone(input.Context)
-				description, ok := c.state.JournalEntryInput.GetDescription()
+				description, ok := c.state.Transaction.Description.Get()
 				assert.True(t, ok)
 				assert.Equal(t, "FOO", description)
 			},
@@ -463,7 +463,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetSelectedDescription("FOO")
 				c.state.InputMetadata.SetDescriptionText("BAR")
 				c.controller.OnDescriptionDone(input.Context)
-				description, ok := c.state.JournalEntryInput.GetDescription()
+				description, ok := c.state.Transaction.Description.Get()
 				assert.True(t, ok)
 				assert.Equal(t, "FOO", description)
 			},
@@ -811,7 +811,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.state.InputMetadata.SetSelectedDescription("FOO")
 				c.controller.OnDescriptionDone(input.Context)
 				c.controller.OnUndo()
-				_, ok := c.state.JournalEntryInput.GetDescription()
+				_, ok := c.state.Transaction.Description.Get()
 				assert.False(t, ok)
 				metadataDescription := c.state.InputMetadata.DescriptionText()
 				assert.Equal(t, "", metadataDescription)

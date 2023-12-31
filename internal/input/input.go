@@ -47,19 +47,6 @@ func (i *JournalEntryInput) SetDescription(x string) {
 	i.inputs["description"] = x
 	i.NotifyChange()
 }
-func (i *JournalEntryInput) GetDescription() (string, bool) {
-	if rawValue, found := i.inputs["description"]; found {
-		if value, ok := rawValue.(string); ok {
-			return value, true
-		}
-	}
-	return "", false
-}
-
-func (i *JournalEntryInput) ClearDescription() {
-	delete(i.inputs, "description")
-	i.NotifyChange()
-}
 
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error

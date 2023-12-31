@@ -43,7 +43,7 @@ func LinkTransactionMatcher(state *statemod.State, matcher transactionmatcher.IT
 			busy = false
 		}()
 
-		descriptionInput, found := state.JournalEntryInput.GetDescription()
+		descriptionInput, found := state.Transaction.Description.Get()
 		if !found {
 			return
 		}
@@ -98,7 +98,7 @@ func LinkAccountGuesser(state *statemod.State, guesser accountguesser.AccountGue
 		completePosting := userinput.ExtractPostings(state.Transaction.Postings.Get())
 		transactionHist := state.JournalMetadata.Transactions()
 		statementEntry, _ := state.CurrentStatementEntry()
-		description, _ := state.JournalEntryInput.GetDescription()
+		description, _ := state.Transaction.Description.Get()
 		inputs := accountguesser.Inputs{
 			StatementEntry:       statementEntry,
 			MatchingTransactions: matchedTransactions,

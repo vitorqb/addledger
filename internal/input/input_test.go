@@ -42,22 +42,6 @@ func TestJournalEntryInput(t *testing.T) {
 				assert.Equal(t, 2, c.onChangeCallCount)
 			},
 		},
-		{
-			name: "Description",
-			run: func(t *testing.T, c *context) {
-				_, found := c.input.GetDescription()
-				assert.False(t, found)
-				c.input.SetDescription("FOO")
-				description, found := c.input.GetDescription()
-				assert.True(t, found)
-				assert.Equal(t, description, "FOO")
-				assert.Equal(t, 1, c.onChangeCallCount)
-				c.input.ClearDescription()
-				_, found = c.input.GetDescription()
-				assert.False(t, found)
-				assert.Equal(t, 2, c.onChangeCallCount)
-			},
-		},
 	}
 
 	for _, tc := range tests {

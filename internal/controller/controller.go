@@ -468,7 +468,6 @@ func (ic *InputController) OnUndo() {
 		ic.state.PrevPhase()
 	case statemod.InputTags:
 		// Clear description and go back
-		ic.state.JournalEntryInput.ClearDescription()
 		ic.state.Transaction.Description.Clear()
 		ic.state.InputMetadata.SetDescriptionText("")
 		ic.state.PrevPhase()
