@@ -2,7 +2,6 @@ package input_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/shopspring/decimal"
@@ -212,72 +211,6 @@ func TestJournalEntryInput(t *testing.T) {
 			input.AddOnChangeHook(func() { ctx.onChangeCalled = true })
 			input.AddOnChangeHook(func() { ctx.onChangeCallCount++ })
 			tc.run(t, ctx)
-		})
-	}
-}
-
-func TestRepr(t *testing.T) {
-	type testcase struct {
-		name         string
-		journalEntry func(t *testing.T) *JournalEntryInput
-		expected     string
-	}
-	testcases := []testcase{
-		{
-			name: "Empty",
-			journalEntry: func(_ *testing.T) *JournalEntryInput {
-				return &JournalEntryInput{}
-			},
-			expected: "",
-		},
-		{
-			name: "with date",
-			journalEntry: func(t *testing.T) *JournalEntryInput {
-				i := NewJournalEntryInput()
-				i.SetDate(tu.Date1(t))
-				return i
-			},
-			expected: "1993-11-23",
-		},
-		{
-			name: "with description",
-			journalEntry: func(t *testing.T) *JournalEntryInput {
-				i := NewJournalEntryInput()
-				i.SetDate(tu.Date1(t))
-				i.SetDescription("FOO BAR")
-				return i
-			},
-			expected: "1993-11-23 FOO BAR",
-		},
-		{
-			name: "with postings",
-			journalEntry: func(t *testing.T) *JournalEntryInput {
-				i := NewJournalEntryInput()
-				i.SetDate(tu.Date1(t))
-				i.SetDescription("FOO BAR")
-				posting1 := i.AddPosting()
-				posting1.SetAccount("ACC")
-				posting1.SetAmmount(anAmmount)
-				posting2 := i.AddPosting()
-				posting2.SetAccount("ACC2")
-				posting2.SetAmmount(anotherAmmount)
-				return i
-			},
-			expected: strings.Join(
-				[]string{
-					"1993-11-23 FOO BAR",
-					"    ACC    EUR 2.2",
-					"    ACC2    EUR -2.2",
-				},
-				"\n",
-			),
-		},
-	}
-
-	for _, tc := range testcases {
-		t.Run(tc.name, func(t *testing.T) {
-			result := tc.journalEntry(t).Repr()
-			assert.Equal(t, tc.expected, result)
 		})
 	}
 }

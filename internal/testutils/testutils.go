@@ -72,6 +72,17 @@ func JournalEntryInput_1(t *testing.T) *input.JournalEntryInput {
 	return journalEntryInput
 }
 
+func TransactionData_1(t *testing.T) *state.TransactionData {
+	transactionData := state.NewTransactionData()
+	transactionData.Date.Set(Date1(t))
+	transactionData.Description.Set("Description1")
+	posting_1 := PostingData_1(t)
+	transactionData.Postings.Append(&posting_1)
+	posting_2 := PostingData_2(t)
+	transactionData.Postings.Append(&posting_2)
+	return transactionData
+}
+
 func Decimal_1(t *testing.T) decimal.Decimal {
 	out, err := decimal.NewFromString("2.20")
 	if err != nil {
@@ -169,7 +180,20 @@ func PostingInput_1(t *testing.T) input.PostingInput {
 func PostingData_1(t *testing.T) state.PostingData {
 	out := state.NewPostingData()
 	out.Account.Set("ACC1")
-	out.Ammount.Set(*Ammount_1(t))
+	out.Ammount.Set(finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(1220, -2),
+	})
+	return *out
+}
+
+func PostingData_2(t *testing.T) state.PostingData {
+	out := state.NewPostingData()
+	out.Account.Set("ACC2")
+	out.Ammount.Set(finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(-1220, -2),
+	})
 	return *out
 }
 

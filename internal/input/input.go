@@ -198,44 +198,6 @@ func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
 	return postings
 }
 
-// Repr transforms the JournalEntryInput into a string.
-func (jei *JournalEntryInput) Repr() string {
-	var text string
-	if date, found := jei.GetDate(); found {
-		text += date.Format("2006-01-02")
-	}
-	if description, found := jei.GetDescription(); found {
-		text += " " + description
-	}
-	tagTexts := []string{}
-	for _, tag := range jei.GetTags() {
-		tagTexts = append(tagTexts, TagToText(tag))
-	}
-	if len(tagTexts) > 0 {
-		text += "  ; " + strings.Join(tagTexts, " ")
-	}
-	i := -1
-	for {
-		i++
-		if posting, found := jei.GetPosting(i); found {
-			text += "\n" + "    "
-			if account, found := posting.GetAccount(); found {
-				text += account
-			}
-			text += "    "
-			if ammount, found := posting.GetAmmount(); found {
-				if ammount.Commodity != "" {
-					text += ammount.Commodity + " "
-				}
-				text += ammount.Quantity.String()
-			}
-		} else {
-			break
-		}
-	}
-	return text
-}
-
 // ToTransaction transforms a JournalEntryInput into a journal.Transaction.
 func (jei *JournalEntryInput) ToTransaction() (journal.Transaction, error) {
 	if jei.HasSingleCurrency() && !jei.PostingHasZeroBalance() {

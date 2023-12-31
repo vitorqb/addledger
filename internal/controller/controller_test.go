@@ -19,6 +19,7 @@ import (
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/testutils"
+	"github.com/vitorqb/addledger/internal/userinput"
 	. "github.com/vitorqb/addledger/mocks/controller"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
@@ -291,11 +292,12 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				countTransactionsBefore := len(c.state.JournalMetadata.Transactions())
 				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.state.Transaction = testutils.TransactionData_1(t)
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
+				expected := "\n\n" + userinput.TransactionRepr(c.state.Transaction)
 				c.controller.OnInputConfirmation()
-				expected := "\n\n" + testutils.JournalEntryInput_1(t).Repr()
 				assert.Equal(t, expected, c.bytesBuffer.String())
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputDate)
 				_, dateFound := c.state.JournalEntryInput.GetDate()

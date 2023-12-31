@@ -295,6 +295,7 @@ func (ic *InputController) OnInputConfirmation() {
 		return
 	}
 	ic.state.JournalEntryInput = input.NewJournalEntryInput()
+	ic.state.Transaction = statemod.NewTransactionData()
 	ic.state.InputMetadata.Reset()
 	accountLoadErr := ic.metaLoader.LoadAccounts()
 	if accountLoadErr != nil {

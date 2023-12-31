@@ -11,7 +11,6 @@ import (
 
 var aDecimal, _ = decimal.NewFromString("2.20")
 var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: aDecimal}
-var anotherAmmount = finance.Ammount{Commodity: "EUR", Quantity: decimal.New(-22, -1)}
 
 func TestPostingInput(t *testing.T) {
 
