@@ -162,7 +162,7 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 	}
 
 	// We have an account - save the posting
-	posting, found := ic.state.JournalEntryInput.CurrentPosting()
+	posting, found := ic.state.JournalEntryInput.LastPosting()
 	if !found {
 		posting = ic.state.JournalEntryInput.AddPosting()
 	}
@@ -184,7 +184,7 @@ func (ic *InputController) OnFinishPosting() {
 	zeroBalance := ic.state.JournalEntryInput.PostingHasZeroBalance()
 	if (singleCurrency && zeroBalance) || !singleCurrency {
 		// Need to clear the last posting, since it's empty
-		ic.state.JournalEntryInput.DeleteCurrentPosting()
+		ic.state.JournalEntryInput.DeleteLastPosting()
 		ic.state.SetPhase(statemod.Confirmation)
 	}
 }
@@ -232,7 +232,7 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 
 	if success {
 		// Saves ammount
-		posting, found := ic.state.JournalEntryInput.CurrentPosting()
+		posting, found := ic.state.JournalEntryInput.LastPosting()
 		if !found {
 			posting = ic.state.JournalEntryInput.AddPosting()
 		}
@@ -240,7 +240,7 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 
 		// If there is balance outstanding, go to next posting
 		if !ic.state.JournalEntryInput.PostingHasZeroBalance() {
-			ic.state.JournalEntryInput.AdvancePosting()
+			ic.state.JournalEntryInput.AddPosting()
 			ic.state.SetPhase(statemod.InputPostingAccount)
 			return
 		}
@@ -299,7 +299,7 @@ func (ic *InputController) OnInputConfirmation() {
 
 func (ic *InputController) OnInputRejection() {
 	// put back an empty posting so the user can add to it
-	ic.state.JournalEntryInput.AdvancePosting()
+	ic.state.JournalEntryInput.AddPosting()
 	ic.state.SetPhase(statemod.InputPostingAccount)
 }
 
@@ -457,8 +457,8 @@ func (ic *InputController) OnUndo() {
 		ic.state.InputMetadata.SetDescriptionText("")
 		ic.state.PrevPhase()
 	case statemod.InputPostingAccount:
-		ic.state.JournalEntryInput.DeleteCurrentPosting()
-		if posting, found := ic.state.JournalEntryInput.CurrentPosting(); found {
+		ic.state.JournalEntryInput.DeleteLastPosting()
+		if posting, found := ic.state.JournalEntryInput.LastPosting(); found {
 			// We have a posting to go back to - clear last ammount and go back
 			posting.ClearAmmount()
 			ic.state.SetPhase(statemod.InputPostingAmmount)
@@ -471,7 +471,7 @@ func (ic *InputController) OnUndo() {
 
 		}
 	case statemod.InputPostingAmmount:
-		if posting, found := ic.state.JournalEntryInput.CurrentPosting(); found {
+		if posting, found := ic.state.JournalEntryInput.LastPosting(); found {
 			posting.ClearAccount()
 		}
 		ic.state.PrevPhase()

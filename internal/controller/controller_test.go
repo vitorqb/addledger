@@ -227,7 +227,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAccountDone(input.Context)
 
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
-				posting, found := c.state.JournalEntryInput.CurrentPosting()
+				posting, found := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, found)
 				account, _ := posting.GetAccount()
 				assert.Equal(t, "FOO", account)
@@ -257,7 +257,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAccountDone(input.Input)
 
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
-				posting, found := c.state.JournalEntryInput.CurrentPosting()
+				posting, found := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, found)
 				account, _ := posting.GetAccount()
 				assert.Equal(t, "FOO", account)
@@ -414,7 +414,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetPostingAccountText("BAR")
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
 				c.controller.OnPostingAccountDone(input.Context)
-				posting, found := c.state.JournalEntryInput.CurrentPosting()
+				posting, found := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, found)
 				acc, ok := posting.GetAccount()
 				assert.True(t, ok)
@@ -523,7 +523,7 @@ func TestInputController(t *testing.T) {
 				// Should have 2 filled postings and be on confirmation page
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
-				lastPosting, found := c.state.JournalEntryInput.CurrentPosting()
+				lastPosting, found := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, found)
 				acc, _ := lastPosting.GetAccount()
 				assert.Equal(t, "BAR2", acc)
@@ -571,7 +571,7 @@ func TestInputController(t *testing.T) {
 
 				// Should have 3 postings, 2 filled + 1 empty
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 3)
-				lastPosting, found := c.state.JournalEntryInput.CurrentPosting()
+				lastPosting, found := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, found)
 				_, accFound := lastPosting.GetAccount()
 				assert.False(t, accFound)
@@ -866,7 +866,7 @@ func TestInputController__OnUndo(t *testing.T) {
 
 				// Must not have a single posting without value
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 1)
-				posting, postingFound := c.state.JournalEntryInput.CurrentPosting()
+				posting, postingFound := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, postingFound)
 				_, ammountFound := posting.GetAmmount()
 				assert.False(t, ammountFound)
@@ -899,7 +899,7 @@ func TestInputController__OnUndo(t *testing.T) {
 
 				// Should have 2 filled postings
 				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
-				lastPosting, lastPostingFound := c.state.JournalEntryInput.CurrentPosting()
+				lastPosting, lastPostingFound := c.state.JournalEntryInput.LastPosting()
 				assert.True(t, lastPostingFound)
 				acc, _ := lastPosting.GetAccount()
 				assert.Equal(t, "BAR2", acc)

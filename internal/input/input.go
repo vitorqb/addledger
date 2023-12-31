@@ -9,21 +9,19 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
 
 type (
 	JournalEntryInput struct {
 		react.IReact
-		inputs              map[string]interface{}
-		currentPostingIndex int
+		inputs map[string]interface{}
 	}
 )
 
 func NewJournalEntryInput() *JournalEntryInput {
 	m := make(map[string]interface{})
-	return &JournalEntryInput{react.New(), m, 0}
+	return &JournalEntryInput{react.New(), m}
 }
 
 func (i *JournalEntryInput) SetDate(x time.Time) {
@@ -91,22 +89,13 @@ func (i *JournalEntryInput) ClearTags() {
 	i.NotifyChange()
 }
 
-// CurrentPosting returns the current posting being edited.
-func (i *JournalEntryInput) CurrentPosting() (p *PostingInput, found bool) {
-	if posting, found := i.GetPosting(i.currentPostingIndex); found {
-		return posting, true
+// LastPosting returns the current posting being edited.
+func (i *JournalEntryInput) LastPosting() (p *PostingInput, found bool) {
+	postings := i.GetPostings()
+	if len(postings) > 0 {
+		return postings[len(postings)-1], true
 	}
-	return nil, false
-}
-
-// AdvancePosting is called when a posting has finished to be inputed,
-// and we should advance the current posting. If it doesn't exist, adds it.
-func (i *JournalEntryInput) AdvancePosting() {
-	i.currentPostingIndex++
-	if _, found := i.GetPosting(i.currentPostingIndex); !found {
-		i.AddPosting()
-	}
-	i.NotifyChange()
+	return NewPostingInput(), false
 }
 
 func (i *JournalEntryInput) CountPostings() int {
@@ -198,15 +187,11 @@ func (i *JournalEntryInput) SetPostings(posting []*PostingInput) {
 	i.NotifyChange()
 }
 
-func (i *JournalEntryInput) DeleteCurrentPosting() {
+func (i *JournalEntryInput) DeleteLastPosting() {
 	if rawPostings, found := i.inputs["postings"]; found {
 		if postings, ok := rawPostings.([]*PostingInput); ok {
-			if i.currentPostingIndex >= 0 && i.currentPostingIndex < len(postings) {
-				postings = utils.RemoveIndex(i.currentPostingIndex, postings)
-				i.inputs["postings"] = postings
-				if i.currentPostingIndex > 0 && i.currentPostingIndex >= len(postings) {
-					i.currentPostingIndex--
-				}
+			if len(postings) > 0 {
+				i.inputs["postings"] = postings[:len(postings)-1]
 				i.NotifyChange()
 			}
 		}

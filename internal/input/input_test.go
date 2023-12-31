@@ -102,15 +102,15 @@ func TestJournalEntryInput(t *testing.T) {
 				assert.Equal(t, 2, c.input.CountPostings())
 				assert.Equal(t, 2, c.onChangeCallCount)
 				// Advance one and delete it
-				c.input.DeleteCurrentPosting()
+				c.input.DeleteLastPosting()
 				assert.Equal(t, 1, c.input.CountPostings())
 				assert.Equal(t, 3, c.onChangeCallCount)
 				// Delete last one
-				c.input.DeleteCurrentPosting()
+				c.input.DeleteLastPosting()
 				assert.Equal(t, 0, c.input.CountPostings())
 				assert.Equal(t, 4, c.onChangeCallCount)
 				// Last delete does nothing
-				c.input.DeleteCurrentPosting()
+				c.input.DeleteLastPosting()
 				assert.Equal(t, 0, c.input.CountPostings())
 				assert.Equal(t, 4, c.onChangeCallCount)
 			},
@@ -118,11 +118,11 @@ func TestJournalEntryInput(t *testing.T) {
 		{
 			"Current Posting",
 			func(t *testing.T, c *context) {
-				_, found := c.input.CurrentPosting()
+				_, found := c.input.LastPosting()
 				assert.False(t, found)
 				assert.Equal(t, 0, c.onChangeCallCount)
 				posting := c.input.AddPosting()
-				foundPosting, found := c.input.CurrentPosting()
+				foundPosting, found := c.input.LastPosting()
 				assert.True(t, found)
 				assert.Same(t, posting, foundPosting)
 				assert.Equal(t, 1, c.onChangeCallCount)
