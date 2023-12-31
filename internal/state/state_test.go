@@ -147,14 +147,6 @@ func TestState(t *testing.T) {
 
 	testcases := []testcase{
 		{
-			name: "Notify on change of JournalEntryInput",
-			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDescription("FOO")
-				assert.Equal(t, 1, c.hookCallCounter)
-
-			},
-		},
-		{
 			name: "Notify on change on Transaction",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.Transaction.Date.Set(time.Now())

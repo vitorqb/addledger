@@ -84,7 +84,6 @@ func TestLinkTransactionMatcher(t *testing.T) {
 
 		// Set the state variables
 		state.JournalMetadata.SetTransactions(transactionHistory)
-		state.JournalEntryInput.SetDescription(description)
 		state.Transaction.Description.Set(description)
 
 		// Check state was properly set
@@ -163,7 +162,6 @@ func TestLinkAccountGuesser(t *testing.T) {
 		state.SetStatementEntries(statamentEntries)
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.Transaction.Postings.Set(postingsData)
-		state.JournalEntryInput.SetDescription(userInput)
 		state.Transaction.Description.Set(userInput)
 		state.JournalMetadata.SetTransactions(transationHistory)
 

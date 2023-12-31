@@ -341,7 +341,6 @@ func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
 	}
 
 	description := ic.state.InputMetadata.DescriptionText()
-	ic.state.JournalEntryInput.SetDescription(description)
 	ic.state.Transaction.Description.Set(description)
 	if len(ic.state.Transaction.Postings.Get()) == 0 {
 		newPosting := statemod.NewPostingData()
@@ -463,7 +462,6 @@ func (ic *InputController) OnUndo() {
 	case statemod.InputDate:
 		ic.state.PrevPhase()
 	case statemod.InputDescription:
-		ic.state.JournalEntryInput.ClearDate()
 		ic.state.Transaction.Date.Clear()
 		ic.state.PrevPhase()
 	case statemod.InputTags:

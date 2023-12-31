@@ -54,7 +54,6 @@ func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {}
 func JournalEntryInput_1(t *testing.T) *input.JournalEntryInput {
 	journalEntryInput := input.NewJournalEntryInput()
 	journalEntryInput.SetDate(Date1(t))
-	journalEntryInput.SetDescription("Description1")
 	return journalEntryInput
 }
 

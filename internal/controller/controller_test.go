@@ -798,7 +798,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.controller.OnUndo()
-				_, ok := c.state.JournalEntryInput.GetDate()
+				_, ok := c.state.Transaction.Date.Get()
 				assert.False(t, ok)
 			},
 		},
@@ -824,7 +824,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.controller.OnUndo()
-				_, ok := c.state.JournalEntryInput.GetDate()
+				_, ok := c.state.Transaction.Date.Get()
 				assert.False(t, ok)
 			},
 		},

@@ -9,51 +9,7 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	. "github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
-	tu "github.com/vitorqb/addledger/internal/testutils"
 )
-
-func TestJournalEntryInput(t *testing.T) {
-
-	type context struct {
-		onChangeCalled    bool
-		onChangeCallCount int
-		input             *JournalEntryInput
-	}
-
-	type test struct {
-		name string
-		run  func(*testing.T, *context)
-	}
-
-	tests := []test{
-		{
-			name: "Date",
-			run: func(t *testing.T, c *context) {
-				_, found := c.input.GetDate()
-				assert.False(t, found)
-				c.input.SetDate(tu.Date1(t))
-				date, found := c.input.GetDate()
-				assert.True(t, found)
-				assert.Equal(t, date, tu.Date1(t))
-				assert.Equal(t, 1, c.onChangeCallCount)
-				c.input.ClearDate()
-				_, found = c.input.GetDate()
-				assert.False(t, found)
-				assert.Equal(t, 2, c.onChangeCallCount)
-			},
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			input := NewJournalEntryInput()
-			ctx := &context{false, 0, input}
-			input.AddOnChangeHook(func() { ctx.onChangeCalled = true })
-			input.AddOnChangeHook(func() { ctx.onChangeCallCount++ })
-			tc.run(t, ctx)
-		})
-	}
-}
 
 func TestTextToAmmount(t *testing.T) {
 	type testcase struct {

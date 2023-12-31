@@ -38,16 +38,6 @@ func (i *JournalEntryInput) GetDate() (time.Time, bool) {
 	return time.Time{}, false
 }
 
-func (i *JournalEntryInput) ClearDate() {
-	delete(i.inputs, "date")
-	i.NotifyChange()
-}
-
-func (i *JournalEntryInput) SetDescription(x string) {
-	i.inputs["description"] = x
-	i.NotifyChange()
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal
