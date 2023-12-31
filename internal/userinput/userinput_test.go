@@ -8,6 +8,7 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/testutils"
+	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/internal/userinput"
 )
 
@@ -91,6 +92,102 @@ func TestTransactionRepr(t *testing.T) {
 			tc.transaction(t, trans)
 			actual := TransactionRepr(trans)
 			assert.Equal(t, tc.expected, actual)
+		})
+	}
+}
+
+func TestTransactionFromData(t *testing.T) {
+	type testcase struct {
+		name                string
+		data                func(t *testing.T) *state.TransactionData
+		expectedTransaction func(t *testing.T) *journal.Transaction
+		errorMsg            string
+	}
+	var testcases = []testcase{
+		{
+			name: "Simple transaction",
+			data: func(t *testing.T) *state.TransactionData {
+				return tu.TransactionData_1(t)
+			},
+			expectedTransaction: func(t *testing.T) *journal.Transaction {
+				return tu.Transaction_1(t)
+			},
+		},
+		{
+			name: "Simple transaction with tags",
+			data: func(t *testing.T) *state.TransactionData {
+				out := tu.TransactionData_1(t)
+				tag := journal.Tag{Name: "foo", Value: "bar"}
+				out.Tags.Append(tag)
+				return out
+			},
+			expectedTransaction: func(t *testing.T) *journal.Transaction {
+				out := tu.Transaction_1(t)
+				out.Comment = "foo:bar"
+				return out
+			},
+		},
+		{
+			name: "Missing description",
+			data: func(t *testing.T) *state.TransactionData {
+				out := tu.TransactionData_1(t)
+				out.Description.Clear()
+				return out
+			},
+			errorMsg: "missing description",
+		},
+		{
+			name: "Missing date",
+			data: func(t *testing.T) *state.TransactionData {
+				out := tu.TransactionData_1(t)
+				out.Date.Clear()
+				return out
+			},
+			errorMsg: "missing date",
+		},
+		{
+			name: "Unbalanced posting",
+			data: func(t *testing.T) *state.TransactionData {
+				out := tu.TransactionData_1(t)
+				posting_3 := state.NewPostingData()
+				posting_3.Account.Set("ACC1")
+				posting_3.Ammount.Set(*testutils.Ammount_1(t))
+				out.Postings.Append(posting_3)
+				return out
+			},
+			errorMsg: "postings are not balanced",
+		},
+		{
+			name: "Posting missing ammount",
+			data: func(t *testing.T) *state.TransactionData {
+				out := tu.TransactionData_1(t)
+				posting, _ := out.Postings.Last()
+				posting.Ammount.Clear()
+				return out
+			},
+			errorMsg: "one of the postings is missing the ammount",
+		},
+		{
+			name: "Posting missing account",
+			data: func(t *testing.T) *state.TransactionData {
+				out := tu.TransactionData_1(t)
+				posting, _ := out.Postings.Last()
+				posting.Account.Clear()
+				return out
+			},
+			errorMsg: "one of the postings is missing the account",
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			data := tc.data(t)
+			result, err := TransactionFromData(data)
+			if tc.errorMsg == "" {
+				assert.Nil(t, err)
+				assert.Equal(t, *tc.expectedTransaction(t), result)
+			} else {
+				assert.ErrorContains(t, err, tc.errorMsg)
+			}
 		})
 	}
 }

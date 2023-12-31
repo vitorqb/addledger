@@ -313,6 +313,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetStatementEntries([]statementreader.StatementEntry{{}})
 				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.state.Transaction = testutils.TransactionData_1(t)
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
@@ -334,6 +335,7 @@ func TestInputController(t *testing.T) {
 				}
 				c.state.SetStatementEntries(stmEntries)
 				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
+				c.state.Transaction = testutils.TransactionData_1(t)
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.state.SetPhase(statemod.Confirmation)

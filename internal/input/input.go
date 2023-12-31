@@ -198,52 +198,6 @@ func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
 	return postings
 }
 
-// ToTransaction transforms a JournalEntryInput into a journal.Transaction.
-func (jei *JournalEntryInput) ToTransaction() (journal.Transaction, error) {
-	if jei.HasSingleCurrency() && !jei.PostingHasZeroBalance() {
-		return journal.Transaction{}, fmt.Errorf("postings are not balanced")
-	}
-
-	description, foundDesc := jei.GetDescription()
-	if !foundDesc {
-		return journal.Transaction{}, fmt.Errorf("missing description")
-	}
-
-	var tagsStr []string
-	for _, tag := range jei.GetTags() {
-		tagsStr = append(tagsStr, TagToText(tag))
-	}
-
-	date, foundDate := jei.GetDate()
-	if !foundDate {
-		return journal.Transaction{}, fmt.Errorf("missing date")
-	}
-
-	var postings []journal.Posting
-	for _, postingInput := range jei.GetPostings() {
-		acc, foundAcc := postingInput.GetAccount()
-		if !foundAcc {
-			return journal.Transaction{}, fmt.Errorf("one of the postings is missing the account")
-		}
-		amount, foundAmount := postingInput.GetAmmount()
-		if !foundAmount {
-			return journal.Transaction{}, fmt.Errorf("one of the postings is missing the amount")
-		}
-		posting := journal.Posting{
-			Account: acc,
-			Ammount: amount,
-		}
-		postings = append(postings, posting)
-	}
-
-	return journal.Transaction{
-		Comment:     strings.Join(tagsStr, " "),
-		Description: description,
-		Date:        date,
-		Posting:     postings,
-	}, nil
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

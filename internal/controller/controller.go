@@ -15,6 +15,7 @@ import (
 	"github.com/vitorqb/addledger/internal/metaloader"
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 //go:generate $MOCKGEN --source=controller.go --destination=../../mocks/controller/controller_mock.go
@@ -280,7 +281,7 @@ func (ic *InputController) OnPostingAmmountChanged(text string) {
 }
 
 func (ic *InputController) OnInputConfirmation() {
-	transaction, transactionErr := ic.state.JournalEntryInput.ToTransaction()
+	transaction, transactionErr := userinput.TransactionFromData(ic.state.Transaction)
 	if transactionErr != nil {
 		// TODO Let the user know somehow!
 		logrus.WithError(transactionErr).Fatal("the transaction input could not be parsed (this shouldn't happen)")
