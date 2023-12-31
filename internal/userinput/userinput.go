@@ -132,3 +132,28 @@ func ExtractPostings(postings []*state.PostingData) []journal.Posting {
 	}
 	return out
 }
+
+// CountCommodities returns the number of different commodities in a list of
+// postings.
+func CountCommodities(postings []state.PostingData) int {
+	commodities := make(map[string]bool)
+	for _, posting := range postings {
+		ammount, found := posting.Ammount.Get()
+		if !found {
+			continue
+		}
+		commodities[ammount.Commodity] = true
+	}
+	return len(commodities)
+}
+
+func PostingBalance(postings []*state.PostingData) []finance.Ammount {
+	var ammounts []finance.Ammount
+	for _, posting := range postings {
+		ammount, found := posting.Ammount.Get()
+		if found {
+			ammounts = append(ammounts, ammount)
+		}
+	}
+	return finance.Balance(ammounts)
+}

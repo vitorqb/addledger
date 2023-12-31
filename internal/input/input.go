@@ -181,11 +181,6 @@ func (i *JournalEntryInput) PostingHasZeroBalance() bool {
 	return true
 }
 
-// HasSingleCurrency returns true if all postings have the same currency
-func (i *JournalEntryInput) HasSingleCurrency() bool {
-	return len(i.PostingBalance()) <= 1
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

@@ -185,17 +185,23 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 // multiple commodities, since we can't know when the user is done entering
 // based on the pending balance.
 func (ic *InputController) OnFinishPosting() {
-	if ic.state.JournalEntryInput.CountPostings() == 0 {
+	balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
+
+	// len(balance) == 0 -> No postings, nothing to do
+	if len(balance) == 0 {
 		return
 	}
-	singleCurrency := ic.state.JournalEntryInput.HasSingleCurrency()
-	zeroBalance := ic.state.JournalEntryInput.PostingHasZeroBalance()
-	if (singleCurrency && zeroBalance) || !singleCurrency {
-		// Need to clear the last posting, since it's empty
-		ic.state.JournalEntryInput.DeleteLastPosting()
-		ic.state.Transaction.Postings.Pop()
-		ic.state.SetPhase(statemod.Confirmation)
+
+	// If we have a single currency and it's unbalanced, nothing to do
+	if len(balance) == 1 && !balance[0].Quantity.IsZero() {
+		return
 	}
+
+	// We have multiple currencies or a single currency with zero balance, so
+	// finish the posting
+	ic.state.JournalEntryInput.DeleteLastPosting()
+	ic.state.Transaction.Postings.Pop()
+	ic.state.SetPhase(statemod.Confirmation)
 }
 
 // OnPostingAccountInsertFromContext inserts the text from the context to the
