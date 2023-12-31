@@ -92,6 +92,9 @@ func (mv *MaybeValue[T]) Get() (T, bool) {
 }
 
 func (mv *MaybeValue[T]) Set(x T) {
+	if r, ok := any(x).(react.IReact); ok {
+		r.AddOnChangeHook(mv.NotifyChange)
+	}
 	mv.value = x
 	mv.isSet = true
 	mv.NotifyChange()
@@ -114,11 +117,19 @@ func (av *ArrayValue[T]) Get() []T {
 }
 
 func (av *ArrayValue[T]) Set(x []T) {
+	for _, v := range x {
+		if r, ok := any(v).(react.IReact); ok {
+			r.AddOnChangeHook(av.NotifyChange)
+		}
+	}
 	av.value = x
 	av.NotifyChange()
 }
 
 func (av *ArrayValue[T]) Append(x T) {
+	if r, ok := any(x).(react.IReact); ok {
+		r.AddOnChangeHook(av.NotifyChange)
+	}
 	av.value = append(av.value, x)
 	av.NotifyChange()
 }
