@@ -148,6 +148,14 @@ func (av *ArrayValue[T]) Pop() {
 	}
 }
 
+func (av *ArrayValue[T]) Last() (T, bool) {
+	if len(av.value) > 0 {
+		return av.value[len(av.value)-1], true
+	}
+	var zero T
+	return zero, false
+}
+
 const (
 	InputDate           Phase = "INPUT_DATE"
 	InputDescription    Phase = "INPUT_DESCRIPTION"

@@ -165,11 +165,15 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 	posting, found := ic.state.JournalEntryInput.LastPosting()
 	if !found {
 		posting = ic.state.JournalEntryInput.AddPosting()
-		newPosting := statemod.NewPostingData()
+	}
+	posting.SetAccount(account)
+
+	newPosting, found := ic.state.Transaction.Postings.Last()
+	if !found {
+		newPosting = statemod.NewPostingData()
 		ic.state.Transaction.Postings.Append(newPosting)
 	}
-
-	posting.SetAccount(account)
+	newPosting.Account.Set(journal.Account(account))
 
 	// Go to ammount
 	ic.state.NextPhase()
@@ -239,10 +243,15 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 		posting, found := ic.state.JournalEntryInput.LastPosting()
 		if !found {
 			posting = ic.state.JournalEntryInput.AddPosting()
-			newPosting := statemod.NewPostingData()
-			ic.state.Transaction.Postings.Append(newPosting)
 		}
 		posting.SetAmmount(ammount)
+
+		newPosting, found := ic.state.Transaction.Postings.Last()
+		if !found {
+			newPosting = statemod.NewPostingData()
+			ic.state.Transaction.Postings.Append(newPosting)
+		}
+		newPosting.Ammount.Set(ammount)
 
 		// If there is balance outstanding, go to next posting
 		if !ic.state.JournalEntryInput.PostingHasZeroBalance() {
@@ -475,6 +484,9 @@ func (ic *InputController) OnUndo() {
 		if posting, found := ic.state.JournalEntryInput.LastPosting(); found {
 			// We have a posting to go back to - clear last ammount and go back
 			posting.ClearAmmount()
+			if newPosting, found := ic.state.Transaction.Postings.Last(); found {
+				newPosting.Ammount.Clear()
+			}
 			ic.state.SetPhase(statemod.InputPostingAmmount)
 		} else {
 			// We don't have any postings - clear tags and go back
@@ -488,6 +500,7 @@ func (ic *InputController) OnUndo() {
 		if posting, found := ic.state.JournalEntryInput.LastPosting(); found {
 			posting.ClearAccount()
 		}
+		ic.state.Transaction.Postings.Pop()
 		ic.state.PrevPhase()
 	default:
 	}
