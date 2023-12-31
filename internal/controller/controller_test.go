@@ -631,7 +631,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnTagDone(input.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "", c.state.InputMetadata.TagText())
-				assert.Equal(t, []journal.Tag{{Name: "FOO", Value: "BAR"}}, c.state.JournalEntryInput.GetTags())
+				assert.Equal(t, []journal.Tag{{Name: "FOO", Value: "BAR"}}, c.state.Transaction.Tags.Get())
 			},
 		},
 		{
@@ -649,7 +649,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnTagDone(input.Context)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "", c.state.InputMetadata.TagText())
-				assert.Equal(t, []journal.Tag{tag}, c.state.JournalEntryInput.GetTags())
+				assert.Equal(t, []journal.Tag{tag}, c.state.Transaction.Tags.Get())
 			},
 		},
 		{
@@ -670,7 +670,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnTagDone(input.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "INVALID_TAG", c.state.InputMetadata.TagText())
-				assert.Equal(t, []journal.Tag{}, c.state.JournalEntryInput.GetTags())
+				assert.Equal(t, []journal.Tag{}, c.state.Transaction.Tags.Get())
 			},
 		},
 		{
@@ -843,9 +843,9 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.controller.OnTagDone(input.Context)
 				// Second Done call moves to next phase
 				c.controller.OnTagDone(input.Input)
-				assert.Equal(t, []journal.Tag{tag}, c.state.JournalEntryInput.GetTags())
+				assert.Equal(t, []journal.Tag{tag}, c.state.Transaction.Tags.Get())
 				c.controller.OnUndo()
-				assert.Equal(t, []journal.Tag{}, c.state.JournalEntryInput.GetTags())
+				assert.Equal(t, []journal.Tag{}, c.state.Transaction.Tags.Get())
 			},
 		},
 		{

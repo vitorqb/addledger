@@ -61,43 +61,6 @@ func (i *JournalEntryInput) ClearDescription() {
 	i.NotifyChange()
 }
 
-func (i *JournalEntryInput) GetTags() []journal.Tag {
-	if rawValue, found := i.inputs["tags"]; found {
-		if value, ok := rawValue.([]journal.Tag); ok {
-			return value
-		}
-	}
-	return []journal.Tag{}
-}
-
-func (i *JournalEntryInput) AppendTag(x journal.Tag) {
-	tags := i.GetTags()
-	i.inputs["tags"] = append(tags, x)
-	i.NotifyChange()
-}
-
-func (i *JournalEntryInput) PopTag() {
-	tags := i.GetTags()
-	if len(tags) > 0 {
-		i.inputs["tags"] = tags[:len(tags)-1]
-		i.NotifyChange()
-	}
-}
-
-func (i *JournalEntryInput) ClearTags() {
-	delete(i.inputs, "tags")
-	i.NotifyChange()
-}
-
-func (i *JournalEntryInput) CountPostings() int {
-	if postingsInputs, found := i.inputs["postings"]; found {
-		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
-			return len(postingsInputs)
-		}
-	}
-	return 0
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

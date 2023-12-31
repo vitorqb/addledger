@@ -58,30 +58,6 @@ func TestJournalEntryInput(t *testing.T) {
 				assert.Equal(t, 2, c.onChangeCallCount)
 			},
 		},
-		{
-			"Manipulate tags",
-			func(t *testing.T, c *context) {
-				assert.Equal(t, []journal.Tag{}, c.input.GetTags())
-				tag1 := journal.Tag{Name: "foo", Value: "bar"}
-				tag2 := journal.Tag{Name: "foo2", Value: "bar2"}
-				c.input.AppendTag(tag1)
-				assert.Equal(t, 1, c.onChangeCallCount)
-				tags := c.input.GetTags()
-				assert.Equal(t, []journal.Tag{tag1}, tags)
-				c.input.AppendTag(tag2)
-				assert.Equal(t, 2, c.onChangeCallCount)
-				tags = c.input.GetTags()
-				assert.Equal(t, []journal.Tag{tag1, tag2}, tags)
-				c.input.PopTag()
-				assert.Equal(t, 3, c.onChangeCallCount)
-				tags = c.input.GetTags()
-				assert.Equal(t, []journal.Tag{tag1}, tags)
-				c.input.ClearTags()
-				assert.Equal(t, 4, c.onChangeCallCount)
-				tags = c.input.GetTags()
-				assert.Equal(t, []journal.Tag{}, tags)
-			},
-		},
 	}
 
 	for _, tc := range tests {

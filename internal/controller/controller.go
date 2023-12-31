@@ -343,7 +343,7 @@ func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
 	description := ic.state.InputMetadata.DescriptionText()
 	ic.state.JournalEntryInput.SetDescription(description)
 	ic.state.Transaction.Description.Set(description)
-	if ic.state.JournalEntryInput.CountPostings() == 0 {
+	if len(ic.state.Transaction.Postings.Get()) == 0 {
 		newPosting := statemod.NewPostingData()
 		ic.state.Transaction.Postings.Append(newPosting)
 	}
@@ -389,7 +389,6 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 	}
 
 	// We have tag - move on to next tag
-	ic.state.JournalEntryInput.AppendTag(tag)
 	ic.state.Transaction.Tags.Append(tag)
 	ic.state.InputMetadata.SetTagText("")
 	err := ic.eventBus.Send(eventbus.Event{
@@ -481,7 +480,6 @@ func (ic *InputController) OnUndo() {
 			ic.state.SetPhase(statemod.InputPostingAmmount)
 		} else {
 			// We don't have any postings - clear tags and go back
-			ic.state.JournalEntryInput.ClearTags()
 			ic.state.Transaction.Tags.Clear()
 			ic.state.InputMetadata.SetTagText("")
 			ic.state.PrevPhase()
