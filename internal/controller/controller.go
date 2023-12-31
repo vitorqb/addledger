@@ -251,7 +251,6 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 		balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
 		for _, balanceAmmount := range balance {
 			if !balanceAmmount.Quantity.IsZero() {
-				ic.state.JournalEntryInput.AddPosting()
 				newPosting := statemod.NewPostingData()
 				ic.state.Transaction.Postings.Append(newPosting)
 				ic.state.SetPhase(statemod.InputPostingAccount)
@@ -314,7 +313,6 @@ func (ic *InputController) OnInputConfirmation() {
 
 func (ic *InputController) OnInputRejection() {
 	// put back an empty posting so the user can add to it
-	ic.state.JournalEntryInput.AddPosting()
 	newPosting := statemod.NewPostingData()
 	ic.state.Transaction.Postings.Append(newPosting)
 	ic.state.SetPhase(statemod.InputPostingAccount)
@@ -346,7 +344,6 @@ func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
 	ic.state.JournalEntryInput.SetDescription(description)
 	ic.state.Transaction.Description.Set(description)
 	if ic.state.JournalEntryInput.CountPostings() == 0 {
-		ic.state.JournalEntryInput.AddPosting()
 		newPosting := statemod.NewPostingData()
 		ic.state.Transaction.Postings.Append(newPosting)
 	}

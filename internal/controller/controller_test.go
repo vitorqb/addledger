@@ -525,7 +525,7 @@ func TestInputController(t *testing.T) {
 				c.controller.OnPostingAmmountDone(input.Input)
 
 				// Should have 2 filled postings and be on confirmation page
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				assert.Equal(t, 2, len(c.state.Transaction.Postings.Get()))
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
 				lastPosting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
@@ -568,13 +568,13 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
 
 				// Should have 2 filled postings (empty one deleted)
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				assert.Equal(t, 2, len(c.state.Transaction.Postings.Get()))
 
 				// User decides to go back
 				c.controller.OnInputRejection()
 
 				// Should have 3 postings, 2 filled + 1 empty
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 3)
+				assert.Equal(t, 3, len(c.state.Transaction.Postings.Get()))
 				lastPosting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
 				_, accFound := lastPosting.Account.Get()
@@ -607,7 +607,7 @@ func TestInputController(t *testing.T) {
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 
 				// A new empty posting is there
-				assert.Equal(t, 2, c.state.JournalEntryInput.CountPostings())
+				assert.Equal(t, 2, len(c.state.Transaction.Postings.Get()))
 			},
 		},
 		{
@@ -861,7 +861,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.controller.OnPostingAmmountDone(input.Input)
 
 				// Must have 2 postings - the filled one and an empty one.
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				assert.Equal(t, len(c.state.Transaction.Postings.Get()), 2)
 				assert.Equal(t, c.state.CurrentPhase(), statemod.InputPostingAccount)
 
 				// Undo
@@ -895,13 +895,13 @@ func TestInputController__OnUndo(t *testing.T) {
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
 
 				// Should have 2 filled postings (empty one deleted)
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				assert.Equal(t, len(c.state.Transaction.Postings.Get()), 2)
 
 				// User decides to undo
 				c.controller.OnUndo()
 
 				// Should have 2 filled postings
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 2)
+				assert.Equal(t, len(c.state.Transaction.Postings.Get()), 2)
 				lastPosting, lastPostingFound := c.state.Transaction.Postings.Last()
 				assert.True(t, lastPostingFound)
 				acc, _ := lastPosting.Account.Get()

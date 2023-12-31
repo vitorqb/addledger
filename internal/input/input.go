@@ -98,21 +98,6 @@ func (i *JournalEntryInput) CountPostings() int {
 	return 0
 }
 
-func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
-	postInput = NewPostingInput()
-	postInput.AddOnChangeHook(i.NotifyChange)
-	if rawPostings, found := i.inputs["postings"]; found {
-		if postings, ok := rawPostings.([]*PostingInput); ok {
-			i.inputs["postings"] = append(postings, postInput)
-			i.NotifyChange()
-			return
-		}
-	}
-	i.inputs["postings"] = []*PostingInput{postInput}
-	i.NotifyChange()
-	return
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

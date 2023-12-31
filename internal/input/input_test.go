@@ -59,16 +59,6 @@ func TestJournalEntryInput(t *testing.T) {
 			},
 		},
 		{
-			"Count postings",
-			func(t *testing.T, c *context) {
-				assert.Equal(t, 0, c.input.CountPostings())
-				c.input.AddPosting()
-				assert.Equal(t, 1, c.input.CountPostings())
-				c.input.AddPosting()
-				assert.Equal(t, 2, c.input.CountPostings())
-			},
-		},
-		{
 			"Manipulate tags",
 			func(t *testing.T, c *context) {
 				assert.Equal(t, []journal.Tag{}, c.input.GetTags())

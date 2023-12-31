@@ -111,7 +111,6 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		// Set on state
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.InputMetadata.SetPostingAmmountText(userInput)
-		state.JournalEntryInput.AddPosting()
 		newPosting := statemod.NewPostingData()
 		state.Transaction.Postings.Append(newPosting)
 		state.SetStatementEntries([]statementreader.StatementEntry{statementEntry})
