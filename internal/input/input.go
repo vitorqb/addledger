@@ -113,42 +113,6 @@ func (i *JournalEntryInput) AddPosting() (postInput *PostingInput) {
 	return
 }
 
-func (i *JournalEntryInput) SetPostings(posting []*PostingInput) {
-	i.inputs["postings"] = posting
-	i.NotifyChange()
-}
-
-func (i *JournalEntryInput) DeleteLastPosting() {
-	if rawPostings, found := i.inputs["postings"]; found {
-		if postings, ok := rawPostings.([]*PostingInput); ok {
-			if len(postings) > 0 {
-				i.inputs["postings"] = postings[:len(postings)-1]
-				i.NotifyChange()
-			}
-		}
-	}
-}
-
-func (i *JournalEntryInput) GetPosting(index int) (*PostingInput, bool) {
-	if postingsInputs, found := i.inputs["postings"]; found {
-		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
-			if index <= len(postingsInputs)-1 {
-				return postingsInputs[index], true
-			}
-		}
-	}
-	return NewPostingInput(), false
-}
-
-func (i *JournalEntryInput) GetPostings() []*PostingInput {
-	if postingsInputs, found := i.inputs["postings"]; found {
-		if postingsInputs, ok := postingsInputs.([]*PostingInput); ok {
-			return postingsInputs
-		}
-	}
-	return []*PostingInput{}
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

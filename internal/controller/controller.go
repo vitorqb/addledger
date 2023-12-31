@@ -193,7 +193,6 @@ func (ic *InputController) OnFinishPosting() {
 
 	// We have multiple currencies or a single currency with zero balance, so
 	// finish the posting
-	ic.state.JournalEntryInput.DeleteLastPosting()
 	ic.state.Transaction.Postings.Pop()
 	ic.state.SetPhase(statemod.Confirmation)
 }
@@ -478,7 +477,6 @@ func (ic *InputController) OnUndo() {
 		ic.state.InputMetadata.SetDescriptionText("")
 		ic.state.PrevPhase()
 	case statemod.InputPostingAccount:
-		ic.state.JournalEntryInput.DeleteLastPosting()
 		ic.state.Transaction.Postings.Pop()
 		if posting, found := ic.state.Transaction.Postings.Last(); found {
 			// We have a posting to go back to - clear last ammount and go back

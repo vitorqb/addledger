@@ -868,7 +868,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.controller.OnUndo()
 
 				// Must not have a single posting without value
-				assert.Equal(t, c.state.JournalEntryInput.CountPostings(), 1)
+				assert.Equal(t, len(c.state.Transaction.Postings.Get()), 1)
 				posting, postingFound := c.state.Transaction.Postings.Last()
 				assert.True(t, postingFound)
 				_, ammountFound := posting.Ammount.Get()

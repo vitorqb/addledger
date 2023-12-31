@@ -69,31 +69,6 @@ func TestJournalEntryInput(t *testing.T) {
 			},
 		},
 		{
-			"Delete last posting",
-			func(t *testing.T, c *context) {
-				assert.Equal(t, 0, c.input.CountPostings())
-				assert.Equal(t, 0, c.onChangeCallCount)
-				c.input.AddPosting()
-				assert.Equal(t, 1, c.input.CountPostings())
-				assert.Equal(t, 1, c.onChangeCallCount)
-				c.input.AddPosting()
-				assert.Equal(t, 2, c.input.CountPostings())
-				assert.Equal(t, 2, c.onChangeCallCount)
-				// Advance one and delete it
-				c.input.DeleteLastPosting()
-				assert.Equal(t, 1, c.input.CountPostings())
-				assert.Equal(t, 3, c.onChangeCallCount)
-				// Delete last one
-				c.input.DeleteLastPosting()
-				assert.Equal(t, 0, c.input.CountPostings())
-				assert.Equal(t, 4, c.onChangeCallCount)
-				// Last delete does nothing
-				c.input.DeleteLastPosting()
-				assert.Equal(t, 0, c.input.CountPostings())
-				assert.Equal(t, 4, c.onChangeCallCount)
-			},
-		},
-		{
 			"Manipulate tags",
 			func(t *testing.T, c *context) {
 				assert.Equal(t, []journal.Tag{}, c.input.GetTags())

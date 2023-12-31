@@ -12,7 +12,6 @@ import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
@@ -148,8 +147,6 @@ func TestLinkAccountGuesser(t *testing.T) {
 		statamentEntries := []statementreader.StatementEntry{statementEntry}
 		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
 		postings := []journal.Posting{testutils.Posting_1(t)}
-		postingInput := testutils.PostingInput_1(t)
-		postingsInputs := []*input.PostingInput{&postingInput}
 		postingData := testutils.PostingData_1(t)
 		postingsData := []*statemod.PostingData{&postingData}
 		transationHistory := []journal.Transaction{*testutils.Transaction_2(t)}
@@ -166,7 +163,6 @@ func TestLinkAccountGuesser(t *testing.T) {
 		state := statemod.InitialState()
 		state.SetStatementEntries(statamentEntries)
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
-		state.JournalEntryInput.SetPostings(postingsInputs)
 		state.Transaction.Postings.Set(postingsData)
 		state.JournalEntryInput.SetDescription(userInput)
 		state.Transaction.Description.Set(userInput)
