@@ -79,6 +79,12 @@ type (
 		isSet bool
 		value T
 	}
+
+	// ArrayValue is a helper container that contains an array of values
+	ArrayValue[T any] struct {
+		react.React
+		value []T
+	}
 )
 
 func (mv *MaybeValue[T]) Get() (T, bool) {
@@ -97,6 +103,37 @@ func (mv *MaybeValue[T]) Clear() {
 		mv.value = zero
 		mv.isSet = false
 		mv.NotifyChange()
+	}
+}
+
+func (av *ArrayValue[T]) Get() []T {
+	if av.value == nil {
+		return []T{}
+	}
+	return av.value
+}
+
+func (av *ArrayValue[T]) Set(x []T) {
+	av.value = x
+	av.NotifyChange()
+}
+
+func (av *ArrayValue[T]) Append(x T) {
+	av.value = append(av.value, x)
+	av.NotifyChange()
+}
+
+func (av *ArrayValue[T]) Clear() {
+	if len(av.value) > 0 {
+		av.value = []T{}
+		av.NotifyChange()
+	}
+}
+
+func (av *ArrayValue[T]) Pop() {
+	if len(av.value) > 0 {
+		av.value = av.value[:len(av.value)-1]
+		av.NotifyChange()
 	}
 }
 

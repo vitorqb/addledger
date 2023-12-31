@@ -51,6 +51,60 @@ func TestMaybeValue(t *testing.T) {
 	})
 }
 
+func TestArrayValue(t *testing.T) {
+	t.Run("Set value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		assert.Equal(t, []int{1, 2, 3}, value.Get())
+		assert.Equal(t, 1, callCounter)
+	})
+	t.Run("Clear value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		value.Clear()
+		assert.Equal(t, []int{}, value.Get())
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Append value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		value.Append(4)
+		assert.Equal(t, []int{1, 2, 3, 4}, value.Get())
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Pop value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		value.Pop()
+		assert.Equal(t, []int{1, 2}, value.Get())
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Pop value when empty", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Pop()
+		assert.Equal(t, []int{}, value.Get())
+		assert.Equal(t, 0, callCounter)
+	})
+	t.Run("Clear value when empty", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Clear()
+		assert.Equal(t, []int{}, value.Get())
+		assert.Equal(t, 0, callCounter)
+	})
+}
+
 func TestState(t *testing.T) {
 
 	type testcontext struct {
