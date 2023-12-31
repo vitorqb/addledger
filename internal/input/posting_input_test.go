@@ -3,14 +3,9 @@ package input_test
 import (
 	"testing"
 
-	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	"github.com/vitorqb/addledger/internal/finance"
 	. "github.com/vitorqb/addledger/internal/input"
 )
-
-var aDecimal, _ = decimal.NewFromString("2.20")
-var anAmmount = finance.Ammount{Commodity: "EUR", Quantity: aDecimal}
 
 func TestPostingInput(t *testing.T) {
 
@@ -37,26 +32,6 @@ func TestPostingInput(t *testing.T) {
 				assert.Equal(t, 1, c.onChangeCallCount)
 				c.postingInput.ClearAccount()
 				_, found = c.postingInput.GetAccount()
-				assert.False(t, found)
-				assert.Equal(t, 2, c.onChangeCallCount)
-			},
-		},
-		{
-			"Set and clear Ammount",
-			func(t *testing.T, c *context) {
-				_, found := c.postingInput.GetAmmount()
-				assert.False(t, found)
-
-				c.postingInput.SetAmmount(anAmmount)
-
-				value, found := c.postingInput.GetAmmount()
-				assert.True(t, found)
-				assert.Equal(t, anAmmount, value)
-				assert.Equal(t, 1, c.onChangeCallCount)
-
-				c.postingInput.ClearAmmount()
-
-				_, found = c.postingInput.GetAmmount()
 				assert.False(t, found)
 				assert.Equal(t, 2, c.onChangeCallCount)
 			},
