@@ -9,10 +9,10 @@ import (
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	"github.com/vitorqb/addledger/internal/metaloader"
+	"github.com/vitorqb/addledger/internal/parsing"
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/userinput"
@@ -38,27 +38,27 @@ type IInputController interface {
 
 	// Handles user entering a new ammount for a posting
 	OnPostingAmmountChanged(text string)
-	OnPostingAmmountDone(input.DoneSource)
+	OnPostingAmmountDone(userinput.DoneSource)
 
 	// Called when an user wants to undo it's last action.
 	OnUndo()
 
 	// Controls Posting Account input
 	OnPostingAccountChanged(newText string)
-	OnPostingAccountDone(source input.DoneSource)
+	OnPostingAccountDone(source userinput.DoneSource)
 	OnPostingAccountInsertFromContext()
 	OnPostingAccountListAcction(action listaction.ListAction)
 	OnFinishPosting()
 
 	// Controls the Description input
 	OnDescriptionChanged(newText string)
-	OnDescriptionDone(source input.DoneSource)
+	OnDescriptionDone(source userinput.DoneSource)
 	OnDescriptionInsertFromContext()
 	OnDescriptionListAction(action listaction.ListAction)
 
 	// Controls the Tags input
 	OnTagChanged(newText string)
-	OnTagDone(source input.DoneSource)
+	OnTagDone(source userinput.DoneSource)
 	OnTagInsertFromContext()
 	OnTagListAction(action listaction.ListAction)
 
@@ -147,12 +147,12 @@ func (ic *InputController) OnDateDone() {
 	}
 }
 
-func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
+func (ic *InputController) OnPostingAccountDone(source userinput.DoneSource) {
 	account := ""
 	switch source {
-	case input.Context:
+	case userinput.Context:
 		account = ic.state.InputMetadata.SelectedPostingAccount()
-	case input.Input:
+	case userinput.Input:
 		account = ic.state.InputMetadata.PostingAccountText()
 	}
 
@@ -224,14 +224,14 @@ func (ic *InputController) OnPostingAccountChanged(newText string) {
 	ic.state.InputMetadata.SetPostingAccountText(newText)
 }
 
-func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
+func (ic *InputController) OnPostingAmmountDone(source userinput.DoneSource) {
 	var ammount finance.Ammount
 	var success bool
 
 	switch source {
-	case input.Context:
+	case userinput.Context:
 		ammount, success = ic.state.InputMetadata.GetPostingAmmountGuess()
-	case input.Input:
+	case userinput.Input:
 		ammount, success = ic.state.InputMetadata.GetPostingAmmountInput()
 	default:
 		logrus.Fatalf("Uknown source for Posting Ammount: %s", source)
@@ -265,7 +265,7 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 func (ic *InputController) OnPostingAmmountChanged(text string) {
 	if text != ic.state.InputMetadata.GetPostingAmmountText() {
 		ic.state.InputMetadata.SetPostingAmmountText(text)
-		ammount, err := input.TextToAmmount(text)
+		ammount, err := parsing.TextToAmmount(text)
 		if err != nil {
 			ic.state.InputMetadata.ClearPostingAmmountInput()
 		} else {
@@ -330,8 +330,8 @@ func (ic *InputController) OnDescriptionListAction(action listaction.ListAction)
 	}
 }
 
-func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
-	if source == input.Context {
+func (ic *InputController) OnDescriptionDone(source userinput.DoneSource) {
+	if source == userinput.Context {
 		// If we have a description from context, use it!
 		if descriptionFromContext := ic.state.InputMetadata.SelectedDescription(); descriptionFromContext != "" {
 			ic.OnDescriptionChanged(descriptionFromContext)
@@ -363,7 +363,7 @@ func (ic *InputController) OnTagChanged(newText string) {
 	ic.state.InputMetadata.SetTagText(newText)
 }
 
-func (ic *InputController) OnTagDone(source input.DoneSource) {
+func (ic *InputController) OnTagDone(source userinput.DoneSource) {
 	var tag journal.Tag
 
 	// If empty input, move to next phase
@@ -373,11 +373,11 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 	}
 
 	// Get tag value
-	if source == input.Context {
+	if source == userinput.Context {
 		tag = ic.state.InputMetadata.SelectedTag()
 	}
 	if tag.Name == "" {
-		tag, _ = input.TextToTag(ic.state.InputMetadata.TagText())
+		tag, _ = userinput.TextToTag(ic.state.InputMetadata.TagText())
 	}
 
 	// Skip if no tag - user entered invalid input
@@ -399,7 +399,7 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 
 func (ic *InputController) OnTagInsertFromContext() {
 	tagFromContext := ic.state.InputMetadata.SelectedTag()
-	textFromContext := input.TagToText(tagFromContext)
+	textFromContext := userinput.TagToText(tagFromContext)
 	event := eventbus.Event{
 		Topic: "input.tag.settext",
 		Data:  textFromContext,

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
+	"github.com/vitorqb/addledger/internal/userinput"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
 )
 
@@ -23,7 +23,7 @@ var fakeSetFocus = func(p tview.Primitive) {}
 // Mock for ContextualListLinkOpts
 type ContextualListLinkMock struct {
 	onListActionsCalls       []listaction.ListAction
-	onDoneCalls              []input.DoneSource
+	onDoneCalls              []userinput.DoneSource
 	onInsertFromContextCalls []struct{}
 }
 
@@ -33,7 +33,7 @@ func (c *ContextualListLinkMock) GetLinkOpts() ContextualListLinkOpts {
 		OnListAction: func(la listaction.ListAction) {
 			c.onListActionsCalls = append(c.onListActionsCalls, la)
 		},
-		OnDone: func(ds input.DoneSource) {
+		OnDone: func(ds userinput.DoneSource) {
 			c.onDoneCalls = append(c.onDoneCalls, ds)
 		},
 		OnInsertFromContext: func() {
@@ -82,7 +82,7 @@ func TestLinkContextualList(t *testing.T) {
 				c.inputField.LinkContextualList(c.eventbus, listLinkOpts)
 				c.inputField.InputHandler()(enterEventKey, fakeSetFocus)
 				assert.Equal(c.t, 1, len(c.contextualLinkMock.onDoneCalls))
-				assert.Equal(c.t, input.Context, c.contextualLinkMock.onDoneCalls[0])
+				assert.Equal(c.t, userinput.Context, c.contextualLinkMock.onDoneCalls[0])
 			},
 		},
 		{
@@ -92,7 +92,7 @@ func TestLinkContextualList(t *testing.T) {
 				c.inputField.LinkContextualList(c.eventbus, listLinkOpts)
 				c.inputField.InputHandler()(ctrlJEventKey, fakeSetFocus)
 				assert.Equal(c.t, 1, len(c.contextualLinkMock.onDoneCalls))
-				assert.Equal(c.t, input.Input, c.contextualLinkMock.onDoneCalls[0])
+				assert.Equal(c.t, userinput.Input, c.contextualLinkMock.onDoneCalls[0])
 			},
 		},
 		{

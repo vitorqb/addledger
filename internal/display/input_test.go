@@ -10,9 +10,9 @@ import (
 	. "github.com/vitorqb/addledger/internal/display"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 	mock_controller "github.com/vitorqb/addledger/mocks/controller"
 	mock_eventbus "github.com/vitorqb/addledger/mocks/eventbus"
 )
@@ -65,7 +65,7 @@ func TestDescriptionField(t *testing.T) {
 		{
 			name: "Dispatches select from context to controller",
 			run: func(c *testcontext, t *testing.T) {
-				c.controller.EXPECT().OnDescriptionDone(input.Context)
+				c.controller.EXPECT().OnDescriptionDone(userinput.Context)
 				c.eventbus.EXPECT().Subscribe(gomock.Any())
 				field := DescriptionField(c.controller, c.eventbus)
 
@@ -87,7 +87,7 @@ func TestDescriptionField(t *testing.T) {
 		{
 			name: "Dispatches done to controller",
 			run: func(c *testcontext, t *testing.T) {
-				c.controller.EXPECT().OnDescriptionDone(input.Input)
+				c.controller.EXPECT().OnDescriptionDone(userinput.Input)
 				c.eventbus.EXPECT().Subscribe(gomock.Any())
 				field := DescriptionField(c.controller, c.eventbus)
 
@@ -138,7 +138,7 @@ func TestPostingAmmountField(t *testing.T) {
 			name: "Calls controller when done (enter)",
 			run: func(c *testcontext, t *testing.T) {
 				c.controller.EXPECT().OnPostingAmmountChanged("EUR 12.20")
-				c.controller.EXPECT().OnPostingAmmountDone(input.Context)
+				c.controller.EXPECT().OnPostingAmmountDone(userinput.Context)
 				field := PostingAmmountField(c.controller)
 				field.SetText("EUR 12.20")
 				field.InputHandler()(enterEventKey, fakeSetFocus)
@@ -148,7 +148,7 @@ func TestPostingAmmountField(t *testing.T) {
 			name: "Calls controller when done (ctrl+j)",
 			run: func(c *testcontext, t *testing.T) {
 				c.controller.EXPECT().OnPostingAmmountChanged("EUR 12.20")
-				c.controller.EXPECT().OnPostingAmmountDone(input.Input)
+				c.controller.EXPECT().OnPostingAmmountDone(userinput.Input)
 				field := PostingAmmountField(c.controller)
 				field.SetText("EUR 12.20")
 				field.InputHandler()(ctrlJEventKey, fakeSetFocus)
@@ -302,7 +302,7 @@ func TestTagsField(t *testing.T) {
 			name: "Calls controller when done (enter)",
 			run: func(c *testcontext, t *testing.T) {
 				c.eventbus.EXPECT().Subscribe(gomock.Any())
-				c.controller.EXPECT().OnTagDone(input.Context)
+				c.controller.EXPECT().OnTagDone(userinput.Context)
 				field := NewTagsField(c.controller, c.eventbus)
 				event := tcell.NewEventKey(tcell.KeyEnter, ' ', tcell.ModNone)
 				field.InputHandler()(event, fakeSetFocus)
@@ -312,7 +312,7 @@ func TestTagsField(t *testing.T) {
 			name: "Calls controller when done (ctrl+j)",
 			run: func(c *testcontext, t *testing.T) {
 				c.eventbus.EXPECT().Subscribe(gomock.Any())
-				c.controller.EXPECT().OnTagDone(input.Input)
+				c.controller.EXPECT().OnTagDone(userinput.Input)
 				field := NewTagsField(c.controller, c.eventbus)
 				event := tcell.NewEventKey(tcell.KeyCtrlJ, ' ', tcell.ModNone)
 				field.InputHandler()(event, fakeSetFocus)

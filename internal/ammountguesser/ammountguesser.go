@@ -5,8 +5,8 @@ package ammountguesser
 import (
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/parsing"
 	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 )
@@ -41,7 +41,7 @@ type AmmountGuesser struct{}
 // Guess implements IAmmountGuesser.
 func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool) {
 	// If user entered an ammount, use it
-	if ammountFromUserInput, err := input.TextToAmmount(inputs.UserInput); err == nil {
+	if ammountFromUserInput, err := parsing.TextToAmmount(inputs.UserInput); err == nil {
 		if ammountFromUserInput.Commodity == "" {
 			ammountFromUserInput.Commodity = DefaultCommodity
 		}

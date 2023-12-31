@@ -6,9 +6,8 @@ import (
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
-	"github.com/vitorqb/addledger/internal/input"
-	inputmod "github.com/vitorqb/addledger/internal/input"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 type Refreshable interface {
@@ -134,12 +133,12 @@ func NewTagsPicker(
 		GetItemsFunc: func() []string {
 			tagsStr := []string{}
 			for _, tag := range state.JournalMetadata.Tags() {
-				tagsStr = append(tagsStr, input.TagToText(tag))
+				tagsStr = append(tagsStr, userinput.TagToText(tag))
 			}
 			return tagsStr
 		},
 		SetSelectedFunc: func(x string) {
-			tag, _ := inputmod.TextToTag(x)
+			tag, _ := userinput.TextToTag(x)
 			state.InputMetadata.SetSelectedTag(tag)
 		},
 		GetInputFunc: func() string {

@@ -5,8 +5,8 @@ import (
 	"github.com/rivo/tview"
 	"github.com/sirupsen/logrus"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/listaction"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 // InputField is a wrapper of a tview.InputField that adds a few extra
@@ -28,7 +28,7 @@ type ContextualListLinkOpts struct {
 	// an action on the contextual list.
 	OnListAction func(listaction.ListAction)
 	// OnDone is called when the user is done entering input.
-	OnDone func(input.DoneSource)
+	OnDone func(userinput.DoneSource)
 	// OnInsertFromContext is called when the user presses a key that should
 	// insert the currently selected item from the contextual list.
 	OnInsertFromContext func()
@@ -49,11 +49,11 @@ func (i *InputField) LinkContextualList(eventbus eventbusmod.IEventBus, options 
 			return nil
 		case tcell.KeyEnter:
 			if event.Modifiers() == tcell.ModNone {
-				options.OnDone(input.Context)
+				options.OnDone(userinput.Context)
 				return nil
 			}
 		case tcell.KeyCtrlJ:
-			options.OnDone(input.Input)
+			options.OnDone(userinput.Input)
 			return nil
 		case tcell.KeyTab:
 			options.OnInsertFromContext()

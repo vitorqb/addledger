@@ -7,6 +7,9 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/state"
+
+	"regexp"
+	"strings"
 )
 
 type ErrMissingAmmount struct{}
@@ -157,3 +160,25 @@ func PostingBalance(postings []*state.PostingData) []finance.Ammount {
 	}
 	return finance.Balance(ammounts)
 }
+
+var TagRegex = regexp.MustCompile(`^(?P<name>[a-zA-Z0-9\-\_]+):(?P<value>[a-zA-Z0-9\-\_]+)$`)
+
+func TextToTag(s string) (journal.Tag, error) {
+	match := TagRegex.FindStringSubmatch(strings.TrimSpace(s))
+	if len(match) != 3 {
+		return journal.Tag{}, fmt.Errorf("invalid tag: %s", s)
+	}
+	return journal.Tag{
+		Name:  match[1],
+		Value: match[2],
+	}, nil
+}
+
+// DoneSource represents the possible sources of value when an user is done entering
+// and input
+type DoneSource string
+
+const (
+	Context DoneSource = "context"
+	Input   DoneSource = "input"
+)

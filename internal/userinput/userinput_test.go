@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/state"
@@ -260,5 +261,81 @@ func TestRemoveIncompletePostings(t *testing.T) {
 			result := ExtractPostings(postings)
 			assert.Equal(t, tc.expected, result)
 		})
+	}
+}
+
+func TestTagTagToText(t *testing.T) {
+	tag := journal.Tag{
+		Name:  "foo",
+		Value: "bar",
+	}
+	expected := "foo:bar"
+	actual := TagToText(tag)
+	if actual != expected {
+		t.Errorf("Expected %s, got %s", expected, actual)
+	}
+}
+
+func TestTagTextToTag__Good(t *testing.T) {
+	type testCase struct {
+		input    string
+		expected journal.Tag
+	}
+	for _, tc := range []testCase{
+		{
+			input:    "foo:bar",
+			expected: journal.Tag{Name: "foo", Value: "bar"},
+		},
+		{
+			input:    " foo:bar ",
+			expected: journal.Tag{Name: "foo", Value: "bar"},
+		},
+		{
+			input:    "foo-bar:baz",
+			expected: journal.Tag{Name: "foo-bar", Value: "baz"},
+		},
+		{
+			input:    "foo_bar:baz",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz"},
+		},
+		{
+			input:    "foo_bar:baz_123",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz_123"},
+		},
+		{
+			input:    "foo_bar:baz-123",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz-123"},
+		},
+		{
+			input:    "foo_bar:baz-123_abc",
+			expected: journal.Tag{Name: "foo_bar", Value: "baz-123_abc"},
+		},
+	} {
+		tag, err := TextToTag(tc.input)
+		if err != nil {
+			t.Errorf("Expected no error, got %s", err)
+		}
+		if tag != tc.expected {
+			t.Errorf("Expected %s, got %s", tc.expected, tag)
+		}
+	}
+}
+
+func TestTagTextToTag__Bad(t *testing.T) {
+	for _, input := range []string{
+		"foo",
+		"foo:",
+		"foo:bar:baz",
+		"",
+		"foo bar:baz",
+		"foo:bar baz",
+		"some word",
+		"some word:foo",
+	} {
+		_, err := TextToTag(input)
+		if err == nil {
+			t.Errorf(fmt.Sprintf("Expected error, got none: %s", input))
+		}
+
 	}
 }

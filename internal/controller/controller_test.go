@@ -12,7 +12,6 @@ import (
 	. "github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	printermod "github.com/vitorqb/addledger/internal/printer"
@@ -211,7 +210,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputDescription)
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				foundDescription, _ := c.state.Transaction.Description.Get()
 				assert.Equal(t, "FOO", foundDescription)
@@ -225,7 +224,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetPostingAccountText("BAR")
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
 
-				c.controller.OnPostingAccountDone(input.Context)
+				c.controller.OnPostingAccountDone(userinput.Context)
 
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
 				posting, found := c.state.Transaction.Postings.Last()
@@ -242,7 +241,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetSelectedPostingAccount("")
 				c.state.InputMetadata.SetPostingAccountText("BAR")
 
-				c.controller.OnPostingAccountDone(input.Context)
+				c.controller.OnPostingAccountDone(userinput.Context)
 
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 			},
@@ -255,7 +254,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetSelectedPostingAccount("BAR")
 				c.state.InputMetadata.SetPostingAccountText("FOO")
 
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 
 				assert.Equal(t, statemod.InputPostingAmmount, c.state.CurrentPhase())
 				posting, found := c.state.Transaction.Postings.Last()
@@ -272,7 +271,7 @@ func TestInputController(t *testing.T) {
 				c.state.InputMetadata.SetSelectedPostingAccount("BAR")
 				c.state.InputMetadata.SetPostingAccountText("")
 
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 			},
@@ -368,7 +367,7 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 				posting := c.state.Transaction.Postings.Get()[0]
 				ammount, _ := posting.Ammount.Get()
 				assert.Equal(t, anAmmount, ammount)
@@ -379,7 +378,7 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAmmountGuess(anAmmount)
-				c.controller.OnPostingAmmountDone(input.Context)
+				c.controller.OnPostingAmmountDone(userinput.Context)
 				posting := c.state.Transaction.Postings.Get()[0]
 				ammount, _ := posting.Ammount.Get()
 				assert.Equal(t, anAmmount, ammount)
@@ -414,7 +413,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAccountText("BAR")
 				c.state.InputMetadata.SetSelectedPostingAccount("FOO")
-				c.controller.OnPostingAccountDone(input.Context)
+				c.controller.OnPostingAccountDone(userinput.Context)
 				posting, found := c.state.Transaction.Postings.Last()
 				assert.True(t, found)
 				acc, ok := posting.Account.Get()
@@ -443,7 +442,7 @@ func TestInputController(t *testing.T) {
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("")
 				c.state.InputMetadata.SetDescriptionText("FOO")
-				c.controller.OnDescriptionDone(input.Context)
+				c.controller.OnDescriptionDone(userinput.Context)
 				description, ok := c.state.Transaction.Description.Get()
 				assert.True(t, ok)
 				assert.Equal(t, "FOO", description)
@@ -457,7 +456,7 @@ func TestInputController(t *testing.T) {
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
 				c.state.InputMetadata.SetDescriptionText("BAR")
-				c.controller.OnDescriptionDone(input.Context)
+				c.controller.OnDescriptionDone(userinput.Context)
 				description, ok := c.state.Transaction.Description.Get()
 				assert.True(t, ok)
 				assert.Equal(t, "FOO", description)
@@ -471,15 +470,15 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("FOO")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anAmmountNegStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Should still be on entering postings
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
@@ -509,15 +508,15 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Should have 2 filled postings and be on confirmation page
 				assert.Equal(t, 2, len(c.state.Transaction.Postings.Get()))
@@ -549,15 +548,15 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Should have gone to confirmation page
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())
@@ -586,11 +585,11 @@ func TestInputController(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// The ammount has been saved to the posting
 				posting := c.state.Transaction.Postings.Get()[0]
@@ -623,7 +622,7 @@ func TestInputController(t *testing.T) {
 				})
 				c.state.SetPhase(statemod.InputTags)
 				c.controller.OnTagChanged("FOO:BAR")
-				c.controller.OnTagDone(input.Input)
+				c.controller.OnTagDone(userinput.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "", c.state.InputMetadata.TagText())
 				assert.Equal(t, []journal.Tag{{Name: "FOO", Value: "BAR"}}, c.state.Transaction.Tags.Get())
@@ -641,7 +640,7 @@ func TestInputController(t *testing.T) {
 				tag := journal.Tag{Name: "FOO", Value: "BAR"}
 				c.state.InputMetadata.SetTagText("F")
 				c.state.InputMetadata.SetSelectedTag(tag)
-				c.controller.OnTagDone(input.Context)
+				c.controller.OnTagDone(userinput.Context)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "", c.state.InputMetadata.TagText())
 				assert.Equal(t, []journal.Tag{tag}, c.state.Transaction.Tags.Get())
@@ -652,7 +651,7 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputTags)
-				c.controller.OnTagDone(input.Input)
+				c.controller.OnTagDone(userinput.Input)
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
 			},
 		},
@@ -662,7 +661,7 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetPhase(statemod.InputTags)
 				c.controller.OnTagChanged("INVALID_TAG")
-				c.controller.OnTagDone(input.Input)
+				c.controller.OnTagDone(userinput.Input)
 				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
 				assert.Equal(t, "INVALID_TAG", c.state.InputMetadata.TagText())
 				assert.Equal(t, []journal.Tag{}, c.state.Transaction.Tags.Get())
@@ -678,17 +677,17 @@ func TestInputController(t *testing.T) {
 				firstAmmount := anAmmount
 				firstAmmount.Commodity = "EUR"
 				c.state.InputMetadata.SetPostingAccountText("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Second posting
 				secondAmmount := anAmmount
 				secondAmmount.Commodity = "USD"
 				c.state.InputMetadata.SetPostingAccountText("BAR2")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.state.InputMetadata.SetPostingAmmountInput(secondAmmount)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Because of multi-currencies, should not advance to next phase
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
@@ -709,17 +708,17 @@ func TestInputController(t *testing.T) {
 				firstAmmount := anAmmount
 				firstAmmount.Commodity = "EUR"
 				c.state.InputMetadata.SetPostingAccountText("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.state.InputMetadata.SetPostingAmmountInput(anAmmount)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Second posting
 				secondAmmount := anAmmount
 				secondAmmount.Quantity.Add(decimal.NewFromFloat(1))
 				c.state.InputMetadata.SetPostingAccountText("BAR2")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.state.InputMetadata.SetPostingAmmountInput(secondAmmount)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Because of pending balance, should not advance to next phase
 				assert.Equal(t, statemod.InputPostingAccount, c.state.CurrentPhase())
@@ -802,7 +801,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
-				c.controller.OnDescriptionDone(input.Context)
+				c.controller.OnDescriptionDone(userinput.Context)
 				c.controller.OnUndo()
 				_, ok := c.state.Transaction.Description.Get()
 				assert.False(t, ok)
@@ -832,9 +831,9 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.state.InputMetadata.SetTagText("FOO")
 				c.state.InputMetadata.SetSelectedTag(tag)
 				// First Done call saves tag
-				c.controller.OnTagDone(input.Context)
+				c.controller.OnTagDone(userinput.Context)
 				// Second Done call moves to next phase
-				c.controller.OnTagDone(input.Input)
+				c.controller.OnTagDone(userinput.Input)
 				assert.Equal(t, []journal.Tag{tag}, c.state.Transaction.Tags.Get())
 				c.controller.OnUndo()
 				assert.Equal(t, []journal.Tag{}, c.state.Transaction.Tags.Get())
@@ -846,11 +845,11 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Must have 2 postings - the filled one and an empty one.
 				assert.Equal(t, len(c.state.Transaction.Postings.Get()), 2)
@@ -873,15 +872,15 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.controller.OnDateChanged("2022-01-01")
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
-				c.controller.OnDescriptionDone(input.Input)
+				c.controller.OnDescriptionDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 				c.controller.OnPostingAccountChanged("BAR2")
-				c.controller.OnPostingAccountDone(input.Input)
+				c.controller.OnPostingAccountDone(userinput.Input)
 				c.controller.OnPostingAmmountChanged(anotherAmmountNegStr)
-				c.controller.OnPostingAmmountDone(input.Input)
+				c.controller.OnPostingAmmountDone(userinput.Input)
 
 				// Should have gone to confirmation page
 				assert.Equal(t, statemod.Confirmation, c.state.CurrentPhase())

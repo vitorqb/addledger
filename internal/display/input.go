@@ -8,8 +8,8 @@ import (
 	"github.com/vitorqb/addledger/internal/display/widgets"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	eventbusmod "github.com/vitorqb/addledger/internal/eventbus"
-	"github.com/vitorqb/addledger/internal/input"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 type (
@@ -147,10 +147,10 @@ func PostingAmmountField(controller controllermod.IInputController) *tview.Input
 	postingAmmountField.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyEnter:
-			controller.OnPostingAmmountDone(input.Context)
+			controller.OnPostingAmmountDone(userinput.Context)
 			return nil
 		case tcell.KeyCtrlJ:
-			controller.OnPostingAmmountDone(input.Input)
+			controller.OnPostingAmmountDone(userinput.Input)
 			return nil
 		}
 		return event
