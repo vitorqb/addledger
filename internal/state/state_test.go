@@ -16,6 +16,41 @@ var anAmmount = finance.Ammount{
 	Quantity:  decimal.New(2400, -2),
 }
 
+func TestMaybeValue(t *testing.T) {
+	t.Run("MaybeValue get set clear", func(t *testing.T) {
+		maybe := MaybeValue[int]{}
+		value, found := maybe.Get()
+		assert.False(t, found)
+		assert.Equal(t, 0, value)
+		maybe.Set(42)
+		value, found = maybe.Get()
+		assert.True(t, found)
+		assert.Equal(t, 42, value)
+		maybe.Clear()
+		value, found = maybe.Get()
+		assert.False(t, found)
+		assert.Equal(t, 0, value)
+	})
+	t.Run("MaybeValue calls on change hook", func(t *testing.T) {
+		maybe := MaybeValue[int]{}
+		callCounter := 0
+		maybe.AddOnChangeHook(func() { callCounter++ })
+		maybe.Set(42)
+		assert.Equal(t, 1, callCounter)
+		maybe.Clear()
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("MaybeValue does not call on change hook if clear twice", func(t *testing.T) {
+		maybe := MaybeValue[int]{}
+		callCounter := 0
+		maybe.AddOnChangeHook(func() { callCounter++ })
+		maybe.Clear()
+		assert.Equal(t, 0, callCounter)
+		maybe.Clear()
+		assert.Equal(t, 0, callCounter)
+	})
+}
+
 func TestState(t *testing.T) {
 
 	type testcontext struct {

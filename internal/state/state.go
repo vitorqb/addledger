@@ -74,18 +74,29 @@ type (
 
 	// MaybeValue is a helper container that may contain a value or not
 	MaybeValue[T any] struct {
-		IsSet bool
-		Value T
+		react.React
+		isSet bool
+		value T
 	}
 )
 
+func (mv *MaybeValue[T]) Get() (T, bool) {
+	return mv.value, mv.isSet
+}
+
 func (mv *MaybeValue[T]) Set(x T) {
-	mv.Value = x
-	mv.IsSet = true
+	mv.value = x
+	mv.isSet = true
+	mv.NotifyChange()
 }
 
 func (mv *MaybeValue[T]) Clear() {
-	mv.IsSet = false
+	if mv.isSet {
+		var zero T
+		mv.value = zero
+		mv.isSet = false
+		mv.NotifyChange()
+	}
 }
 
 const (
@@ -188,10 +199,7 @@ func (im *InputMetadata) SetPostingAccountText(x string) {
 
 // GetPostingAccountGuess returns the current guess for the PostingAccount input.
 func (im *InputMetadata) GetPostingAccountGuess() (journal.Account, bool) {
-	if !im.postingAccountGuess.IsSet {
-		return journal.Account(""), false
-	}
-	return im.postingAccountGuess.Value, true
+	return im.postingAccountGuess.Get()
 }
 
 // SetPostingAccountGuess sets the current guess for the PostingAccount input.
@@ -245,10 +253,7 @@ func (im *InputMetadata) SetPostingAmmountGuess(x finance.Ammount) {
 // GetPostingAmmountGuess returns the current guess for the ammount to enter. The
 // second returned value described whether the value is set or not.
 func (im *InputMetadata) GetPostingAmmountGuess() (finance.Ammount, bool) {
-	if !im.postingAmmountGuess.IsSet {
-		return finance.Ammount{}, false
-	}
-	return im.postingAmmountGuess.Value, true
+	return im.postingAmmountGuess.Get()
 }
 
 // ClearPostingAmmountGuess cleats the guess for the ammount to enter.
@@ -266,10 +271,7 @@ func (im *InputMetadata) SetPostingAmmountInput(x finance.Ammount) {
 // GetPostingAmmountInput returns the current input for the ammount to enter. The
 // second returned value described whether the value is set or not.
 func (im *InputMetadata) GetPostingAmmountInput() (finance.Ammount, bool) {
-	if !im.postingAmmountInput.IsSet {
-		return finance.Ammount{}, false
-	}
-	return im.postingAmmountInput.Value, true
+	return im.postingAmmountInput.Get()
 }
 
 // ClearPostingAmmountInput cleats the input for the ammount to enter.
@@ -297,10 +299,7 @@ func (im *InputMetadata) ClearPostingAmmountText() {
 
 // GetDateGuess returns the current date guess
 func (im *InputMetadata) GetDateGuess() (time.Time, bool) {
-	if !im.dateGuess.IsSet {
-		return time.Time{}, false
-	}
-	return im.dateGuess.Value, true
+	return im.dateGuess.Get()
 }
 
 // SetDateGuess sets the current date guess
