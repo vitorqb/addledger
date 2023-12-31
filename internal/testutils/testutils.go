@@ -167,7 +167,10 @@ func Transaction_3(t *testing.T) *journal.Transaction {
 }
 
 func Posting_1(t *testing.T) journal.Posting {
-	return journal.Posting{Account: "ACC1", Ammount: *Ammount_1(t)}
+	return journal.Posting{Account: "ACC1", Ammount: finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(1220, -2),
+	}}
 }
 
 func PostingInput_1(t *testing.T) input.PostingInput {

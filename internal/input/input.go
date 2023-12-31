@@ -186,18 +186,6 @@ func (i *JournalEntryInput) HasSingleCurrency() bool {
 	return len(i.PostingBalance()) <= 1
 }
 
-// GetCompletePostings returns all postings that are complete.
-func (i *JournalEntryInput) GetCompletePostings() []journal.Posting {
-	var postings []journal.Posting
-	for _, postingInput := range i.GetPostings() {
-		if postingInput.IsComplete() {
-			posting := postingInput.ToPosting()
-			postings = append(postings, posting)
-		}
-	}
-	return postings
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

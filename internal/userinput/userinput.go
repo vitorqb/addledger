@@ -113,3 +113,22 @@ func TransactionFromData(t *state.TransactionData) (journal.Transaction, error) 
 func TagToText(tag journal.Tag) string {
 	return tag.Name + ":" + tag.Value
 }
+
+// ExtractPostings returns a list of journal.Posting from a list of
+// state.PostingData.
+func ExtractPostings(postings []*state.PostingData) []journal.Posting {
+	var out []journal.Posting
+	for _, posting := range postings {
+		account, found := posting.Account.Get()
+		if !found {
+			continue
+		}
+		ammount, found := posting.Ammount.Get()
+		if !found {
+			continue
+		}
+		posting := journal.Posting{Account: string(account), Ammount: ammount}
+		out = append(out, posting)
+	}
+	return out
+}

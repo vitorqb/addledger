@@ -191,3 +191,74 @@ func TestTransactionFromData(t *testing.T) {
 		})
 	}
 }
+
+func TestRemoveIncompletePostings(t *testing.T) {
+	type testcase struct {
+		name     string
+		setup    func(t *testing.T) []*state.PostingData
+		expected []journal.Posting
+	}
+	var testcases = []testcase{
+		{
+			name: "No postings",
+			setup: func(t *testing.T) []*state.PostingData {
+				return []*state.PostingData{}
+			},
+		},
+		{
+			name: "One complete posting",
+			setup: func(t *testing.T) []*state.PostingData {
+				posting := state.NewPostingData()
+				posting.Account.Set("ACC")
+				posting.Ammount.Set(*testutils.Ammount_1(t))
+				return []*state.PostingData{posting}
+			},
+			expected: []journal.Posting{
+				{
+					Account: "ACC",
+					Ammount: *testutils.Ammount_1(t),
+				},
+			},
+		},
+		{
+			name: "One missing ammount",
+			setup: func(t *testing.T) []*state.PostingData {
+				posting := state.NewPostingData()
+				posting.Account.Set("ACC")
+				return []*state.PostingData{posting}
+			},
+		},
+		{
+			name: "One missing account",
+			setup: func(t *testing.T) []*state.PostingData {
+				posting := state.NewPostingData()
+				posting.Ammount.Set(*testutils.Ammount_1(t))
+				return []*state.PostingData{posting}
+			},
+		},
+		{
+			name: "One missing account and one complete",
+			setup: func(t *testing.T) []*state.PostingData {
+				posting_1 := state.NewPostingData()
+				posting_1.Ammount.Set(*testutils.Ammount_1(t))
+				posting_2 := state.NewPostingData()
+				posting_2.Account.Set("ACC")
+				posting_2.Ammount.Set(*testutils.Ammount_1(t))
+				return []*state.PostingData{posting_1, posting_2}
+			},
+			expected: []journal.Posting{
+				{
+					Account: "ACC",
+					Ammount: *testutils.Ammount_1(t),
+				},
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			postings := tc.setup(t)
+			result := ExtractPostings(postings)
+			assert.Equal(t, tc.expected, result)
+		})
+	}
+}
