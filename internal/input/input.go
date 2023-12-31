@@ -92,17 +92,11 @@ func (i *JournalEntryInput) ClearTags() {
 }
 
 // CurrentPosting returns the current posting being edited.
-func (i *JournalEntryInput) CurrentPosting() *PostingInput {
-	// currentPostingIndex is on range -> get and return.
+func (i *JournalEntryInput) CurrentPosting() (p *PostingInput, found bool) {
 	if posting, found := i.GetPosting(i.currentPostingIndex); found {
-		return posting
+		return posting, true
 	}
-
-	// currentPostingIndex out of range -> add one and return.
-	posting := i.AddPosting()
-	i.currentPostingIndex = i.CountPostings() - 1
-	i.NotifyChange()
-	return posting
+	return nil, false
 }
 
 // AdvancePosting is called when a posting has finished to be inputed,

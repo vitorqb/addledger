@@ -118,10 +118,14 @@ func TestJournalEntryInput(t *testing.T) {
 		{
 			"Current Posting",
 			func(t *testing.T, c *context) {
-				addedPosting := c.input.CurrentPosting()
-				assert.Equal(t, 2, c.onChangeCallCount)
-				currentPosting := c.input.CurrentPosting()
-				assert.Same(t, addedPosting, currentPosting)
+				_, found := c.input.CurrentPosting()
+				assert.False(t, found)
+				assert.Equal(t, 0, c.onChangeCallCount)
+				posting := c.input.AddPosting()
+				foundPosting, found := c.input.CurrentPosting()
+				assert.True(t, found)
+				assert.Same(t, posting, foundPosting)
+				assert.Equal(t, 1, c.onChangeCallCount)
 			},
 		},
 		{
