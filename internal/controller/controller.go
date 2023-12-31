@@ -289,7 +289,6 @@ func (ic *InputController) OnInputConfirmation() {
 		logrus.WithError(printErr).Fatal("failed to write to file")
 		return
 	}
-	ic.state.JournalEntryInput = input.NewJournalEntryInput()
 	ic.state.Transaction = statemod.NewTransactionData()
 	ic.state.InputMetadata.Reset()
 	accountLoadErr := ic.metaLoader.LoadAccounts()

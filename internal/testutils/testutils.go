@@ -11,7 +11,6 @@ import (
 	"github.com/rivo/tview"
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
@@ -37,23 +36,12 @@ func Date2(t *testing.T) time.Time {
 	return out
 }
 
-func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {}
-
 func FillPostingData_1(t *testing.T, posting *state.PostingData) {
 	posting.Account.Set("ACC1")
 	posting.Ammount.Set(finance.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(1220, -2),
 	})
-}
-
-func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {}
-
-func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {}
-
-func JournalEntryInput_1(t *testing.T) *input.JournalEntryInput {
-	journalEntryInput := input.NewJournalEntryInput()
-	return journalEntryInput
 }
 
 func TransactionData_1(t *testing.T) *state.TransactionData {
@@ -155,11 +143,6 @@ func Posting_1(t *testing.T) journal.Posting {
 		Commodity: "EUR",
 		Quantity:  decimal.New(1220, -2),
 	}}
-}
-
-func PostingInput_1(t *testing.T) input.PostingInput {
-	out := input.NewPostingInput()
-	return *out
 }
 
 func PostingData_1(t *testing.T) state.PostingData {

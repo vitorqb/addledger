@@ -8,20 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/pkg/react"
 )
-
-type (
-	JournalEntryInput struct {
-		react.IReact
-		inputs map[string]interface{}
-	}
-)
-
-func NewJournalEntryInput() *JournalEntryInput {
-	m := make(map[string]interface{})
-	return &JournalEntryInput{react.New(), m}
-}
 
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
@@ -62,11 +61,10 @@ type (
 	// State is the top-level app state
 	State struct {
 		react.IReact
-		currentPhase      Phase
-		JournalEntryInput *input.JournalEntryInput
-		Transaction       *TransactionData
-		InputMetadata     *InputMetadata
-		JournalMetadata   *JournalMetadata
+		currentPhase    Phase
+		Transaction     *TransactionData
+		InputMetadata   *InputMetadata
+		JournalMetadata *JournalMetadata
 		// StatementEntries are entires loaded from a bank statement.
 		// They are used to help the user to create journal entries.
 		StatementEntries []statementreader.StatementEntry
@@ -166,7 +164,6 @@ const (
 )
 
 func InitialState() *State {
-	journalEntryInput := input.NewJournalEntryInput()
 	inputMetadata := &InputMetadata{
 		IReact:                 react.New(),
 		selectedPostingAccount: "",
@@ -183,16 +180,14 @@ func InitialState() *State {
 	journalMetadata := NewJournalMetadata()
 	display := NewDisplay()
 	state := &State{
-		IReact:            react.New(),
-		currentPhase:      InputDate,
-		JournalEntryInput: journalEntryInput,
-		Transaction:       NewTransactionData(),
-		InputMetadata:     inputMetadata,
-		JournalMetadata:   journalMetadata,
-		StatementEntries:  []statementreader.StatementEntry{},
-		Display:           display,
+		IReact:           react.New(),
+		currentPhase:     InputDate,
+		Transaction:      NewTransactionData(),
+		InputMetadata:    inputMetadata,
+		JournalMetadata:  journalMetadata,
+		StatementEntries: []statementreader.StatementEntry{},
+		Display:          display,
 	}
-	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
 	journalMetadata.AddOnChangeHook(state.NotifyChange)
 	display.AddOnChangeHook(state.NotifyChange)

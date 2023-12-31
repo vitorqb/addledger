@@ -291,7 +291,6 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				countTransactionsBefore := len(c.state.JournalMetadata.Transactions())
-				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
 				c.state.Transaction = testutils.TransactionData_1(t)
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
@@ -312,7 +311,6 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetStatementEntries([]statementreader.StatementEntry{{}})
-				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
 				c.state.Transaction = testutils.TransactionData_1(t)
 				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
@@ -334,7 +332,6 @@ func TestInputController(t *testing.T) {
 					{Date: date2},
 				}
 				c.state.SetStatementEntries(stmEntries)
-				c.state.JournalEntryInput = testutils.JournalEntryInput_1(t)
 				c.state.Transaction = testutils.TransactionData_1(t)
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
