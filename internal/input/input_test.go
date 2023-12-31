@@ -128,57 +128,6 @@ func TestJournalEntryInput(t *testing.T) {
 			},
 		},
 		{
-			"Calculate posting balance no postings",
-			func(t *testing.T, c *context) {
-				expected := []finance.Ammount{}
-				assert.Equal(t, expected, c.input.PostingBalance())
-			},
-		},
-		{
-			"Calculate posting balance with postings total 0",
-			func(t *testing.T, c *context) {
-				ammount1 := finance.Ammount{
-					Commodity: "EUR",
-					Quantity:  decimal.New(12, 1),
-				}
-				c.input.AddPosting().SetAmmount(ammount1)
-				ammount2 := finance.Ammount{
-					Commodity: "EUR",
-					Quantity:  decimal.New(-12, 1),
-				}
-				c.input.AddPosting().SetAmmount(ammount2)
-				expected := []finance.Ammount{}
-				assert.Equal(t, expected, c.input.PostingBalance())
-			},
-		},
-		{
-			"Calculate posting balance with postings total not 0",
-			func(t *testing.T, c *context) {
-				ammount1 := finance.Ammount{
-					Commodity: "EUR",
-					Quantity:  decimal.New(12, 1),
-				}
-				c.input.AddPosting().SetAmmount(ammount1)
-				ammount2 := finance.Ammount{
-					Commodity: "BRL",
-					Quantity:  decimal.New(-12, 1),
-				}
-				c.input.AddPosting().SetAmmount(ammount2)
-				expected := []finance.Ammount{ammount1, ammount2}
-				assert.ElementsMatch(t, expected, c.input.PostingBalance())
-			},
-		},
-		{
-			"Ignore postings without ammount",
-			func(t *testing.T, c *context) {
-				c.input.AddPosting()
-				c.input.AddPosting()
-				c.input.AddPosting().SetAmmount(anAmmount)
-				expected := []finance.Ammount{anAmmount}
-				assert.Equal(t, expected, c.input.PostingBalance())
-			},
-		},
-		{
 			"Manipulate tags",
 			func(t *testing.T, c *context) {
 				assert.Equal(t, []journal.Tag{}, c.input.GetTags())

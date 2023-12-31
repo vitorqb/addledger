@@ -158,29 +158,6 @@ func (i *JournalEntryInput) GetPostings() []*PostingInput {
 	return []*PostingInput{}
 }
 
-// PostingBalance returns the balance left for all postings
-func (i *JournalEntryInput) PostingBalance() []finance.Ammount {
-	postings := i.GetPostings()
-	var ammounts []finance.Ammount
-	for _, posting := range postings {
-		ammount, found := posting.GetAmmount()
-		if found {
-			ammounts = append(ammounts, ammount)
-		}
-	}
-	return finance.Balance(ammounts)
-}
-
-// PostingHasZeroBalance returns true if there is no left balance
-func (i *JournalEntryInput) PostingHasZeroBalance() bool {
-	for _, ammount := range i.PostingBalance() {
-		if !ammount.Quantity.Equal(decimal.Zero) {
-			return false
-		}
-	}
-	return true
-}
-
 func TextToAmmount(x string) (finance.Ammount, error) {
 	var err error
 	var quantity decimal.Decimal

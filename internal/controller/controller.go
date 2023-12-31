@@ -261,12 +261,15 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 		newPosting.Ammount.Set(ammount)
 
 		// If there is balance outstanding, go to next posting
-		if !ic.state.JournalEntryInput.PostingHasZeroBalance() {
-			ic.state.JournalEntryInput.AddPosting()
-			newPosting := statemod.NewPostingData()
-			ic.state.Transaction.Postings.Append(newPosting)
-			ic.state.SetPhase(statemod.InputPostingAccount)
-			return
+		balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
+		for _, balanceAmmount := range balance {
+			if !balanceAmmount.Quantity.IsZero() {
+				ic.state.JournalEntryInput.AddPosting()
+				newPosting := statemod.NewPostingData()
+				ic.state.Transaction.Postings.Append(newPosting)
+				ic.state.SetPhase(statemod.InputPostingAccount)
+				return
+			}
 		}
 
 		// Else, go to confirmation
