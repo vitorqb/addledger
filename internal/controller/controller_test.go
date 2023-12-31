@@ -436,6 +436,7 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("")
 				c.state.InputMetadata.SetDescriptionText("FOO")
@@ -450,6 +451,7 @@ func TestInputController(t *testing.T) {
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
 				c.state.InputMetadata.SetDescriptionText("BAR")
@@ -785,6 +787,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			name: "OnUndo cleans up the last user input",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.controller.OnUndo()
 				_, ok := c.state.JournalEntryInput.GetDate()
@@ -795,6 +798,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			name: "OnUndo cleans up the description",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
 				c.controller.OnDescriptionDone(input.Context)
@@ -809,6 +813,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			name: "OnUndo cleans up date ",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.JournalEntryInput.SetDate(aTime)
+				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.controller.OnUndo()
 				_, ok := c.state.JournalEntryInput.GetDate()

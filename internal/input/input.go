@@ -58,6 +58,11 @@ func (i *JournalEntryInput) GetDescription() (string, bool) {
 	return "", false
 }
 
+func (i *JournalEntryInput) ClearDescription() {
+	delete(i.inputs, "description")
+	i.NotifyChange()
+}
+
 func (i *JournalEntryInput) GetTags() []journal.Tag {
 	if rawValue, found := i.inputs["tags"]; found {
 		if value, ok := rawValue.([]journal.Tag); ok {
@@ -83,11 +88,6 @@ func (i *JournalEntryInput) PopTag() {
 
 func (i *JournalEntryInput) ClearTags() {
 	delete(i.inputs, "tags")
-	i.NotifyChange()
-}
-
-func (i *JournalEntryInput) ClearDescription() {
-	delete(i.inputs, "description")
 	i.NotifyChange()
 }
 

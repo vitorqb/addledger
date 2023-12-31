@@ -142,6 +142,7 @@ func (ic *InputController) OnDateChanged(x string) {
 func (ic *InputController) OnDateDone() {
 	if date, found := ic.state.InputMetadata.GetDateGuess(); found {
 		ic.state.JournalEntryInput.SetDate(date)
+		ic.state.Transaction.Date.Set(date)
 		ic.state.NextPhase()
 	}
 }
@@ -440,10 +441,12 @@ func (ic *InputController) OnUndo() {
 		ic.state.PrevPhase()
 	case statemod.InputDescription:
 		ic.state.JournalEntryInput.ClearDate()
+		ic.state.Transaction.Date.Clear()
 		ic.state.PrevPhase()
 	case statemod.InputTags:
 		// Clear description and go back
 		ic.state.JournalEntryInput.ClearDescription()
+		ic.state.Transaction.Description.Clear()
 		ic.state.InputMetadata.SetDescriptionText("")
 		ic.state.PrevPhase()
 	case statemod.InputPostingAccount:
