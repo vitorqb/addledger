@@ -37,13 +37,7 @@ func Date2(t *testing.T) time.Time {
 	return out
 }
 
-func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {
-	posting.SetAccount("ACC1")
-	posting.SetAmmount(finance.Ammount{
-		Commodity: "EUR",
-		Quantity:  decimal.New(1220, -2),
-	})
-}
+func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {}
 
 func FillPostingData_1(t *testing.T, posting *state.PostingData) {
 	posting.Account.Set("ACC1")
@@ -53,21 +47,9 @@ func FillPostingData_1(t *testing.T, posting *state.PostingData) {
 	})
 }
 
-func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {
-	posting.SetAccount("ACC2")
-	posting.SetAmmount(finance.Ammount{
-		Commodity: "EUR",
-		Quantity:  decimal.New(-1220, -2),
-	})
-}
+func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {}
 
-func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {
-	posting.SetAccount("ACC3")
-	posting.SetAmmount(finance.Ammount{
-		Commodity: "EUR",
-		Quantity:  decimal.New(999, -1),
-	})
-}
+func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {}
 
 func JournalEntryInput_1(t *testing.T) *input.JournalEntryInput {
 	journalEntryInput := input.NewJournalEntryInput()
@@ -183,8 +165,6 @@ func Posting_1(t *testing.T) journal.Posting {
 
 func PostingInput_1(t *testing.T) input.PostingInput {
 	out := input.NewPostingInput()
-	out.SetAccount("ACC1")
-	out.SetAmmount(*Ammount_1(t))
 	return *out
 }
 
