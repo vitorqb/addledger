@@ -4,6 +4,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 type (
@@ -31,6 +32,6 @@ func NewView(state *state.State) *View {
 }
 
 func (v *View) refresh() {
-	text := v.state.JournalEntryInput.Repr()
+	text := userinput.TransactionRepr(v.state.Transaction)
 	v.SetText(text)
 }

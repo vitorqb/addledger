@@ -10,6 +10,7 @@ import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/transactionmatcher"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 // ConfigureLogger configures the logger.
@@ -42,7 +43,7 @@ func LinkTransactionMatcher(state *statemod.State, matcher transactionmatcher.IT
 			busy = false
 		}()
 
-		descriptionInput, found := state.JournalEntryInput.GetDescription()
+		descriptionInput, found := state.Transaction.Description.Get()
 		if !found {
 			return
 		}
@@ -70,7 +71,7 @@ func LinkAmmountGuesser(state *statemod.State, guesser ammountguesser.IAmmountGu
 		currentStatementEntry, _ := state.CurrentStatementEntry()
 		inputs := ammountguesser.Inputs{
 			UserInput:            state.InputMetadata.GetPostingAmmountText(),
-			PostingInputs:        state.JournalEntryInput.GetPostings(),
+			PostingsData:         state.Transaction.Postings.Get(),
 			StatementEntry:       currentStatementEntry,
 			MatchingTransactions: state.InputMetadata.MatchingTransactions(),
 		}
@@ -94,10 +95,10 @@ func LinkAccountGuesser(state *statemod.State, guesser accountguesser.AccountGue
 		defer func() { busy = false }()
 
 		matchedTransactions := state.InputMetadata.MatchingTransactions()
-		completePosting := state.JournalEntryInput.GetCompletePostings()
+		completePosting := userinput.ExtractPostings(state.Transaction.Postings.Get())
 		transactionHist := state.JournalMetadata.Transactions()
 		statementEntry, _ := state.CurrentStatementEntry()
-		description, _ := state.JournalEntryInput.GetDescription()
+		description, _ := state.Transaction.Description.Get()
 		inputs := accountguesser.Inputs{
 			StatementEntry:       statementEntry,
 			MatchingTransactions: matchedTransactions,

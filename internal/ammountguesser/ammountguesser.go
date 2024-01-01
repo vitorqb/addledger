@@ -5,8 +5,9 @@ package ammountguesser
 import (
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/parsing"
+	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 )
 
@@ -17,9 +18,9 @@ type Inputs struct {
 	// UserInput is the text the user has inputted in the ammount field. E.g. "EUR 12.20"
 	UserInput string
 
-	// PostingInputs are the postings that have been inputted so far by the user,
-	// in the current journal entry.
-	PostingInputs []*input.PostingInput
+	// PostingsData are the postings that have been inputted so far by the user,
+	// in the current transaction.
+	PostingsData []*state.PostingData
 
 	// StatementEntry is the statement entry that has been loaded and is being used
 	// for the current journal entry.
@@ -40,7 +41,7 @@ type AmmountGuesser struct{}
 // Guess implements IAmmountGuesser.
 func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool) {
 	// If user entered an ammount, use it
-	if ammountFromUserInput, err := input.TextToAmmount(inputs.UserInput); err == nil {
+	if ammountFromUserInput, err := parsing.TextToAmmount(inputs.UserInput); err == nil {
 		if ammountFromUserInput.Commodity == "" {
 			ammountFromUserInput.Commodity = DefaultCommodity
 		}
@@ -49,7 +50,7 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 
 	// If we have pending balance, use it
 	for {
-		nonEmptyPostingInputs := selectNonEmptyPostingInputs(inputs.PostingInputs)
+		nonEmptyPostingInputs := selectNonEmptyPostingData(inputs.PostingsData)
 		if len(nonEmptyPostingInputs) < 1 {
 			break
 		}
@@ -59,7 +60,7 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 		balance := decimal.Zero
 		commodity := ""
 		for _, posting := range nonEmptyPostingInputs {
-			ammount, _ := posting.GetAmmount()
+			ammount, _ := posting.Ammount.Get()
 			// Multiple commodities -> stop
 			if commodity != "" && ammount.Commodity != commodity {
 				success = false
@@ -100,13 +101,13 @@ var DefaultGuess = finance.Ammount{
 	Quantity:  decimal.New(1220, -2),
 }
 
-func selectNonEmptyPostingInputs(postingInputs []*input.PostingInput) []*input.PostingInput {
-	var nonEmptyPostingInputs []*input.PostingInput
-	for _, input := range postingInputs {
-		_, found := input.GetAmmount()
+func selectNonEmptyPostingData(postingsData []*state.PostingData) []*state.PostingData {
+	var nonEmpty []*state.PostingData
+	for _, data := range postingsData {
+		_, found := data.Ammount.Get()
 		if found {
-			nonEmptyPostingInputs = append(nonEmptyPostingInputs, input)
+			nonEmpty = append(nonEmpty, data)
 		}
 	}
-	return nonEmptyPostingInputs
+	return nonEmpty
 }

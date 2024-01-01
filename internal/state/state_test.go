@@ -9,11 +9,128 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	. "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/pkg/react"
 )
 
 var anAmmount = finance.Ammount{
 	Commodity: "EUR",
 	Quantity:  decimal.New(2400, -2),
+}
+
+func TestMaybeValue(t *testing.T) {
+	t.Run("MaybeValue get set clear", func(t *testing.T) {
+		maybe := MaybeValue[int]{}
+		value, found := maybe.Get()
+		assert.False(t, found)
+		assert.Equal(t, 0, value)
+		maybe.Set(42)
+		value, found = maybe.Get()
+		assert.True(t, found)
+		assert.Equal(t, 42, value)
+		maybe.Clear()
+		value, found = maybe.Get()
+		assert.False(t, found)
+		assert.Equal(t, 0, value)
+	})
+	t.Run("Set reactiful value calls hook on change", func(t *testing.T) {
+		callCounter := 0
+		maybe := MaybeValue[react.IReact]{}
+		maybe.AddOnChangeHook(func() { callCounter++ })
+		reactfVal := &react.React{}
+		maybe.Set(reactfVal)
+		reactfVal.NotifyChange()
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("MaybeValue calls on change hook", func(t *testing.T) {
+		maybe := MaybeValue[int]{}
+		callCounter := 0
+		maybe.AddOnChangeHook(func() { callCounter++ })
+		maybe.Set(42)
+		assert.Equal(t, 1, callCounter)
+		maybe.Clear()
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("MaybeValue does not call on change hook if clear twice", func(t *testing.T) {
+		maybe := MaybeValue[int]{}
+		callCounter := 0
+		maybe.AddOnChangeHook(func() { callCounter++ })
+		maybe.Clear()
+		assert.Equal(t, 0, callCounter)
+		maybe.Clear()
+		assert.Equal(t, 0, callCounter)
+	})
+}
+
+func TestArrayValue(t *testing.T) {
+	t.Run("Set value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		assert.Equal(t, []int{1, 2, 3}, value.Get())
+		assert.Equal(t, 1, callCounter)
+	})
+	t.Run("Appending rectifull value calls hook on change", func(t *testing.T) {
+		callCounter := 0
+		reactfVal := &react.React{}
+		arrValue := ArrayValue[react.IReact]{}
+		arrValue.AddOnChangeHook(func() { callCounter++ })
+		arrValue.Append(reactfVal)
+		reactfVal.NotifyChange()
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Setting rectifull value calls hook on change", func(t *testing.T) {
+		callCounter := 0
+		reactfVal := &react.React{}
+		arrValue := ArrayValue[react.IReact]{}
+		arrValue.AddOnChangeHook(func() { callCounter++ })
+		arrValue.Set([]react.IReact{reactfVal})
+		reactfVal.NotifyChange()
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Clear value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		value.Clear()
+		assert.Equal(t, []int{}, value.Get())
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Append value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		value.Append(4)
+		assert.Equal(t, []int{1, 2, 3, 4}, value.Get())
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Pop value", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Set([]int{1, 2, 3})
+		value.Pop()
+		assert.Equal(t, []int{1, 2}, value.Get())
+		assert.Equal(t, 2, callCounter)
+	})
+	t.Run("Pop value when empty", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Pop()
+		assert.Equal(t, []int{}, value.Get())
+		assert.Equal(t, 0, callCounter)
+	})
+	t.Run("Clear value when empty", func(t *testing.T) {
+		value := ArrayValue[int]{}
+		callCounter := 0
+		value.AddOnChangeHook(func() { callCounter++ })
+		value.Clear()
+		assert.Equal(t, []int{}, value.Get())
+		assert.Equal(t, 0, callCounter)
+	})
 }
 
 func TestState(t *testing.T) {
@@ -30,11 +147,10 @@ func TestState(t *testing.T) {
 
 	testcases := []testcase{
 		{
-			name: "Notify on change of JournalEntryInput",
+			name: "Notify on change on Transaction",
 			run: func(t *testing.T, c *testcontext) {
-				c.state.JournalEntryInput.SetDescription("FOO")
+				c.state.Transaction.Date.Set(time.Now())
 				assert.Equal(t, 1, c.hookCallCounter)
-
 			},
 		},
 		{

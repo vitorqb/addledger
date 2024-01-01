@@ -9,8 +9,8 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	config "github.com/vitorqb/addledger/internal/config"
-	input "github.com/vitorqb/addledger/internal/input"
 	listaction "github.com/vitorqb/addledger/internal/listaction"
+	userinput "github.com/vitorqb/addledger/internal/userinput"
 )
 
 // MockStatementLoader is a mock of StatementLoader interface.
@@ -110,7 +110,7 @@ func (mr *MockIInputControllerMockRecorder) OnDescriptionChanged(newText interfa
 }
 
 // OnDescriptionDone mocks base method.
-func (m *MockIInputController) OnDescriptionDone(source input.DoneSource) {
+func (m *MockIInputController) OnDescriptionDone(source userinput.DoneSource) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OnDescriptionDone", source)
 }
@@ -254,7 +254,7 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAccountChanged(newText inte
 }
 
 // OnPostingAccountDone mocks base method.
-func (m *MockIInputController) OnPostingAccountDone(source input.DoneSource) {
+func (m *MockIInputController) OnPostingAccountDone(source userinput.DoneSource) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OnPostingAccountDone", source)
 }
@@ -302,7 +302,7 @@ func (mr *MockIInputControllerMockRecorder) OnPostingAmmountChanged(text interfa
 }
 
 // OnPostingAmmountDone mocks base method.
-func (m *MockIInputController) OnPostingAmmountDone(arg0 input.DoneSource) {
+func (m *MockIInputController) OnPostingAmmountDone(arg0 userinput.DoneSource) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OnPostingAmmountDone", arg0)
 }
@@ -326,7 +326,7 @@ func (mr *MockIInputControllerMockRecorder) OnTagChanged(newText interface{}) *g
 }
 
 // OnTagDone mocks base method.
-func (m *MockIInputController) OnTagDone(source input.DoneSource) {
+func (m *MockIInputController) OnTagDone(source userinput.DoneSource) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "OnTagDone", source)
 }

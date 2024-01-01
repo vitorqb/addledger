@@ -11,8 +11,8 @@ import (
 	"github.com/rivo/tview"
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
 )
@@ -36,39 +36,23 @@ func Date2(t *testing.T) time.Time {
 	return out
 }
 
-func FillPostingInput_1(t *testing.T, posting *input.PostingInput) {
-	posting.SetAccount("ACC1")
-	posting.SetAmmount(finance.Ammount{
+func FillPostingData_1(t *testing.T, posting *state.PostingData) {
+	posting.Account.Set("ACC1")
+	posting.Ammount.Set(finance.Ammount{
 		Commodity: "EUR",
 		Quantity:  decimal.New(1220, -2),
 	})
 }
 
-func FillPostingInput_2(t *testing.T, posting *input.PostingInput) {
-	posting.SetAccount("ACC2")
-	posting.SetAmmount(finance.Ammount{
-		Commodity: "EUR",
-		Quantity:  decimal.New(-1220, -2),
-	})
-}
-
-func FillPostingInput_3(t *testing.T, posting *input.PostingInput) {
-	posting.SetAccount("ACC3")
-	posting.SetAmmount(finance.Ammount{
-		Commodity: "EUR",
-		Quantity:  decimal.New(999, -1),
-	})
-}
-
-func JournalEntryInput_1(t *testing.T) *input.JournalEntryInput {
-	journalEntryInput := input.NewJournalEntryInput()
-	journalEntryInput.SetDate(Date1(t))
-	journalEntryInput.SetDescription("Description1")
-	posting_1 := journalEntryInput.AddPosting()
-	FillPostingInput_1(t, posting_1)
-	posting_2 := journalEntryInput.AddPosting()
-	FillPostingInput_2(t, posting_2)
-	return journalEntryInput
+func TransactionData_1(t *testing.T) *state.TransactionData {
+	transactionData := state.NewTransactionData()
+	transactionData.Date.Set(Date1(t))
+	transactionData.Description.Set("Description1")
+	posting_1 := PostingData_1(t)
+	transactionData.Postings.Append(&posting_1)
+	posting_2 := PostingData_2(t)
+	transactionData.Postings.Append(&posting_2)
+	return transactionData
 }
 
 func Decimal_1(t *testing.T) decimal.Decimal {
@@ -155,13 +139,29 @@ func Transaction_3(t *testing.T) *journal.Transaction {
 }
 
 func Posting_1(t *testing.T) journal.Posting {
-	return journal.Posting{Account: "ACC1", Ammount: *Ammount_1(t)}
+	return journal.Posting{Account: "ACC1", Ammount: finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(1220, -2),
+	}}
 }
 
-func PostingInput_1(t *testing.T) input.PostingInput {
-	out := input.NewPostingInput()
-	out.SetAccount("ACC1")
-	out.SetAmmount(*Ammount_1(t))
+func PostingData_1(t *testing.T) state.PostingData {
+	out := state.NewPostingData()
+	out.Account.Set("ACC1")
+	out.Ammount.Set(finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(1220, -2),
+	})
+	return *out
+}
+
+func PostingData_2(t *testing.T) state.PostingData {
+	out := state.NewPostingData()
+	out.Account.Set("ACC2")
+	out.Ammount.Set(finance.Ammount{
+		Commodity: "EUR",
+		Quantity:  decimal.New(-1220, -2),
+	})
 	return *out
 }
 

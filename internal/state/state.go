@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
@@ -62,10 +61,10 @@ type (
 	// State is the top-level app state
 	State struct {
 		react.IReact
-		currentPhase      Phase
-		JournalEntryInput *input.JournalEntryInput
-		InputMetadata     *InputMetadata
-		JournalMetadata   *JournalMetadata
+		currentPhase    Phase
+		Transaction     *TransactionData
+		InputMetadata   *InputMetadata
+		JournalMetadata *JournalMetadata
 		// StatementEntries are entires loaded from a bank statement.
 		// They are used to help the user to create journal entries.
 		StatementEntries []statementreader.StatementEntry
@@ -74,18 +73,85 @@ type (
 
 	// MaybeValue is a helper container that may contain a value or not
 	MaybeValue[T any] struct {
-		IsSet bool
-		Value T
+		react.React
+		isSet bool
+		value T
+	}
+
+	// ArrayValue is a helper container that contains an array of values
+	ArrayValue[T any] struct {
+		react.React
+		value []T
 	}
 )
 
+func (mv *MaybeValue[T]) Get() (T, bool) {
+	return mv.value, mv.isSet
+}
+
 func (mv *MaybeValue[T]) Set(x T) {
-	mv.Value = x
-	mv.IsSet = true
+	if r, ok := any(x).(react.IReact); ok {
+		r.AddOnChangeHook(mv.NotifyChange)
+	}
+	mv.value = x
+	mv.isSet = true
+	mv.NotifyChange()
 }
 
 func (mv *MaybeValue[T]) Clear() {
-	mv.IsSet = false
+	if mv.isSet {
+		var zero T
+		mv.value = zero
+		mv.isSet = false
+		mv.NotifyChange()
+	}
+}
+
+func (av *ArrayValue[T]) Get() []T {
+	if av.value == nil {
+		return []T{}
+	}
+	return av.value
+}
+
+func (av *ArrayValue[T]) Set(x []T) {
+	for _, v := range x {
+		if r, ok := any(v).(react.IReact); ok {
+			r.AddOnChangeHook(av.NotifyChange)
+		}
+	}
+	av.value = x
+	av.NotifyChange()
+}
+
+func (av *ArrayValue[T]) Append(x T) {
+	if r, ok := any(x).(react.IReact); ok {
+		r.AddOnChangeHook(av.NotifyChange)
+	}
+	av.value = append(av.value, x)
+	av.NotifyChange()
+}
+
+func (av *ArrayValue[T]) Clear() {
+	if len(av.value) > 0 {
+		av.value = []T{}
+		av.NotifyChange()
+	}
+}
+
+func (av *ArrayValue[T]) Pop() {
+	if len(av.value) > 0 {
+		av.value = av.value[:len(av.value)-1]
+		av.NotifyChange()
+	}
+}
+
+func (av *ArrayValue[T]) Last() (T, bool) {
+	if len(av.value) > 0 {
+		return av.value[len(av.value)-1], true
+	}
+	var zero T
+	return zero, false
 }
 
 const (
@@ -98,7 +164,6 @@ const (
 )
 
 func InitialState() *State {
-	journalEntryInput := input.NewJournalEntryInput()
 	inputMetadata := &InputMetadata{
 		IReact:                 react.New(),
 		selectedPostingAccount: "",
@@ -115,18 +180,18 @@ func InitialState() *State {
 	journalMetadata := NewJournalMetadata()
 	display := NewDisplay()
 	state := &State{
-		IReact:            react.New(),
-		currentPhase:      InputDate,
-		JournalEntryInput: journalEntryInput,
-		InputMetadata:     inputMetadata,
-		JournalMetadata:   journalMetadata,
-		StatementEntries:  []statementreader.StatementEntry{},
-		Display:           display,
+		IReact:           react.New(),
+		currentPhase:     InputDate,
+		Transaction:      NewTransactionData(),
+		InputMetadata:    inputMetadata,
+		JournalMetadata:  journalMetadata,
+		StatementEntries: []statementreader.StatementEntry{},
+		Display:          display,
 	}
-	journalEntryInput.AddOnChangeHook(state.NotifyChange)
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
 	journalMetadata.AddOnChangeHook(state.NotifyChange)
 	display.AddOnChangeHook(state.NotifyChange)
+	state.Transaction.AddOnChangeHook(state.NotifyChange)
 	return state
 }
 
@@ -188,10 +253,7 @@ func (im *InputMetadata) SetPostingAccountText(x string) {
 
 // GetPostingAccountGuess returns the current guess for the PostingAccount input.
 func (im *InputMetadata) GetPostingAccountGuess() (journal.Account, bool) {
-	if !im.postingAccountGuess.IsSet {
-		return journal.Account(""), false
-	}
-	return im.postingAccountGuess.Value, true
+	return im.postingAccountGuess.Get()
 }
 
 // SetPostingAccountGuess sets the current guess for the PostingAccount input.
@@ -245,10 +307,7 @@ func (im *InputMetadata) SetPostingAmmountGuess(x finance.Ammount) {
 // GetPostingAmmountGuess returns the current guess for the ammount to enter. The
 // second returned value described whether the value is set or not.
 func (im *InputMetadata) GetPostingAmmountGuess() (finance.Ammount, bool) {
-	if !im.postingAmmountGuess.IsSet {
-		return finance.Ammount{}, false
-	}
-	return im.postingAmmountGuess.Value, true
+	return im.postingAmmountGuess.Get()
 }
 
 // ClearPostingAmmountGuess cleats the guess for the ammount to enter.
@@ -266,10 +325,7 @@ func (im *InputMetadata) SetPostingAmmountInput(x finance.Ammount) {
 // GetPostingAmmountInput returns the current input for the ammount to enter. The
 // second returned value described whether the value is set or not.
 func (im *InputMetadata) GetPostingAmmountInput() (finance.Ammount, bool) {
-	if !im.postingAmmountInput.IsSet {
-		return finance.Ammount{}, false
-	}
-	return im.postingAmmountInput.Value, true
+	return im.postingAmmountInput.Get()
 }
 
 // ClearPostingAmmountInput cleats the input for the ammount to enter.
@@ -297,10 +353,7 @@ func (im *InputMetadata) ClearPostingAmmountText() {
 
 // GetDateGuess returns the current date guess
 func (im *InputMetadata) GetDateGuess() (time.Time, bool) {
-	if !im.dateGuess.IsSet {
-		return time.Time{}, false
-	}
-	return im.dateGuess.Value, true
+	return im.dateGuess.Get()
 }
 
 // SetDateGuess sets the current date guess

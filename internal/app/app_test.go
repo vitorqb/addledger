@@ -12,7 +12,6 @@ import (
 	"github.com/vitorqb/addledger/internal/ammountguesser"
 	. "github.com/vitorqb/addledger/internal/app"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
@@ -85,7 +84,7 @@ func TestLinkTransactionMatcher(t *testing.T) {
 
 		// Set the state variables
 		state.JournalMetadata.SetTransactions(transactionHistory)
-		state.JournalEntryInput.SetDescription(description)
+		state.Transaction.Description.Set(description)
 
 		// Check state was properly set
 		resultMatchingTransactions := state.InputMetadata.MatchingTransactions()
@@ -111,14 +110,15 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		// Set on state
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
 		state.InputMetadata.SetPostingAmmountText(userInput)
-		state.JournalEntryInput.AddPosting()
+		newPosting := statemod.NewPostingData()
+		state.Transaction.Postings.Append(newPosting)
 		state.SetStatementEntries([]statementreader.StatementEntry{statementEntry})
 		// Assertions & behavior for engine
 		guesser.EXPECT().Guess(gomock.Any()).DoAndReturn(func(inputs ammountguesser.Inputs) (finance.Ammount, bool) {
 			assert.Equal(t, userInput, inputs.UserInput)
 			assert.Equal(t, statementEntry, inputs.StatementEntry)
 			assert.Equal(t, matchingTransactions, inputs.MatchingTransactions)
-			assert.Equal(t, state.JournalEntryInput.GetPostings(), inputs.PostingInputs)
+			assert.Equal(t, state.Transaction.Postings.Get(), inputs.PostingsData)
 			return expectedGuess, true
 		})
 
@@ -145,8 +145,8 @@ func TestLinkAccountGuesser(t *testing.T) {
 		statamentEntries := []statementreader.StatementEntry{statementEntry}
 		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
 		postings := []journal.Posting{testutils.Posting_1(t)}
-		postingInput := testutils.PostingInput_1(t)
-		postingsInputs := []*input.PostingInput{&postingInput}
+		postingData := testutils.PostingData_1(t)
+		postingsData := []*statemod.PostingData{&postingData}
 		transationHistory := []journal.Transaction{*testutils.Transaction_2(t)}
 		userInput := "User input"
 		inputs := accountguesser.Inputs{
@@ -161,8 +161,8 @@ func TestLinkAccountGuesser(t *testing.T) {
 		state := statemod.InitialState()
 		state.SetStatementEntries(statamentEntries)
 		state.InputMetadata.SetMatchingTransactions(matchingTransactions)
-		state.JournalEntryInput.SetPostings(postingsInputs)
-		state.JournalEntryInput.SetDescription(userInput)
+		state.Transaction.Postings.Set(postingsData)
+		state.Transaction.Description.Set(userInput)
 		state.JournalMetadata.SetTransactions(transationHistory)
 
 		// The expected call to guesser

@@ -9,12 +9,13 @@ import (
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/input"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	"github.com/vitorqb/addledger/internal/metaloader"
+	"github.com/vitorqb/addledger/internal/parsing"
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 //go:generate $MOCKGEN --source=controller.go --destination=../../mocks/controller/controller_mock.go
@@ -37,27 +38,27 @@ type IInputController interface {
 
 	// Handles user entering a new ammount for a posting
 	OnPostingAmmountChanged(text string)
-	OnPostingAmmountDone(input.DoneSource)
+	OnPostingAmmountDone(userinput.DoneSource)
 
 	// Called when an user wants to undo it's last action.
 	OnUndo()
 
 	// Controls Posting Account input
 	OnPostingAccountChanged(newText string)
-	OnPostingAccountDone(source input.DoneSource)
+	OnPostingAccountDone(source userinput.DoneSource)
 	OnPostingAccountInsertFromContext()
 	OnPostingAccountListAcction(action listaction.ListAction)
 	OnFinishPosting()
 
 	// Controls the Description input
 	OnDescriptionChanged(newText string)
-	OnDescriptionDone(source input.DoneSource)
+	OnDescriptionDone(source userinput.DoneSource)
 	OnDescriptionInsertFromContext()
 	OnDescriptionListAction(action listaction.ListAction)
 
 	// Controls the Tags input
 	OnTagChanged(newText string)
-	OnTagDone(source input.DoneSource)
+	OnTagDone(source userinput.DoneSource)
 	OnTagInsertFromContext()
 	OnTagListAction(action listaction.ListAction)
 
@@ -141,17 +142,17 @@ func (ic *InputController) OnDateChanged(x string) {
 
 func (ic *InputController) OnDateDone() {
 	if date, found := ic.state.InputMetadata.GetDateGuess(); found {
-		ic.state.JournalEntryInput.SetDate(date)
+		ic.state.Transaction.Date.Set(date)
 		ic.state.NextPhase()
 	}
 }
 
-func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
+func (ic *InputController) OnPostingAccountDone(source userinput.DoneSource) {
 	account := ""
 	switch source {
-	case input.Context:
+	case userinput.Context:
 		account = ic.state.InputMetadata.SelectedPostingAccount()
-	case input.Input:
+	case userinput.Input:
 		account = ic.state.InputMetadata.PostingAccountText()
 	}
 
@@ -161,8 +162,12 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 	}
 
 	// We have an account - save the posting
-	posting := ic.state.JournalEntryInput.CurrentPosting()
-	posting.SetAccount(account)
+	posting, found := ic.state.Transaction.Postings.Last()
+	if !found {
+		posting = statemod.NewPostingData()
+		ic.state.Transaction.Postings.Append(posting)
+	}
+	posting.Account.Set(journal.Account(account))
 
 	// Go to ammount
 	ic.state.NextPhase()
@@ -173,16 +178,22 @@ func (ic *InputController) OnPostingAccountDone(source input.DoneSource) {
 // multiple commodities, since we can't know when the user is done entering
 // based on the pending balance.
 func (ic *InputController) OnFinishPosting() {
-	if ic.state.JournalEntryInput.CountPostings() == 0 {
+	balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
+
+	// len(balance) == 0 -> No postings, nothing to do
+	if len(balance) == 0 {
 		return
 	}
-	singleCurrency := ic.state.JournalEntryInput.HasSingleCurrency()
-	zeroBalance := ic.state.JournalEntryInput.PostingHasZeroBalance()
-	if (singleCurrency && zeroBalance) || !singleCurrency {
-		// Need to clear the last posting, since it's empty
-		ic.state.JournalEntryInput.DeleteCurrentPosting()
-		ic.state.SetPhase(statemod.Confirmation)
+
+	// If we have a single currency and it's unbalanced, nothing to do
+	if len(balance) == 1 && !balance[0].Quantity.IsZero() {
+		return
 	}
+
+	// We have multiple currencies or a single currency with zero balance, so
+	// finish the posting
+	ic.state.Transaction.Postings.Pop()
+	ic.state.SetPhase(statemod.Confirmation)
 }
 
 // OnPostingAccountInsertFromContext inserts the text from the context to the
@@ -213,14 +224,14 @@ func (ic *InputController) OnPostingAccountChanged(newText string) {
 	ic.state.InputMetadata.SetPostingAccountText(newText)
 }
 
-func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
+func (ic *InputController) OnPostingAmmountDone(source userinput.DoneSource) {
 	var ammount finance.Ammount
 	var success bool
 
 	switch source {
-	case input.Context:
+	case userinput.Context:
 		ammount, success = ic.state.InputMetadata.GetPostingAmmountGuess()
-	case input.Input:
+	case userinput.Input:
 		ammount, success = ic.state.InputMetadata.GetPostingAmmountInput()
 	default:
 		logrus.Fatalf("Uknown source for Posting Ammount: %s", source)
@@ -228,14 +239,22 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 
 	if success {
 		// Saves ammount
-		posting := ic.state.JournalEntryInput.CurrentPosting()
-		posting.SetAmmount(ammount)
+		posting, found := ic.state.Transaction.Postings.Last()
+		if !found {
+			posting = statemod.NewPostingData()
+			ic.state.Transaction.Postings.Append(posting)
+		}
+		posting.Ammount.Set(ammount)
 
 		// If there is balance outstanding, go to next posting
-		if !ic.state.JournalEntryInput.PostingHasZeroBalance() {
-			ic.state.JournalEntryInput.AdvancePosting()
-			ic.state.SetPhase(statemod.InputPostingAccount)
-			return
+		balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
+		for _, balanceAmmount := range balance {
+			if !balanceAmmount.Quantity.IsZero() {
+				newPosting := statemod.NewPostingData()
+				ic.state.Transaction.Postings.Append(newPosting)
+				ic.state.SetPhase(statemod.InputPostingAccount)
+				return
+			}
 		}
 
 		// Else, go to confirmation
@@ -246,7 +265,7 @@ func (ic *InputController) OnPostingAmmountDone(source input.DoneSource) {
 func (ic *InputController) OnPostingAmmountChanged(text string) {
 	if text != ic.state.InputMetadata.GetPostingAmmountText() {
 		ic.state.InputMetadata.SetPostingAmmountText(text)
-		ammount, err := input.TextToAmmount(text)
+		ammount, err := parsing.TextToAmmount(text)
 		if err != nil {
 			ic.state.InputMetadata.ClearPostingAmmountInput()
 		} else {
@@ -256,7 +275,7 @@ func (ic *InputController) OnPostingAmmountChanged(text string) {
 }
 
 func (ic *InputController) OnInputConfirmation() {
-	transaction, transactionErr := ic.state.JournalEntryInput.ToTransaction()
+	transaction, transactionErr := userinput.TransactionFromData(ic.state.Transaction)
 	if transactionErr != nil {
 		// TODO Let the user know somehow!
 		logrus.WithError(transactionErr).Fatal("the transaction input could not be parsed (this shouldn't happen)")
@@ -270,7 +289,7 @@ func (ic *InputController) OnInputConfirmation() {
 		logrus.WithError(printErr).Fatal("failed to write to file")
 		return
 	}
-	ic.state.JournalEntryInput = input.NewJournalEntryInput()
+	ic.state.Transaction = statemod.NewTransactionData()
 	ic.state.InputMetadata.Reset()
 	accountLoadErr := ic.metaLoader.LoadAccounts()
 	if accountLoadErr != nil {
@@ -292,7 +311,8 @@ func (ic *InputController) OnInputConfirmation() {
 
 func (ic *InputController) OnInputRejection() {
 	// put back an empty posting so the user can add to it
-	ic.state.JournalEntryInput.AdvancePosting()
+	newPosting := statemod.NewPostingData()
+	ic.state.Transaction.Postings.Append(newPosting)
 	ic.state.SetPhase(statemod.InputPostingAccount)
 }
 
@@ -310,8 +330,8 @@ func (ic *InputController) OnDescriptionListAction(action listaction.ListAction)
 	}
 }
 
-func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
-	if source == input.Context {
+func (ic *InputController) OnDescriptionDone(source userinput.DoneSource) {
+	if source == userinput.Context {
 		// If we have a description from context, use it!
 		if descriptionFromContext := ic.state.InputMetadata.SelectedDescription(); descriptionFromContext != "" {
 			ic.OnDescriptionChanged(descriptionFromContext)
@@ -319,9 +339,10 @@ func (ic *InputController) OnDescriptionDone(source input.DoneSource) {
 	}
 
 	description := ic.state.InputMetadata.DescriptionText()
-	ic.state.JournalEntryInput.SetDescription(description)
-	if ic.state.JournalEntryInput.CountPostings() == 0 {
-		ic.state.JournalEntryInput.AddPosting()
+	ic.state.Transaction.Description.Set(description)
+	if len(ic.state.Transaction.Postings.Get()) == 0 {
+		newPosting := statemod.NewPostingData()
+		ic.state.Transaction.Postings.Append(newPosting)
 	}
 	ic.state.NextPhase()
 }
@@ -342,7 +363,7 @@ func (ic *InputController) OnTagChanged(newText string) {
 	ic.state.InputMetadata.SetTagText(newText)
 }
 
-func (ic *InputController) OnTagDone(source input.DoneSource) {
+func (ic *InputController) OnTagDone(source userinput.DoneSource) {
 	var tag journal.Tag
 
 	// If empty input, move to next phase
@@ -352,11 +373,11 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 	}
 
 	// Get tag value
-	if source == input.Context {
+	if source == userinput.Context {
 		tag = ic.state.InputMetadata.SelectedTag()
 	}
 	if tag.Name == "" {
-		tag, _ = input.TextToTag(ic.state.InputMetadata.TagText())
+		tag, _ = userinput.TextToTag(ic.state.InputMetadata.TagText())
 	}
 
 	// Skip if no tag - user entered invalid input
@@ -365,7 +386,7 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 	}
 
 	// We have tag - move on to next tag
-	ic.state.JournalEntryInput.AppendTag(tag)
+	ic.state.Transaction.Tags.Append(tag)
 	ic.state.InputMetadata.SetTagText("")
 	err := ic.eventBus.Send(eventbus.Event{
 		Topic: "input.tag.settext",
@@ -378,7 +399,7 @@ func (ic *InputController) OnTagDone(source input.DoneSource) {
 
 func (ic *InputController) OnTagInsertFromContext() {
 	tagFromContext := ic.state.InputMetadata.SelectedTag()
-	textFromContext := input.TagToText(tagFromContext)
+	textFromContext := userinput.TagToText(tagFromContext)
 	event := eventbus.Event{
 		Topic: "input.tag.settext",
 		Data:  textFromContext,
@@ -439,27 +460,30 @@ func (ic *InputController) OnUndo() {
 	case statemod.InputDate:
 		ic.state.PrevPhase()
 	case statemod.InputDescription:
-		ic.state.JournalEntryInput.ClearDate()
+		ic.state.Transaction.Date.Clear()
 		ic.state.PrevPhase()
 	case statemod.InputTags:
 		// Clear description and go back
-		ic.state.JournalEntryInput.ClearDescription()
+		ic.state.Transaction.Description.Clear()
 		ic.state.InputMetadata.SetDescriptionText("")
 		ic.state.PrevPhase()
 	case statemod.InputPostingAccount:
-		ic.state.JournalEntryInput.DeleteCurrentPosting()
-		if ic.state.JournalEntryInput.CountPostings() == 0 {
+		ic.state.Transaction.Postings.Pop()
+		if posting, found := ic.state.Transaction.Postings.Last(); found {
+			// We have a posting to go back to - clear last ammount and go back
+			posting.Ammount.Clear()
+			ic.state.SetPhase(statemod.InputPostingAmmount)
+		} else {
 			// We don't have any postings - clear tags and go back
-			ic.state.JournalEntryInput.ClearTags()
+			ic.state.Transaction.Tags.Clear()
 			ic.state.InputMetadata.SetTagText("")
 			ic.state.PrevPhase()
-		} else {
-			// We have a posting to go back to - clear last ammount and go back
-			ic.state.JournalEntryInput.CurrentPosting().ClearAmmount()
-			ic.state.SetPhase(statemod.InputPostingAmmount)
+
 		}
 	case statemod.InputPostingAmmount:
-		ic.state.JournalEntryInput.CurrentPosting().ClearAccount()
+		if posting, found := ic.state.Transaction.Postings.Last(); found {
+			posting.Account.Clear()
+		}
 		ic.state.PrevPhase()
 	default:
 	}
