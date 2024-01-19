@@ -6,8 +6,8 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/parsing"
 	"github.com/vitorqb/addledger/internal/state"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 //go:generate $MOCKGEN --source=ammountguesser.go --destination=../../mocks/ammountguesser/ammountguesser_mock.go
@@ -40,7 +40,7 @@ type AmmountGuesser struct{}
 // Guess implements IAmmountGuesser.
 func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool) {
 	// If user entered an ammount, use it
-	if ammountFromUserInput, err := parsing.TextToAmmount(inputs.UserInput); err == nil {
+	if ammountFromUserInput, err := userinput.TextToAmmount(inputs.UserInput); err == nil {
 		if ammountFromUserInput.Commodity == "" {
 			ammountFromUserInput.Commodity = DefaultCommodity
 		}

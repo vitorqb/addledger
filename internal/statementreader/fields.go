@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/vitorqb/addledger/internal/finance"
-	"github.com/vitorqb/addledger/internal/parsing"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 // A FieldImporter knows how to import a field from a string.
@@ -57,7 +57,7 @@ var _ FieldImporter = DescriptionImporter{}
 type AmmountImporter struct{}
 
 func (a AmmountImporter) Import(statementEntry *finance.StatementEntry, value string) error {
-	if parsed, err := parsing.TextToAmmount(value); err == nil {
+	if parsed, err := userinput.TextToAmmount(value); err == nil {
 		statementEntry.Ammount = parsed
 		return nil
 	}

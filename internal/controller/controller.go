@@ -12,7 +12,6 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	"github.com/vitorqb/addledger/internal/metaloader"
-	"github.com/vitorqb/addledger/internal/parsing"
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/userinput"
@@ -265,7 +264,7 @@ func (ic *InputController) OnPostingAmmountDone(source userinput.DoneSource) {
 func (ic *InputController) OnPostingAmmountChanged(text string) {
 	if text != ic.state.InputMetadata.GetPostingAmmountText() {
 		ic.state.InputMetadata.SetPostingAmmountText(text)
-		ammount, err := parsing.TextToAmmount(text)
+		ammount, err := userinput.TextToAmmount(text)
 		if err != nil {
 			ic.state.InputMetadata.ClearPostingAmmountInput()
 		} else {
