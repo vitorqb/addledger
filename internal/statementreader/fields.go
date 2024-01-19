@@ -4,19 +4,20 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/parsing"
 )
 
 // A FieldImporter knows how to import a field from a string.
 type FieldImporter interface {
 	// Import imports the field from the string.
-	Import(statementEntry *StatementEntry, value string) error
+	Import(statementEntry *finance.StatementEntry, value string) error
 }
 
 // AccountImporter imports the account field.
 type AccountImporter struct{}
 
-func (a AccountImporter) Import(statementEntry *StatementEntry, value string) error {
+func (a AccountImporter) Import(statementEntry *finance.StatementEntry, value string) error {
 	statementEntry.Account = value
 	return nil
 }
@@ -28,7 +29,7 @@ type DateImporter struct {
 	Format string
 }
 
-func (d DateImporter) Import(statementEntry *StatementEntry, value string) error {
+func (d DateImporter) Import(statementEntry *finance.StatementEntry, value string) error {
 	// Note: we are hardcoding the date formats here, which is not ideal.
 	// We should probably allow the user to configure the date formats.
 	if d.Format != "" {
@@ -45,7 +46,7 @@ var _ FieldImporter = DateImporter{}
 // DescriptionImporter imports the description field.
 type DescriptionImporter struct{}
 
-func (d DescriptionImporter) Import(statementEntry *StatementEntry, value string) error {
+func (d DescriptionImporter) Import(statementEntry *finance.StatementEntry, value string) error {
 	statementEntry.Description = value
 	return nil
 }
@@ -55,7 +56,7 @@ var _ FieldImporter = DescriptionImporter{}
 // AmmountImporter imports the amount field.
 type AmmountImporter struct{}
 
-func (a AmmountImporter) Import(statementEntry *StatementEntry, value string) error {
+func (a AmmountImporter) Import(statementEntry *finance.StatementEntry, value string) error {
 	if parsed, err := parsing.TextToAmmount(value); err == nil {
 		statementEntry.Ammount = parsed
 		return nil

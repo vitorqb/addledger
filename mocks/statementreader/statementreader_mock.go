@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	finance "github.com/vitorqb/addledger/internal/finance"
 	statementreader "github.com/vitorqb/addledger/internal/statementreader"
 )
 
@@ -36,14 +37,14 @@ func (m *MockIStatementReader) EXPECT() *MockIStatementReaderMockRecorder {
 }
 
 // Read mocks base method.
-func (m *MockIStatementReader) Read(file io.Reader, options ...statementreader.Option) ([]statementreader.StatementEntry, error) {
+func (m *MockIStatementReader) Read(file io.Reader, options ...statementreader.Option) ([]finance.StatementEntry, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{file}
 	for _, a := range options {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "Read", varargs...)
-	ret0, _ := ret[0].([]statementreader.StatementEntry)
+	ret0, _ := ret[0].([]finance.StatementEntry)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -79,7 +80,7 @@ func (m *MockSortStrategy) EXPECT() *MockSortStrategyMockRecorder {
 }
 
 // Clone mocks base method.
-func (m *MockSortStrategy) Clone(arg0 []statementreader.StatementEntry) statementreader.SortStrategy {
+func (m *MockSortStrategy) Clone(arg0 []finance.StatementEntry) statementreader.SortStrategy {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Clone", arg0)
 	ret0, _ := ret[0].(statementreader.SortStrategy)

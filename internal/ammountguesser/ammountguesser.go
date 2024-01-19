@@ -8,7 +8,6 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/parsing"
 	"github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementreader"
 )
 
 //go:generate $MOCKGEN --source=ammountguesser.go --destination=../../mocks/ammountguesser/ammountguesser_mock.go
@@ -24,7 +23,7 @@ type Inputs struct {
 
 	// StatementEntry is the statement entry that has been loaded and is being used
 	// for the current journal entry.
-	StatementEntry statementreader.StatementEntry
+	StatementEntry finance.StatementEntry
 
 	// MatchingTransactions are the transactions that match the current user input.
 	MatchingTransactions []journal.Transaction

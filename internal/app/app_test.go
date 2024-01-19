@@ -14,7 +14,6 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	statemod "github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/testutils"
 	accountguesser_mock "github.com/vitorqb/addledger/mocks/accountguesser"
 	ammountguesser_mock "github.com/vitorqb/addledger/mocks/ammountguesser"
@@ -102,7 +101,7 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		// All input used for guessing
 		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
 		userInput := "EUR 12.20"
-		statementEntry := statementreader.StatementEntry{}
+		statementEntry := finance.StatementEntry{}
 
 		// The expected guess
 		expectedGuess := *testutils.Ammount_1(t)
@@ -112,7 +111,7 @@ func TestLinkAmmountGuesser(t *testing.T) {
 		state.InputMetadata.SetPostingAmmountText(userInput)
 		newPosting := statemod.NewPostingData()
 		state.Transaction.Postings.Append(newPosting)
-		state.SetStatementEntries([]statementreader.StatementEntry{statementEntry})
+		state.SetStatementEntries([]finance.StatementEntry{statementEntry})
 		// Assertions & behavior for engine
 		guesser.EXPECT().Guess(gomock.Any()).DoAndReturn(func(inputs ammountguesser.Inputs) (finance.Ammount, bool) {
 			assert.Equal(t, userInput, inputs.UserInput)
@@ -142,7 +141,7 @@ func TestLinkAccountGuesser(t *testing.T) {
 
 		// Input used for guessing
 		statementEntry := testutils.StatementEntry_1(t)
-		statamentEntries := []statementreader.StatementEntry{statementEntry}
+		statamentEntries := []finance.StatementEntry{statementEntry}
 		matchingTransactions := []journal.Transaction{*testutils.Transaction_1(t)}
 		postings := []journal.Posting{testutils.Posting_1(t)}
 		postingData := testutils.PostingData_1(t)

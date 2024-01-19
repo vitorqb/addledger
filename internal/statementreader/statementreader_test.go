@@ -47,7 +47,7 @@ func TestDateImporter(t *testing.T) {
 	for _, tc := range testCases {
 		testName := fmt.Sprintf("%s-%s", tc.format, tc.dateStr)
 		t.Run(testName, func(t *testing.T) {
-			statementEntry := &StatementEntry{}
+			statementEntry := &finance.StatementEntry{}
 			err := DateImporter{tc.format}.Import(statementEntry, tc.dateStr)
 			assert.Equal(t, tc.expectedDate, statementEntry.Date)
 			if tc.expectedError != "" {
@@ -73,7 +73,7 @@ func TestAccountImporter(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		statementEntry := &StatementEntry{}
+		statementEntry := &finance.StatementEntry{}
 		err := AccountImporter{}.Import(statementEntry, tc.accountStr)
 		assert.Equal(t, tc.expectedAccount, statementEntry.Account)
 		assert.ErrorIs(t, err, tc.expectedError)
@@ -103,7 +103,7 @@ func TestAmmountImporter(t *testing.T) {
 		},
 	}
 	for _, tc := range testCases {
-		statementEntry := &StatementEntry{}
+		statementEntry := &finance.StatementEntry{}
 		err := AmmountImporter{}.Import(statementEntry, tc.ammountStr)
 		assert.Equal(t, tc.expectedAmmount, statementEntry.Ammount)
 		if tc.expectedError != "" {
@@ -119,8 +119,8 @@ func TestCSVLoader(t *testing.T) {
 		name          string
 		options       []Option
 		csvInput      string
-		expected      []StatementEntry
-		expectFn      func([]StatementEntry)
+		expected      []finance.StatementEntry
+		expectFn      func([]finance.StatementEntry)
 		expectedError string
 	}
 	testCases := []testCase{
@@ -136,7 +136,7 @@ func TestCSVLoader(t *testing.T) {
 				}),
 			},
 			csvInput: `2023-10-31,FOO,12.21`,
-			expected: []StatementEntry{
+			expected: []finance.StatementEntry{
 				{
 					Account:     "ACC",
 					Date:        time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),
@@ -158,7 +158,7 @@ func TestCSVLoader(t *testing.T) {
 				WithSortStrategy(SortByDate{}),
 			},
 			csvInput: "2023-10-30\n2023-10-29",
-			expectFn: func(x []StatementEntry) {
+			expectFn: func(x []finance.StatementEntry) {
 				assert.Equal(t, time.Date(2023, 10, 29, 0, 0, 0, 0, time.UTC), x[0].Date)
 				assert.Equal(t, time.Date(2023, 10, 30, 0, 0, 0, 0, time.UTC), x[1].Date)
 			},
@@ -176,7 +176,7 @@ func TestCSVLoader(t *testing.T) {
 				WithDefaultCommodity(""),
 			},
 			csvInput: "ACC,31/10/2023,FOO,12.21\nACC,30/10/2023,BAR,12.00",
-			expected: []StatementEntry{
+			expected: []finance.StatementEntry{
 				{
 					Account:     "ACC",
 					Date:        time.Date(2023, 10, 31, 0, 0, 0, 0, time.UTC),
