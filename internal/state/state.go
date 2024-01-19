@@ -5,7 +5,6 @@ import (
 
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/utils"
 	"github.com/vitorqb/addledger/pkg/react"
 )
@@ -67,7 +66,7 @@ type (
 		JournalMetadata *JournalMetadata
 		// StatementEntries are entires loaded from a bank statement.
 		// They are used to help the user to create journal entries.
-		StatementEntries []statementreader.StatementEntry
+		StatementEntries []finance.StatementEntry
 		Display          *Display
 	}
 
@@ -185,7 +184,7 @@ func InitialState() *State {
 		Transaction:      NewTransactionData(),
 		InputMetadata:    inputMetadata,
 		JournalMetadata:  journalMetadata,
-		StatementEntries: []statementreader.StatementEntry{},
+		StatementEntries: []finance.StatementEntry{},
 		Display:          display,
 	}
 	inputMetadata.AddOnChangeHook(state.NotifyChange)
@@ -469,20 +468,20 @@ func (jm *JournalMetadata) Tags() []journal.Tag {
 }
 
 // GetStatementEntries returns the current statement entries
-func (s *State) GetStatementEntries() []statementreader.StatementEntry {
+func (s *State) GetStatementEntries() []finance.StatementEntry {
 	return s.StatementEntries
 }
 
 // SetStatementEntries sets the current statement entries
-func (s *State) SetStatementEntries(x []statementreader.StatementEntry) {
+func (s *State) SetStatementEntries(x []finance.StatementEntry) {
 	s.StatementEntries = x
 	s.NotifyChange()
 }
 
 // CurrentStatementEntry returns the current statement entry
-func (s *State) CurrentStatementEntry() (e statementreader.StatementEntry, found bool) {
+func (s *State) CurrentStatementEntry() (e finance.StatementEntry, found bool) {
 	if len(s.StatementEntries) == 0 {
-		return statementreader.StatementEntry{}, false
+		return finance.StatementEntry{}, false
 	}
 	return s.StatementEntries[0], true
 }

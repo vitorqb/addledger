@@ -9,7 +9,6 @@ import (
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementreader"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 )
 
@@ -71,7 +70,7 @@ func TestAmmountGuesser(t *testing.T) {
 				tc.inputs.MatchingTransactions = []journal.Transaction{*t}
 
 				// Set a statement entry
-				tc.inputs.StatementEntry = statementreader.StatementEntry{Ammount: anotherAmmount}
+				tc.inputs.StatementEntry = finance.StatementEntry{Ammount: anotherAmmount}
 
 			},
 			guess:   anotherAmmount.InvertSign(),
@@ -85,7 +84,7 @@ func TestAmmountGuesser(t *testing.T) {
 				tc.inputs.MatchingTransactions = []journal.Transaction{*transact}
 
 				// Set a statement entry that should be ignored
-				tc.inputs.StatementEntry = statementreader.StatementEntry{Ammount: anotherAmmount}
+				tc.inputs.StatementEntry = finance.StatementEntry{Ammount: anotherAmmount}
 
 				// Set some pending balance
 				postingData := state.NewPostingData()

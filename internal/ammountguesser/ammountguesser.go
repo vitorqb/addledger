@@ -6,9 +6,8 @@ import (
 	"github.com/shopspring/decimal"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/parsing"
 	"github.com/vitorqb/addledger/internal/state"
-	"github.com/vitorqb/addledger/internal/statementreader"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 //go:generate $MOCKGEN --source=ammountguesser.go --destination=../../mocks/ammountguesser/ammountguesser_mock.go
@@ -24,7 +23,7 @@ type Inputs struct {
 
 	// StatementEntry is the statement entry that has been loaded and is being used
 	// for the current journal entry.
-	StatementEntry statementreader.StatementEntry
+	StatementEntry finance.StatementEntry
 
 	// MatchingTransactions are the transactions that match the current user input.
 	MatchingTransactions []journal.Transaction
@@ -41,7 +40,7 @@ type AmmountGuesser struct{}
 // Guess implements IAmmountGuesser.
 func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool) {
 	// If user entered an ammount, use it
-	if ammountFromUserInput, err := parsing.TextToAmmount(inputs.UserInput); err == nil {
+	if ammountFromUserInput, err := userinput.TextToAmmount(inputs.UserInput); err == nil {
 		if ammountFromUserInput.Commodity == "" {
 			ammountFromUserInput.Commodity = DefaultCommodity
 		}
@@ -50,8 +49,8 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 
 	// If we have pending balance, use it
 	for {
-		nonEmptyPostingInputs := selectNonEmptyPostingData(inputs.PostingsData)
-		if len(nonEmptyPostingInputs) < 1 {
+		nonEmptyPostingData := selectNonEmptyPostingData(inputs.PostingsData)
+		if len(nonEmptyPostingData) < 1 {
 			break
 		}
 
@@ -59,7 +58,7 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 		var success bool = true
 		balance := decimal.Zero
 		commodity := ""
-		for _, posting := range nonEmptyPostingInputs {
+		for _, posting := range nonEmptyPostingData {
 			ammount, _ := posting.Ammount.Get()
 			// Multiple commodities -> stop
 			if commodity != "" && ammount.Commodity != commodity {

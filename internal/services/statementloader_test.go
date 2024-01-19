@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	configmod "github.com/vitorqb/addledger/internal/config"
+	"github.com/vitorqb/addledger/internal/finance"
 	. "github.com/vitorqb/addledger/internal/services"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
@@ -45,7 +46,7 @@ func TestStatementLoaderSvc(t *testing.T) {
 		{
 			name: "Success",
 			run: func(t *testing.T, c *testcontext) {
-				entries := []statementreader.StatementEntry{{Account: "ACC"}}
+				entries := []finance.StatementEntry{{Account: "ACC"}}
 				config := configmod.StatementLoaderConfig{File: statement}
 				c.reader.EXPECT().Read(gomock.Any(), gomock.Any()).Return(entries, nil)
 				err := c.service.Load(config)

@@ -8,7 +8,6 @@ import (
 	. "github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/journal"
-	"github.com/vitorqb/addledger/internal/statementreader"
 	tu "github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/accountguesser"
 )
@@ -170,7 +169,7 @@ func TestStatementAccountGuesser(t *testing.T) {
 	}
 	type testcase struct {
 		name     string
-		sEntry   statementreader.StatementEntry
+		sEntry   finance.StatementEntry
 		input    []journal.Posting
 		success  bool
 		expected journal.Account
@@ -178,26 +177,26 @@ func TestStatementAccountGuesser(t *testing.T) {
 	var testcases = []testcase{
 		{
 			name:     "no statement entry",
-			sEntry:   statementreader.StatementEntry{},
+			sEntry:   finance.StatementEntry{},
 			success:  false,
 			expected: "",
 		},
 		{
 			name:     "statement entry with account",
-			sEntry:   statementreader.StatementEntry{Account: "savings"},
+			sEntry:   finance.StatementEntry{Account: "savings"},
 			success:  true,
 			expected: "savings",
 		},
 		{
 			name:     "existing input posting w same account",
-			sEntry:   statementreader.StatementEntry{Account: "savings"},
+			sEntry:   finance.StatementEntry{Account: "savings"},
 			input:    []journal.Posting{{Account: "savings"}},
 			success:  false,
 			expected: "",
 		},
 		{
 			name:     "existing input posting w different account",
-			sEntry:   statementreader.StatementEntry{Account: "savings"},
+			sEntry:   finance.StatementEntry{Account: "savings"},
 			input:    []journal.Posting{{Account: "expenses"}},
 			success:  true,
 			expected: "savings",

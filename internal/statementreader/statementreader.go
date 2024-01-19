@@ -5,29 +5,16 @@ import (
 	"fmt"
 	"io"
 	"sort"
-	"time"
 
 	"github.com/vitorqb/addledger/internal/finance"
 )
 
 //go:generate $MOCKGEN --source=statementreader.go --destination=../../mocks/statementreader/statementreader_mock.go
 
-// StatementEntry represents a single entry in a bank statement.
-type StatementEntry struct {
-	// Account is the account of the entry.
-	Account string
-	// Date is the date of the entry.
-	Date time.Time
-	// Description is a description of the entry.
-	Description string
-	// Amount is the amount of the entry.
-	Ammount finance.Ammount
-}
-
 // IStatementReader is an interface for reading a bank statement from a file and
 // converting it to a list of statement entries.
 type IStatementReader interface {
-	Read(file io.Reader, options ...Option) ([]StatementEntry, error)
+	Read(file io.Reader, options ...Option) ([]finance.StatementEntry, error)
 }
 
 // CSVColumnMapping maps a csv column to a statement entry field.
@@ -40,13 +27,13 @@ type CSVColumnMapping struct {
 
 type StatementReader struct{}
 
-func (s *StatementReader) Read(reader io.Reader, options ...Option) ([]StatementEntry, error) {
+func (s *StatementReader) Read(reader io.Reader, options ...Option) ([]finance.StatementEntry, error) {
 	config := parseOptions(options)
 	csvReader := csv.NewReader(reader)
 	csvReader.Comma = config.Separator
 
 	// Parse statement entries
-	var statementEntries []StatementEntry
+	var statementEntries []finance.StatementEntry
 	for {
 		record, err := csvReader.Read()
 		if err == io.EOF {
@@ -55,7 +42,7 @@ func (s *StatementReader) Read(reader io.Reader, options ...Option) ([]Statement
 		if err != nil {
 			return nil, fmt.Errorf("error reading csv file: %w", err)
 		}
-		var statementEntry StatementEntry
+		var statementEntry finance.StatementEntry
 		for _, columnMapping := range config.ColumnMappings {
 			if columnMapping.Column >= len(record) {
 				return nil, fmt.Errorf("column index out of range for field %T", columnMapping.Importer)
@@ -113,15 +100,15 @@ var DefaultConfig = Config{
 // but wrapping the given array.
 type SortStrategy interface {
 	sort.Interface
-	Clone([]StatementEntry) SortStrategy
+	Clone([]finance.StatementEntry) SortStrategy
 }
 
-type SortByDate []StatementEntry
+type SortByDate []finance.StatementEntry
 
-func (x SortByDate) Len() int                            { return len(x) }
-func (x SortByDate) Swap(i, j int)                       { x[i], x[j] = x[j], x[i] }
-func (x SortByDate) Less(i, j int) bool                  { return x[i].Date.Before(x[j].Date) }
-func (SortByDate) Clone(x []StatementEntry) SortStrategy { return SortByDate(x) }
+func (x SortByDate) Len() int                                    { return len(x) }
+func (x SortByDate) Swap(i, j int)                               { x[i], x[j] = x[j], x[i] }
+func (x SortByDate) Less(i, j int) bool                          { return x[i].Date.Before(x[j].Date) }
+func (SortByDate) Clone(x []finance.StatementEntry) SortStrategy { return SortByDate(x) }
 
 // Option is a function that configures a CSVLoaderConfig.
 type Option func(*Config)
