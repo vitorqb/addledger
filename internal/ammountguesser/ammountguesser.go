@@ -50,8 +50,8 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 
 	// If we have pending balance, use it
 	for {
-		nonEmptyPostingInputs := selectNonEmptyPostingData(inputs.PostingsData)
-		if len(nonEmptyPostingInputs) < 1 {
+		nonEmptyPostingData := selectNonEmptyPostingData(inputs.PostingsData)
+		if len(nonEmptyPostingData) < 1 {
 			break
 		}
 
@@ -59,7 +59,7 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 		var success bool = true
 		balance := decimal.Zero
 		commodity := ""
-		for _, posting := range nonEmptyPostingInputs {
+		for _, posting := range nonEmptyPostingData {
 			ammount, _ := posting.Ammount.Get()
 			// Multiple commodities -> stop
 			if commodity != "" && ammount.Commodity != commodity {
