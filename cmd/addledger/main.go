@@ -64,6 +64,7 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load date guesser")
 	}
+	app.LinkDateGuesser(state, dateGuesser)
 
 	// Starts a Printer
 	printer, printerErr := injector.Printer(config.PrinterConfig)

@@ -6,6 +6,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/dateguesser"
+	"github.com/vitorqb/addledger/internal/finance"
 	"github.com/vitorqb/addledger/internal/testutils"
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 )
@@ -24,16 +25,25 @@ func TestDateGuesser(t *testing.T) {
 			name: "No input suggests today",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				guess, success := c.guesser.Guess("")
+				guess, success := c.guesser.Guess("", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date1(t), guess)
+			},
+		},
+		{
+			name: "No input with statement entry suggests statement entry",
+			run: func(c *testcontext, t *testing.T) {
+				c.clock.EXPECT().Now().AnyTimes().Return(testutils.Date1(t))
+				guess, success := c.guesser.Guess("", finance.StatementEntry{Date: testutils.Date2(t)})
+				assert.True(t, success)
+				assert.Equal(t, testutils.Date2(t), guess)
 			},
 		},
 		{
 			name: "Valid user input (full date)",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				guess, success := c.guesser.Guess("1993-11-23")
+				guess, success := c.guesser.Guess("1993-11-23", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date1(t), guess)
 			},
@@ -42,7 +52,7 @@ func TestDateGuesser(t *testing.T) {
 			name: "Valid user input (day only)",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				guess, success := c.guesser.Guess("23")
+				guess, success := c.guesser.Guess("23", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date1(t), guess)
 			},
@@ -51,7 +61,7 @@ func TestDateGuesser(t *testing.T) {
 			name: "Valid user input (day only, 1 digit month)",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().AnyTimes().Return(testutils.Date2(t))
-				guess, success := c.guesser.Guess("01")
+				guess, success := c.guesser.Guess("01", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date2(t), guess)
 			},
@@ -60,7 +70,7 @@ func TestDateGuesser(t *testing.T) {
 			name: "Valid user input (month and day)",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				guess, success := c.guesser.Guess("11-23")
+				guess, success := c.guesser.Guess("11-23", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date1(t), guess)
 			},
@@ -69,7 +79,7 @@ func TestDateGuesser(t *testing.T) {
 			name: "Previous day",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				guess, success := c.guesser.Guess("-1")
+				guess, success := c.guesser.Guess("-1", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date1(t).AddDate(0, 0, -1), guess)
 			},
@@ -78,7 +88,7 @@ func TestDateGuesser(t *testing.T) {
 			name: "Two days ago",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				guess, success := c.guesser.Guess("-2")
+				guess, success := c.guesser.Guess("-2", finance.StatementEntry{})
 				assert.True(t, success)
 				assert.Equal(t, testutils.Date1(t).AddDate(0, 0, -2), guess)
 			},
@@ -87,7 +97,7 @@ func TestDateGuesser(t *testing.T) {
 			name: "Invalid user input",
 			run: func(c *testcontext, t *testing.T) {
 				c.clock.EXPECT().Now().Return(testutils.Date1(t))
-				_, success := c.guesser.Guess("41")
+				_, success := c.guesser.Guess("41", finance.StatementEntry{})
 				assert.False(t, success)
 			},
 		},

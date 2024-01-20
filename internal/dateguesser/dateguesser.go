@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/vitorqb/addledger/internal/finance"
 )
 
 //go:generate $MOCKGEN --source=dateguesser.go --destination=../../mocks/dateguesser/dateguesser_mock.go
@@ -26,10 +28,10 @@ var _ IClock = &Clock{}
 func (*Clock) Now() time.Time { return time.Now() }
 
 // IDateGuesser proves an interface for an engine that guesses the date the user
-// wants from it's text input.
+// wants from it's text input and a statement entry.
 type IDateGuesser interface {
 	// Guess returns a tuple of (guess, success).
-	Guess(userInput string) (guess time.Time, success bool)
+	Guess(userInput string, statementEntry finance.StatementEntry) (guess time.Time, success bool)
 }
 
 // DateGuesser implemnets IDateGuesser.
@@ -43,12 +45,17 @@ var _ IDateGuesser = &DateGuesser{}
 func New() (*DateGuesser, error) { return &DateGuesser{&Clock{}}, nil }
 
 // Guess implements IDateGuesser
-func (dg *DateGuesser) Guess(userInput string) (guess time.Time, success bool) {
+func (dg *DateGuesser) Guess(userInput string, statementEntry finance.StatementEntry) (guess time.Time, success bool) {
 	now := dg.Clock.Now()
 
-	// Empty user input - use today
-	if userInput == "" {
+	// Empty user input and no statementEntry - use today
+	if userInput == "" && statementEntry.Date.IsZero() {
 		return now, true
+	}
+
+	// Empty user input and statementEntry - use statementEntry
+	if userInput == "" && !statementEntry.Date.IsZero() {
+		return statementEntry.Date, true
 	}
 
 	// User entered full date - we are happy
