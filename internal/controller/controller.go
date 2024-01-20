@@ -122,27 +122,14 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 }
 
 func (ic *InputController) OnDateChanged(x string) {
-	// No input and loaded statement - use statement date
-	if x == "" {
-		if sEntry, found := ic.state.CurrentStatementEntry(); found {
-			ic.state.InputMetadata.SetDateGuess(sEntry.Date)
-			return
-		}
-	}
-
-	// Delegate to DateGuesser
-	date, success := ic.dateGuesser.Guess(x)
-	if success {
-		ic.state.InputMetadata.SetDateGuess(date)
-	} else {
-		ic.state.InputMetadata.ClearDateGuess()
-	}
+	ic.state.InputMetadata.SetDateText(x)
 }
 
 func (ic *InputController) OnDateDone() {
 	if date, found := ic.state.InputMetadata.GetDateGuess(); found {
 		ic.state.Transaction.Date.Set(date)
 		ic.state.NextPhase()
+		return
 	}
 }
 

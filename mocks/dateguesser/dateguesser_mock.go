@@ -9,6 +9,7 @@ import (
 	time "time"
 
 	gomock "github.com/golang/mock/gomock"
+	finance "github.com/vitorqb/addledger/internal/finance"
 )
 
 // MockIClock is a mock of IClock interface.
@@ -72,16 +73,16 @@ func (m *MockIDateGuesser) EXPECT() *MockIDateGuesserMockRecorder {
 }
 
 // Guess mocks base method.
-func (m *MockIDateGuesser) Guess(userInput string) (time.Time, bool) {
+func (m *MockIDateGuesser) Guess(userInput string, statementEntry finance.StatementEntry) (time.Time, bool) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Guess", userInput)
+	ret := m.ctrl.Call(m, "Guess", userInput, statementEntry)
 	ret0, _ := ret[0].(time.Time)
 	ret1, _ := ret[1].(bool)
 	return ret0, ret1
 }
 
 // Guess indicates an expected call of Guess.
-func (mr *MockIDateGuesserMockRecorder) Guess(userInput interface{}) *gomock.Call {
+func (mr *MockIDateGuesserMockRecorder) Guess(userInput, statementEntry interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIDateGuesser)(nil).Guess), userInput)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Guess", reflect.TypeOf((*MockIDateGuesser)(nil).Guess), userInput, statementEntry)
 }

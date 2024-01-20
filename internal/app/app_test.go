@@ -3,6 +3,7 @@ package app_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/sirupsen/logrus"
@@ -17,6 +18,7 @@ import (
 	"github.com/vitorqb/addledger/internal/testutils"
 	accountguesser_mock "github.com/vitorqb/addledger/mocks/accountguesser"
 	ammountguesser_mock "github.com/vitorqb/addledger/mocks/ammountguesser"
+	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/transactionmatcher"
 )
 
@@ -202,4 +204,80 @@ func TestLinkAccountGuesser(t *testing.T) {
 		assert.False(t, success)
 	})
 
+}
+
+func TestLinkDateGuesser(t *testing.T) {
+
+	aDate := time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)
+	aDateStr := aDate.Format("2006-01-02")
+	sEntry := finance.StatementEntry{}
+
+	testcases := []struct {
+		name string
+		run  func(*testing.T, *statemod.State, *MockIDateGuesser)
+	}{
+		{
+			name: "Updates guess in state from new date input",
+			run: func(t *testing.T, state *statemod.State, guesser *MockIDateGuesser) {
+				// Expected guesser call
+				guesser.EXPECT().Guess(aDateStr, sEntry).Return(aDate, true)
+
+				// Link
+				LinkDateGuesser(state, guesser)
+
+				// Set inputs on state
+				state.InputMetadata.SetDateText(aDateStr)
+
+				// Ensure guess was set
+				actualGuess, _ := state.InputMetadata.GetDateGuess()
+				assert.Equal(t, aDate, actualGuess)
+			},
+		},
+		{
+			name: "Updates guess in state from new statement entry",
+			run: func(t *testing.T, state *statemod.State, guesser *MockIDateGuesser) {
+				// Expected guesser call
+				guesser.EXPECT().Guess("", sEntry).Return(aDate, true)
+
+				// Link
+				LinkDateGuesser(state, guesser)
+
+				// Set inputs on state
+				state.SetStatementEntries([]finance.StatementEntry{sEntry})
+
+				// Ensure guess was set
+				actualGuess, _ := state.InputMetadata.GetDateGuess()
+				assert.Equal(t, aDate, actualGuess)
+			},
+		},
+		{
+			name: "Clears guess when no guess",
+			run: func(t *testing.T, state *statemod.State, guesser *MockIDateGuesser) {
+				// Expected guesser call
+				guesser.EXPECT().Guess(aDateStr, sEntry).Return(time.Time{}, false)
+
+				// Starts with a guess
+				state.InputMetadata.SetDateGuess(aDate)
+
+				// Link
+				LinkDateGuesser(state, guesser)
+
+				// Set inputs on state
+				state.InputMetadata.SetDateText(aDateStr)
+
+				// Ensure guess was cleared
+				_, found := state.InputMetadata.GetDateGuess()
+				assert.False(t, found)
+			},
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+			guesser := NewMockIDateGuesser(ctrl)
+			testcase.run(t, statemod.InitialState(), guesser)
+		})
+	}
 }

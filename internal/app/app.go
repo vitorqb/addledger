@@ -8,6 +8,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vitorqb/addledger/internal/accountguesser"
 	"github.com/vitorqb/addledger/internal/ammountguesser"
+	"github.com/vitorqb/addledger/internal/dateguesser"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/transactionmatcher"
 	"github.com/vitorqb/addledger/internal/userinput"
@@ -112,5 +113,26 @@ func LinkAccountGuesser(state *statemod.State, guesser accountguesser.AccountGue
 			return
 		}
 		state.InputMetadata.SetPostingAccountGuess(acc)
+	})
+}
+
+// LinkDateGuesser links a given Date Guesser to state updates
+func LinkDateGuesser(state *statemod.State, guesser dateguesser.IDateGuesser) {
+	busy := false
+	state.AddOnChangeHook(func() {
+		if busy {
+			return
+		}
+		busy = true
+		defer func() { busy = false }()
+
+		dateText := state.InputMetadata.GetDateText()
+		statementEntry, _ := state.CurrentStatementEntry()
+		dateGuess, success := guesser.Guess(dateText, statementEntry)
+		if success {
+			state.InputMetadata.SetDateGuess(dateGuess)
+			return
+		}
+		state.InputMetadata.ClearDateGuess()
 	})
 }

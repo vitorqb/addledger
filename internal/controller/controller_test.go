@@ -25,7 +25,6 @@ import (
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
-var otherTime, _ = time.Parse(time.RFC3339, "2022-01-02")
 var anAmmount = finance.Ammount{
 	Commodity: "BRL",
 	Quantity:  decimal.New(9999, -3),
@@ -151,56 +150,15 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
-			name: "On date change and done",
+			name: "On date done",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
 				assert.Nil(t, c.initError)
-				c.dateGuesser.EXPECT().Guess("2022-01-01").Return(aTime, true)
-				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				assert.Equal(t, statemod.InputDescription, c.state.CurrentPhase())
 				foundDate, _ := c.state.Transaction.Date.Get()
 				assert.Equal(t, aTime, foundDate)
-			},
-		},
-		{
-			name: "On date change with empty input and statement",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				statementEntries := []finance.StatementEntry{{Date: otherTime}}
-				c.state.SetStatementEntries(statementEntries)
-				c.controller.OnDateChanged("")
-				guess, success := c.state.InputMetadata.GetDateGuess()
-				assert.True(t, success)
-				assert.Equal(t, otherTime, guess)
-			},
-		},
-		{
-			name: "On date change but no guess",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				assert.Nil(t, c.initError)
-				c.dateGuesser.EXPECT().Guess("aaa").Return(time.Time{}, false)
-				c.controller.OnDateChanged("aaa")
-				c.controller.OnDateDone()
-				assert.Equal(t, statemod.InputDate, c.state.CurrentPhase())
-				_, dateFound := c.state.Transaction.Date.Get()
-				assert.False(t, dateFound)
-			},
-		},
-		{
-			name: "On date cleans up date on second entry",
-			opts: defaultOpts,
-			run: func(t *testing.T, c *testcontext) {
-				assert.Nil(t, c.initError)
-				c.dateGuesser.EXPECT().Guess("2023-01-01").Return(aTime, true)
-				c.dateGuesser.EXPECT().Guess("aaa").Return(time.Time{}, false)
-				c.controller.OnDateChanged("2023-01-01")
-				foundDate, _ := c.state.Transaction.Date.Get()
-				assert.Equal(t, aTime, foundDate)
-				c.controller.OnDateChanged("aaa")
-				_, dateFound := c.state.Transaction.Date.Get()
-				assert.False(t, dateFound)
 			},
 		},
 		{
@@ -290,7 +248,6 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				countTransactionsBefore := len(c.state.JournalMetadata.Transactions())
 				c.state.Transaction = testutils.TransactionData_1(t)
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				expected := "\n\n" + userinput.TransactionRepr(c.state.Transaction)
@@ -310,7 +267,6 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.state.SetStatementEntries([]finance.StatementEntry{{}})
 				c.state.Transaction = testutils.TransactionData_1(t)
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
 				c.controller.OnInputConfirmation()
@@ -336,9 +292,9 @@ func TestInputController(t *testing.T) {
 				c.state.SetPhase(statemod.Confirmation)
 				c.controller.OnInputConfirmation()
 
-				// We expect the date of the 2nd statement entry to be the guess
-				dateGuess, _ := c.state.InputMetadata.GetDateGuess()
-				assert.Equal(t, date2, dateGuess)
+				assert.Equal(t, statemod.InputDate, c.state.CurrentPhase())
+				dateText := c.state.InputMetadata.GetDateText()
+				assert.Equal(t, "", dateText)
 			},
 		},
 		{
@@ -465,8 +421,8 @@ func TestInputController(t *testing.T) {
 			name: "After two unbalanced postings dont advance to confirmation",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(userinput.Input)
@@ -503,8 +459,8 @@ func TestInputController(t *testing.T) {
 			run: func(t *testing.T, c *testcontext) {
 				c.metaLoader.EXPECT().LoadAccounts().Times(1)
 				c.metaLoader.EXPECT().LoadTransactions().Times(0)
-				c.dateGuesser.EXPECT().Guess(gomock.Any()).AnyTimes().Return(aTime, true)
 				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(userinput.Input)
@@ -543,8 +499,8 @@ func TestInputController(t *testing.T) {
 			name: "Must have empty posting after confirmation rejection",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(userinput.Input)
@@ -580,8 +536,8 @@ func TestInputController(t *testing.T) {
 			name: "OnPostingAmmountDone",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
-				c.dateGuesser.EXPECT().Guess(gomock.Any())
 				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(userinput.Input)
@@ -842,6 +798,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			name: "Undo after first posting is entered ",
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(userinput.Input)
@@ -869,6 +826,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			name: "User undo on confirmation page",
 			run: func(t *testing.T, c *testcontext) {
 				c.controller.OnDateChanged("2022-01-01")
+				c.state.InputMetadata.SetDateGuess(aTime)
 				c.controller.OnDateDone()
 				c.controller.OnDescriptionChanged("FOO")
 				c.controller.OnDescriptionDone(userinput.Input)
@@ -959,7 +917,6 @@ func TestInputController__OnUndo(t *testing.T) {
 			c.eventBus = NewMockIEventBus(ctrl)
 			c.csvStatementLoader = NewMockStatementLoader(ctrl)
 			dateGuesser := NewMockIDateGuesser(ctrl)
-			dateGuesser.EXPECT().Guess(gomock.Any()).AnyTimes()
 			c.controller, err = NewController(c.state,
 				WithOutput(&bytesBuffer),
 				WithEventBus(c.eventBus),

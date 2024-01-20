@@ -43,6 +43,7 @@ type (
 
 		// Controls date
 		dateGuess *MaybeValue[time.Time]
+		dateText  string
 
 		// The transactions that match the current input
 		matchingTransactions []journal.Transaction
@@ -174,6 +175,7 @@ func InitialState() *State {
 		postingAmmountInput:    &MaybeValue[finance.Ammount]{},
 		postingAmmountText:     "",
 		dateGuess:              &MaybeValue[time.Time]{},
+		dateText:               "",
 		matchingTransactions:   []journal.Transaction{},
 	}
 	journalMetadata := NewJournalMetadata()
@@ -364,6 +366,17 @@ func (im *InputMetadata) SetDateGuess(x time.Time) {
 // ClearDateGuess clears the current date guess
 func (im *InputMetadata) ClearDateGuess() {
 	im.dateGuess.Clear()
+	im.NotifyChange()
+}
+
+// GetDateText returns the current text for the date input
+func (im *InputMetadata) GetDateText() string {
+	return im.dateText
+}
+
+// SetDateText sets the current text for the date input
+func (im *InputMetadata) SetDateText(x string) {
+	im.dateText = x
 	im.NotifyChange()
 }
 
