@@ -13,11 +13,12 @@ import (
 
 type (
 	// MainView represents the main view of the application, which contains
-	// 3 parts:
+	// 4 main parts:
 	// - View: the main view, which displays the current journal entry
 	// - Input: the input field, where the user can type new entries
 	// - Context: a context box, which displays information about the current
 	//   input and helps the user to fill it.
+	// - MessageBox: a box that displays messages to the user.
 	// The MainView may also contain a StatementDisplay, which displays
 	// information about the current statement (if any).
 	MainView struct {
@@ -39,6 +40,11 @@ type (
 		state    *state.State
 		setFocus func(p tview.Primitive) *tview.Application
 	}
+
+	// MessageBox is a tview.TextView that displays messages to the user.
+	MessageBox struct {
+		*tview.TextView
+	}
 )
 
 type LayoutPage string
@@ -54,7 +60,14 @@ const (
 	modalHeight = 10
 )
 
-func NewMainView(view *View, input *Input, context *Context, statementDisplay *StatementDisplay, state *state.State) *MainView {
+func NewMainView(
+	view *View,
+	input *Input,
+	context *Context,
+	statementDisplay *StatementDisplay,
+	messageBox *MessageBox,
+	state *state.State,
+) *MainView {
 	mainView := &MainView{
 		Flex:             tview.NewFlex(),
 		view:             view,
@@ -68,6 +81,7 @@ func NewMainView(view *View, input *Input, context *Context, statementDisplay *S
 	mainView.AddItem(statementDisplay, 0, 0, false)
 	mainView.AddItem(input, 0, 1, false)
 	mainView.AddItem(context, 0, 10, false)
+	mainView.AddItem(messageBox, 0, 2, false)
 	state.AddOnChangeHook(mainView.Refresh)
 	return mainView
 }
@@ -101,6 +115,7 @@ func NewLayout(
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)
+	messageBox := NewMessageBox(state)
 
 	// Creates a Context
 	accountList, err := NewAccountList(state, eventBus)
@@ -141,7 +156,7 @@ func NewLayout(
 	// (if any). It starts hidden and is only shown when there are statements.
 	statementDisplay := NewStatementDisplay(state)
 
-	mainView := NewMainView(view, input, context, statementDisplay, state)
+	mainView := NewMainView(view, input, context, statementDisplay, messageBox, state)
 	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
 	loadStatementModal := center(NewLoadStatementModal(controller), modalWith*2, modalHeight*2)
 
@@ -216,4 +231,13 @@ func HandleGlobalShortcuts(controller controller.IInputController, event *tcell.
 		return nil
 	}
 	return event
+}
+
+func NewMessageBox(state *state.State) *MessageBox {
+	messageBox := MessageBox{tview.NewTextView()}
+	messageBox.SetBorder(true)
+	state.AddOnChangeHook(func() {
+		messageBox.SetText(state.Display.UserMessage())
+	})
+	return &messageBox
 }

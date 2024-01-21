@@ -93,6 +93,16 @@ func TestNewLayout(t *testing.T) {
 				assert.True(t, c.layout.InputHasFocus())
 			},
 		},
+		{
+			name: "Displays a given message",
+			run: func(c *testcontext, t *testing.T) {
+				msg := "Foo!"
+				c.state.Display.SetUserMessage(msg)
+				c.layout.Refresh()
+				text := c.layout.GetItem(4).(*MessageBox).GetText(true)
+				assert.Equal(t, msg, text)
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
