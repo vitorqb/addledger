@@ -12,6 +12,7 @@ import (
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/stringmatcher"
 	"github.com/vitorqb/addledger/internal/transactionmatcher"
+	"github.com/vitorqb/addledger/internal/usermessenger"
 	"github.com/vitorqb/addledger/pkg/hledger"
 )
 
@@ -90,4 +91,8 @@ func TransactionMatcher() (transactionmatcher.ITransactionMatcher, error) {
 	transactionMatcher := transactionmatcher.New(stringMatcher)
 
 	return transactionMatcher, nil
+}
+
+func UserMessenger(state *statemod.State) usermessenger.IUserMessenger {
+	return usermessenger.New(state)
 }

@@ -22,6 +22,7 @@ import (
 	. "github.com/vitorqb/addledger/mocks/dateguesser"
 	. "github.com/vitorqb/addledger/mocks/eventbus"
 	. "github.com/vitorqb/addledger/mocks/metaloader"
+	. "github.com/vitorqb/addledger/mocks/usermessenger"
 )
 
 var aTime, _ = time.Parse(time.RFC3339, "2022-01-01")
@@ -714,6 +715,7 @@ func TestInputController__OnUndo(t *testing.T) {
 		controller         *InputController
 		eventBus           *MockIEventBus
 		csvStatementLoader *MockStatementLoader
+		userMessenger      *MockIUserMessenger
 	}
 
 	type testcase struct {
@@ -904,6 +906,16 @@ func TestInputController__OnUndo(t *testing.T) {
 				assert.False(t, c.state.Display.LoadStatementModal())
 			},
 		},
+		{
+			name: "OnLoadStatement loads statement warns user on error",
+			run: func(t *testing.T, c *testcontext) {
+				c.userMessenger.EXPECT().Error(gomock.Any(), gomock.Any()).Do(func(msg string, err error) {
+					assert.Contains(t, msg, "Failed to load config")
+					assert.Contains(t, err.Error(), "no such file or directory")
+				})
+				c.controller.OnLoadStatement("foo", "bar")
+			},
+		},
 	}
 
 	for _, tc := range testcases {
@@ -916,6 +928,7 @@ func TestInputController__OnUndo(t *testing.T) {
 			c.state = statemod.InitialState()
 			c.eventBus = NewMockIEventBus(ctrl)
 			c.csvStatementLoader = NewMockStatementLoader(ctrl)
+			c.userMessenger = NewMockIUserMessenger(ctrl)
 			dateGuesser := NewMockIDateGuesser(ctrl)
 			c.controller, err = NewController(c.state,
 				WithOutput(&bytesBuffer),
@@ -924,6 +937,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				WithMetaLoader(NewMockIMetaLoader(ctrl)),
 				WithPrinter(printermod.New(2, 2)),
 				WithCSVStatementLoader(c.csvStatementLoader),
+				WithUserMessenger(c.userMessenger),
 			)
 			assert.NoError(t, err)
 			tc.run(t, c)

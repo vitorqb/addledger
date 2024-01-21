@@ -7,6 +7,7 @@ import (
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/metaloader"
 	printermod "github.com/vitorqb/addledger/internal/printer"
+	"github.com/vitorqb/addledger/internal/usermessenger"
 )
 
 // Opts represents all options for an InputController
@@ -23,6 +24,8 @@ type Opts struct {
 	printer printermod.IPrinter
 	// The instance of ICSVStatementLoader to use
 	csvStatementLoader StatementLoader
+	// The instance of IUserMessenger to use
+	userMessenger usermessenger.IUserMessenger
 }
 
 // Opt configures options for an InputController
@@ -82,6 +85,14 @@ func WithPrinter(printer printermod.IPrinter) Opt {
 func WithCSVStatementLoader(csvStatementLoader StatementLoader) Opt {
 	return OptFn(func(opts *Opts) error {
 		opts.csvStatementLoader = csvStatementLoader
+		return nil
+	})
+}
+
+// WithUserMessenger configures which IUserMessenger to use.
+func WithUserMessenger(userMessenger usermessenger.IUserMessenger) Opt {
+	return OptFn(func(opts *Opts) error {
+		opts.userMessenger = userMessenger
 		return nil
 	})
 }

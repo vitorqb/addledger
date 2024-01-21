@@ -84,6 +84,9 @@ func main() {
 	statementReader := injector.StatementReader()
 	statementLoaderSvc := services.NewStatementLoaderSvc(state, statementReader)
 
+	// Starts a user messenger
+	userMessenger := injector.UserMessenger(state)
+
 	// Starts a new controller
 	controller, err := controller.NewController(state,
 		controller.WithOutput(destFile),
@@ -92,6 +95,7 @@ func main() {
 		controller.WithMetaLoader(metaLoader),
 		controller.WithPrinter(printer),
 		controller.WithCSVStatementLoader(statementLoaderSvc),
+		controller.WithUserMessenger(userMessenger),
 	)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to instantiate controller")
