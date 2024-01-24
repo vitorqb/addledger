@@ -56,6 +56,9 @@ type (
 		// Controls whether the shortcut modal is displayed or not
 		shortcutModal      bool
 		loadStatementModal bool
+
+		// A message to display to the user
+		userMessage string
 	}
 
 	// State is the top-level app state
@@ -513,6 +516,7 @@ func NewDisplay() *Display {
 		IReact:             react.New(),
 		shortcutModal:      false,
 		loadStatementModal: false,
+		userMessage:        "",
 	}
 }
 
@@ -536,4 +540,15 @@ func (d *Display) SetLoadStatementModal(x bool) {
 // LoadStatementModal returns whether the statement modal is displayed or not
 func (d *Display) LoadStatementModal() bool {
 	return d.loadStatementModal
+}
+
+// SetUserMessage sets the current user message
+func (d *Display) SetUserMessage(x string) {
+	d.userMessage = x
+	d.NotifyChange()
+}
+
+// UserMessage returns the current user message
+func (d *Display) UserMessage() string {
+	return d.userMessage
 }

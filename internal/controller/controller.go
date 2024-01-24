@@ -15,6 +15,7 @@ import (
 	printermod "github.com/vitorqb/addledger/internal/printer"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/userinput"
+	"github.com/vitorqb/addledger/internal/usermessenger"
 )
 
 //go:generate $MOCKGEN --source=controller.go --destination=../../mocks/controller/controller_mock.go
@@ -80,6 +81,7 @@ type InputController struct {
 	metaLoader         metaloader.IMetaLoader
 	printer            printermod.IPrinter
 	csvStatementLoader StatementLoader
+	userMessenger      usermessenger.IUserMessenger
 }
 
 var _ IInputController = &InputController{}
@@ -110,6 +112,9 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 	if opts.csvStatementLoader == nil {
 		return nil, fmt.Errorf("missing csvStatementLoader")
 	}
+	if opts.userMessenger == nil {
+		opts.userMessenger = &usermessenger.NoOp{}
+	}
 	return &InputController{
 		state:              state,
 		output:             opts.output,
@@ -118,6 +123,7 @@ func NewController(state *statemod.State, options ...Opt) (*InputController, err
 		metaLoader:         opts.metaLoader,
 		printer:            opts.printer,
 		csvStatementLoader: opts.csvStatementLoader,
+		userMessenger:      opts.userMessenger,
 	}, nil
 }
 
@@ -192,7 +198,7 @@ func (ic *InputController) OnPostingAccountInsertFromContext() {
 	}
 	err := ic.eventBus.Send(event)
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -202,7 +208,7 @@ func (ic *InputController) OnPostingAccountListAcction(action listaction.ListAct
 		Data:  action,
 	})
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -263,24 +269,21 @@ func (ic *InputController) OnPostingAmmountChanged(text string) {
 func (ic *InputController) OnInputConfirmation() {
 	transaction, transactionErr := userinput.TransactionFromData(ic.state.Transaction)
 	if transactionErr != nil {
-		// TODO Let the user know somehow!
-		logrus.WithError(transactionErr).Fatal("the transaction input could not be parsed (this shouldn't happen)")
+		ic.userMessenger.Error("The transaction input could not be parsed (this shouldn't happen)", transactionErr)
 		return
 	}
 
 	// TODO Inject the printer instead of hardcoding
 	printErr := printermod.New(2, 0).Print(ic.output, transaction)
 	if printErr != nil {
-		// TODO Let the user know somehow!
-		logrus.WithError(printErr).Fatal("failed to write to file")
+		ic.userMessenger.Error("Failed to write to file", printErr)
 		return
 	}
 	ic.state.Transaction = statemod.NewTransactionData()
 	ic.state.InputMetadata.Reset()
 	accountLoadErr := ic.metaLoader.LoadAccounts()
 	if accountLoadErr != nil {
-		// TODO Let the user know somehow!
-		logrus.WithError(accountLoadErr).Fatal("failed to load accounts")
+		ic.userMessenger.Error("Failed to load accounts", accountLoadErr)
 		return
 	}
 	// Note: we could call `ic.metaLoader.LoadTransactions` here. This is, however,
@@ -312,7 +315,7 @@ func (ic *InputController) OnDescriptionListAction(action listaction.ListAction)
 		Data:  action,
 	})
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -341,7 +344,7 @@ func (ic *InputController) OnDescriptionInsertFromContext() {
 	}
 	err := ic.eventBus.Send(event)
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -379,7 +382,7 @@ func (ic *InputController) OnTagDone(source userinput.DoneSource) {
 		Data:  "",
 	})
 	if err != nil {
-		logrus.WithError(err).Error("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -392,7 +395,7 @@ func (ic *InputController) OnTagInsertFromContext() {
 	}
 	err := ic.eventBus.Send(event)
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -403,7 +406,7 @@ func (ic *InputController) OnTagListAction(action listaction.ListAction) {
 	}
 	err := ic.eventBus.Send(event)
 	if err != nil {
-		logrus.WithError(err).Warn("Failed to send event")
+		ic.userMessenger.Error("Failed to send event", err)
 	}
 }
 
@@ -430,12 +433,12 @@ func (ic *InputController) OnLoadStatementRequest() {
 func (ic *InputController) OnLoadStatement(csvFile string, presetFile string) {
 	config, err := configmod.LoadStatementLoaderConfig(csvFile, presetFile)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to load config")
+		ic.userMessenger.Error("Failed to load config", err)
 		return
 	}
 	err = ic.csvStatementLoader.Load(config)
 	if err != nil {
-		logrus.WithError(err).Error("Failed to load statement")
+		ic.userMessenger.Error("Failed to load statement", err)
 		return
 	}
 	ic.state.Display.SetLoadStatementModal(false)
