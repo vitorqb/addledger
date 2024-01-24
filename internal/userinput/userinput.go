@@ -66,21 +66,38 @@ func PostingRepr(p *state.PostingData) string {
 	return out
 }
 
+func PostingFromData(p *state.PostingData) (journal.Posting, error) {
+	ammount, found := p.Ammount.Get()
+	if !found {
+		return journal.Posting{}, ErrMissingAmmount{}
+	}
+	account, found := p.Account.Get()
+	if !found {
+		return journal.Posting{}, ErrMissingAccount{}
+	}
+	return journal.Posting{Account: string(account), Ammount: ammount}, nil
+}
+
+func PostingsFromData(postings []*state.PostingData) ([]journal.Posting, error) {
+	out := make([]journal.Posting, 0, len(postings))
+	for _, posting := range postings {
+		p, err := PostingFromData(posting)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
 func TransactionFromData(t *state.TransactionData) (journal.Transaction, error) {
 	ammounts := make([]finance.Ammount, 0, len(t.Postings.Get()))
-	postings := make([]journal.Posting, 0, len(t.Postings.Get()))
-	for _, postingData := range t.Postings.Get() {
-		ammount, found := postingData.Ammount.Get()
-		if !found {
-			return journal.Transaction{}, ErrMissingAmmount{}
-		}
-		account, found := postingData.Account.Get()
-		if !found {
-			return journal.Transaction{}, ErrMissingAccount{}
-		}
-		ammounts = append(ammounts, ammount)
-		posting := journal.Posting{Account: string(account), Ammount: ammount}
-		postings = append(postings, posting)
+	postings, err := PostingsFromData(t.Postings.Get())
+	if err != nil {
+		return journal.Transaction{}, err
+	}
+	for _, posting := range postings {
+		ammounts = append(ammounts, posting.Ammount)
 	}
 
 	// If we have a single currency, we can check if the postings are balanced.
