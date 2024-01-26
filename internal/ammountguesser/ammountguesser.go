@@ -47,32 +47,16 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 		return ammountFromUserInput, true
 	}
 
-	// If we have pending balance, use it
-	for {
-		nonEmptyPostingData := selectNonEmptyPostingData(inputs.PostingsData)
-		if len(nonEmptyPostingData) < 1 {
-			break
+	// Calculate balance left from postings
+	nonEmptyPostingData := selectNonEmptyPostingData(inputs.PostingsData)
+	postings, _ := userinput.PostingsFromData(nonEmptyPostingData)
+	balance := journal.PostingsBalance(postings)
+	if balance.SingleCommodity() && !balance.IsZero() {
+		// If user entered a fraction, use it
+		if fraction, err := userinput.TextToFraction(inputs.UserInput); err == nil {
+			return balance.Ammounts()[0].Mul(fraction).Round(2).InvertSign(), true
 		}
-
-		// Calculate pending balance
-		var success bool = true
-		balance := decimal.Zero
-		commodity := ""
-		for _, posting := range nonEmptyPostingData {
-			ammount, _ := posting.Ammount.Get()
-			// Multiple commodities -> stop
-			if commodity != "" && ammount.Commodity != commodity {
-				success = false
-				break
-			}
-			commodity = ammount.Commodity
-			balance = balance.Sub(ammount.Quantity)
-		}
-		if !success {
-			break
-		} else {
-			return finance.Ammount{Commodity: commodity, Quantity: balance}, true
-		}
+		return balance.Ammounts()[0].InvertSign(), true
 	}
 
 	// If we have a statement entry, use it

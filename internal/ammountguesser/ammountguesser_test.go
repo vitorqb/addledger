@@ -95,6 +95,26 @@ func TestAmmountGuesser(t *testing.T) {
 			guess:   anAmmount.InvertSign(),
 			success: true,
 		},
+		{
+			name: "Guess from user-inputted fraction",
+			setupFunc: func(tc *testcase) {
+				postingData := tu.PostingData_1(t)
+				tc.inputs.PostingsData = []*state.PostingData{&postingData}
+				tc.inputs.UserInput = "1/2"
+			},
+			guess:   tu.Posting_1(t).Ammount.Div(decimal.New(2, 0)).InvertSign(),
+			success: true,
+		},
+		{
+			name: "Guess from user-inputted fraction",
+			setupFunc: func(tc *testcase) {
+				postingData := tu.PostingData_1(t)
+				tc.inputs.PostingsData = []*state.PostingData{&postingData}
+				tc.inputs.UserInput = "100/200"
+			},
+			guess:   tu.Posting_1(t).Ammount.Div(decimal.New(2, 0)).InvertSign(),
+			success: true,
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -104,7 +124,7 @@ func TestAmmountGuesser(t *testing.T) {
 			guesser := AmmountGuesser{}
 
 			guess, success := guesser.Guess(tc.inputs)
-			assert.Equal(t, tc.guess, guess)
+			assert.True(t, guess.Equal(tc.guess))
 			assert.Equal(t, tc.success, success)
 		})
 	}

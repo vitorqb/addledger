@@ -66,25 +66,42 @@ func PostingRepr(p *state.PostingData) string {
 	return out
 }
 
+func PostingFromData(p *state.PostingData) (journal.Posting, error) {
+	ammount, found := p.Ammount.Get()
+	if !found {
+		return journal.Posting{}, ErrMissingAmmount{}
+	}
+	account, found := p.Account.Get()
+	if !found {
+		return journal.Posting{}, ErrMissingAccount{}
+	}
+	return journal.Posting{Account: string(account), Ammount: ammount}, nil
+}
+
+func PostingsFromData(postings []*state.PostingData) ([]journal.Posting, error) {
+	out := make([]journal.Posting, 0, len(postings))
+	for _, posting := range postings {
+		p, err := PostingFromData(posting)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, p)
+	}
+	return out, nil
+}
+
 func TransactionFromData(t *state.TransactionData) (journal.Transaction, error) {
 	ammounts := make([]finance.Ammount, 0, len(t.Postings.Get()))
-	postings := make([]journal.Posting, 0, len(t.Postings.Get()))
-	for _, postingData := range t.Postings.Get() {
-		ammount, found := postingData.Ammount.Get()
-		if !found {
-			return journal.Transaction{}, ErrMissingAmmount{}
-		}
-		account, found := postingData.Account.Get()
-		if !found {
-			return journal.Transaction{}, ErrMissingAccount{}
-		}
-		ammounts = append(ammounts, ammount)
-		posting := journal.Posting{Account: string(account), Ammount: ammount}
-		postings = append(postings, posting)
+	postings, err := PostingsFromData(t.Postings.Get())
+	if err != nil {
+		return journal.Transaction{}, err
+	}
+	for _, posting := range postings {
+		ammounts = append(ammounts, posting.Ammount)
 	}
 
 	// If we have a single currency, we can check if the postings are balanced.
-	if balance := finance.Balance(ammounts); len(balance) == 1 && !balance[0].Quantity.IsZero() {
+	if balance := finance.NewBalance(ammounts); balance.SingleCommodity() && !balance.IsZero() {
 		return journal.Transaction{}, ErrUnbalancedPosting{}
 	}
 
@@ -151,7 +168,7 @@ func CountCommodities(postings []state.PostingData) int {
 	return len(commodities)
 }
 
-func PostingBalance(postings []*state.PostingData) []finance.Ammount {
+func PostingBalance(postings []*state.PostingData) finance.Balance {
 	var ammounts []finance.Ammount
 	for _, posting := range postings {
 		ammount, found := posting.Ammount.Get()
@@ -159,7 +176,7 @@ func PostingBalance(postings []*state.PostingData) []finance.Ammount {
 			ammounts = append(ammounts, ammount)
 		}
 	}
-	return finance.Balance(ammounts)
+	return finance.NewBalance(ammounts)
 }
 
 var TagRegex = regexp.MustCompile(`^(?P<name>[a-zA-Z0-9\-\_]+):(?P<value>[a-zA-Z0-9\-\_]+)$`)
@@ -201,4 +218,26 @@ func TextToAmmount(x string) (finance.Ammount, error) {
 		return finance.Ammount{}, fmt.Errorf("invalid format: %w", err)
 	}
 	return finance.Ammount{Commodity: commodity, Quantity: quantity}, nil
+}
+
+func TextToFraction(x string) (decimal.Decimal, error) {
+	if !strings.Contains(x, "/") {
+		return decimal.Zero, fmt.Errorf("invalid fraction")
+	}
+	var err error
+	var numerator, denominator decimal.Decimal
+	switch words := strings.Split(x, "/"); len(words) {
+	case 2:
+		numerator, err = decimal.NewFromString(words[0])
+		if err != nil {
+			return decimal.Zero, fmt.Errorf("invalid fraction: %w", err)
+		}
+		denominator, err = decimal.NewFromString(words[1])
+		if err != nil {
+			return decimal.Zero, fmt.Errorf("invalid fraction: %w", err)
+		}
+	default:
+		return decimal.Zero, fmt.Errorf("invalid fraction")
+	}
+	return numerator.Div(denominator), nil
 }

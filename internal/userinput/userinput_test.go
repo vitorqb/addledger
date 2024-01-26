@@ -412,3 +412,68 @@ func TestTextToAmmount(t *testing.T) {
 		})
 	}
 }
+
+func TestPostingFromData(t *testing.T) {
+	t.Run("Missing ammount", func(t *testing.T) {
+		data := state.NewPostingData()
+		_, err := PostingFromData(data)
+		assert.ErrorContains(t, err, "missing the ammount")
+	})
+	t.Run("Missing account", func(t *testing.T) {
+		data := state.NewPostingData()
+		data.Ammount.Set(*testutils.Ammount_1(t))
+		_, err := PostingFromData(data)
+		assert.ErrorContains(t, err, "missing the account")
+	})
+	t.Run("Complete", func(t *testing.T) {
+		ammount := testutils.Ammount_1(t)
+		data := state.NewPostingData()
+		data.Ammount.Set(*ammount)
+		data.Account.Set("ACC")
+		posting, err := PostingFromData(data)
+		assert.Nil(t, err)
+		expPosting := journal.Posting{Account: "ACC", Ammount: *ammount}
+		assert.Equal(t, expPosting, posting)
+	})
+}
+
+func TestPostingsFromData(t *testing.T) {
+	t.Run("Empty", func(t *testing.T) {
+		data := []*state.PostingData{}
+		postings, err := PostingsFromData(data)
+		assert.Nil(t, err)
+		assert.Equal(t, []journal.Posting{}, postings)
+	})
+	t.Run("Two complete", func(t *testing.T) {
+		ammount_1 := testutils.Ammount_1(t)
+		ammount_2 := testutils.Ammount_2(t)
+		data := make([]*state.PostingData, 2)
+		data[0] = state.NewPostingData()
+		data[0].Ammount.Set(*ammount_1)
+		data[0].Account.Set("ACC1")
+		data[1] = state.NewPostingData()
+		data[1].Ammount.Set(*ammount_2)
+		data[1].Account.Set("ACC2")
+		postings, err := PostingsFromData(data)
+		assert.Nil(t, err)
+		expPostings := []journal.Posting{
+			{Ammount: *ammount_1, Account: "ACC1"},
+			{Ammount: *ammount_2, Account: "ACC2"},
+		}
+		assert.Equal(t, expPostings, postings)
+	})
+	t.Run("One missing ammount", func(t *testing.T) {
+		data := make([]*state.PostingData, 1)
+		data[0] = state.NewPostingData()
+		_, err := PostingsFromData(data)
+		assert.ErrorContains(t, err, "missing the ammount")
+	})
+	t.Run("One missing account", func(t *testing.T) {
+		ammount := testutils.Ammount_1(t)
+		data := make([]*state.PostingData, 1)
+		data[0] = state.NewPostingData()
+		data[0].Ammount.Set(*ammount)
+		_, err := PostingsFromData(data)
+		assert.ErrorContains(t, err, "missing the account")
+	})
+}

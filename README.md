@@ -118,6 +118,30 @@ path to it, like `--csv-statement-preset=~/preset.json`.
 If you want to enter a transaction with many commodities, in order to
 finish entering posting accounts, press `ALT+Enter`.
 
+### Entering amounts
+
+When entering posting amounts, you can:
+
+1. Enter just the number (and use default commodity)
+
+```
+123   # => EUR 123
+```
+
+2. Enter commodity + number
+
+```
+USD 123  # => USD 123
+```
+
+3. Enter a fraction (when there is a pending balance for the transaction)
+
+```
+# acc1   EUR 120
+# acc2   _______
+1/3  # => EUR 40
+```
+
 ## Development
 
 ### Setup

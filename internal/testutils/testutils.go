@@ -62,8 +62,20 @@ func Decimal_1(t *testing.T) decimal.Decimal {
 	return out
 }
 
+func Decimal_2(t *testing.T) decimal.Decimal {
+	out, err := decimal.NewFromString("9.99")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
 func Ammount_1(t *testing.T) *finance.Ammount {
 	return &finance.Ammount{Commodity: "EUR", Quantity: Decimal_1(t)}
+}
+
+func Ammount_2(t *testing.T) *finance.Ammount {
+	return &finance.Ammount{Commodity: "EUR", Quantity: Decimal_2(t)}
 }
 
 func Transaction_1(t *testing.T) *journal.Transaction {
