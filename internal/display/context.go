@@ -39,9 +39,6 @@ func NewContext(state *statemod.State, widgets []ContextWidget) (*Context, error
 		context.AddPage(widget.PageName, widget.Widget, true, false)
 	}
 
-	// Switch to the initial page
-	context.SwitchToPage("dateGuesser")
-
 	// Add a hook to refresh the widgets when the current page changes.
 	context.SetChangedFunc(func() {
 		_, page := context.GetFrontPage()
@@ -49,6 +46,9 @@ func NewContext(state *statemod.State, widgets []ContextWidget) (*Context, error
 			refreshablePage.Refresh()
 		}
 	})
+
+	// Switch to the initial page
+	context.SwitchToPage("dateGuesser")
 
 	context.Refresh()
 	state.AddOnChangeHook(context.Refresh)
@@ -59,17 +59,24 @@ func NewContext(state *statemod.State, widgets []ContextWidget) (*Context, error
 func (c Context) Refresh() {
 	switch c.state.CurrentPhase() {
 	case statemod.InputDate:
-		c.SwitchToPage("dateGuesser")
+		c.MaybeSwitchToPage("dateGuesser")
 	case statemod.InputPostingAccount:
-		c.SwitchToPage("accountList")
+		c.MaybeSwitchToPage("accountList")
 	case statemod.InputDescription:
-		c.SwitchToPage("descriptionPicker")
+		c.MaybeSwitchToPage("descriptionPicker")
 	case statemod.InputPostingAmmount:
-		c.SwitchToPage("ammountGuesser")
+		c.MaybeSwitchToPage("ammountGuesser")
 	case statemod.InputTags:
-		c.SwitchToPage("tagsPicker")
+		c.MaybeSwitchToPage("tagsPicker")
 	default:
-		c.SwitchToPage("empty")
+		c.MaybeSwitchToPage("empty")
+	}
+}
+
+func (c Context) MaybeSwitchToPage(pageName string) {
+	currentPage, _ := c.GetFrontPage()
+	if currentPage != pageName {
+		c.SwitchToPage(pageName)
 	}
 }
 
