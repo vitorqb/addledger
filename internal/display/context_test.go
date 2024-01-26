@@ -56,8 +56,10 @@ func TestNewContext(t *testing.T) {
 					t.Fatal(err)
 				}
 				assert.Equal(t, 1, primitive1.RefreshCallCount)
-				c.state.SetPhase(statemod.InputDate)
-				assert.Equal(t, 2, primitive1.RefreshCallCount)
+				assert.Equal(t, 0, primitive2.RefreshCallCount)
+				c.state.SetPhase(statemod.InputPostingAccount)
+				assert.Equal(t, 1, primitive1.RefreshCallCount)
+				assert.Equal(t, 1, primitive2.RefreshCallCount)
 			},
 		},
 	}
