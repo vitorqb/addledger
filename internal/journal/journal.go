@@ -31,10 +31,10 @@ type Tag struct {
 }
 
 // PostingsBalance returns the balance of the postings.
-func PostingsBalance(postings []Posting) []finance.Ammount {
+func PostingsBalance(postings []Posting) finance.Balance {
 	ammounts := make([]finance.Ammount, len(postings))
 	for i, posting := range postings {
 		ammounts[i] = posting.Ammount
 	}
-	return finance.Balance(ammounts)
+	return finance.NewBalance(ammounts)
 }

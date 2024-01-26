@@ -101,7 +101,7 @@ func TransactionFromData(t *state.TransactionData) (journal.Transaction, error) 
 	}
 
 	// If we have a single currency, we can check if the postings are balanced.
-	if balance := finance.Balance(ammounts); len(balance) == 1 && !balance[0].Quantity.IsZero() {
+	if balance := finance.NewBalance(ammounts); balance.SingleCommodity() && !balance.IsZero() {
 		return journal.Transaction{}, ErrUnbalancedPosting{}
 	}
 
@@ -168,7 +168,7 @@ func CountCommodities(postings []state.PostingData) int {
 	return len(commodities)
 }
 
-func PostingBalance(postings []*state.PostingData) []finance.Ammount {
+func PostingBalance(postings []*state.PostingData) finance.Balance {
 	var ammounts []finance.Ammount
 	for _, posting := range postings {
 		ammount, found := posting.Ammount.Get()
@@ -176,7 +176,7 @@ func PostingBalance(postings []*state.PostingData) []finance.Ammount {
 			ammounts = append(ammounts, ammount)
 		}
 	}
-	return finance.Balance(ammounts)
+	return finance.NewBalance(ammounts)
 }
 
 var TagRegex = regexp.MustCompile(`^(?P<name>[a-zA-Z0-9\-\_]+):(?P<value>[a-zA-Z0-9\-\_]+)$`)

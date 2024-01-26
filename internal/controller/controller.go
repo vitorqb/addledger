@@ -173,12 +173,12 @@ func (ic *InputController) OnFinishPosting() {
 	balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
 
 	// len(balance) == 0 -> No postings, nothing to do
-	if len(balance) == 0 {
+	if len(balance.Ammounts()) == 0 {
 		return
 	}
 
 	// If we have a single currency and it's unbalanced, nothing to do
-	if len(balance) == 1 && !balance[0].Quantity.IsZero() {
+	if balance.SingleCommodity() && !balance.IsZero() {
 		return
 	}
 
@@ -240,13 +240,11 @@ func (ic *InputController) OnPostingAmmountDone(source userinput.DoneSource) {
 
 		// If there is balance outstanding, go to next posting
 		balance := userinput.PostingBalance(ic.state.Transaction.Postings.Get())
-		for _, balanceAmmount := range balance {
-			if !balanceAmmount.Quantity.IsZero() {
-				newPosting := statemod.NewPostingData()
-				ic.state.Transaction.Postings.Append(newPosting)
-				ic.state.SetPhase(statemod.InputPostingAccount)
-				return
-			}
+		if !balance.IsZero() {
+			newPosting := statemod.NewPostingData()
+			ic.state.Transaction.Postings.Append(newPosting)
+			ic.state.SetPhase(statemod.InputPostingAccount)
+			return
 		}
 
 		// Else, go to confirmation

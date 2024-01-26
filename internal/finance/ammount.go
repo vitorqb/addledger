@@ -19,8 +19,27 @@ func (a Ammount) InvertSign() Ammount {
 	return Ammount{a.Commodity, a.Quantity.Neg()}
 }
 
+// A balance is a list of Ammounts, where each Ammount has a different
+// commodity. It represents the balance of a transaction.
+type Balance struct {
+	ammounts []Ammount // Will always have ONLY 1 ammount per commodity
+}
+
+func (b Balance) Ammounts() []Ammount { return b.ammounts }
+
+func (b Balance) SingleCommodity() bool { return len(b.ammounts) == 1 }
+
+func (b Balance) IsZero() bool {
+	for _, ammount := range b.ammounts {
+		if !ammount.Quantity.IsZero() {
+			return false
+		}
+	}
+	return true
+}
+
 // Returns the balance for each currency in a list of Ammounts.
-func Balance(ammounts []Ammount) []Ammount {
+func NewBalance(ammounts []Ammount) Balance {
 	commoditiesQuantityMap := map[string]decimal.Decimal{}
 	for _, ammount := range ammounts {
 		commoditiesQuantityMap[ammount.Commodity] = decimal.Zero
@@ -34,5 +53,5 @@ func Balance(ammounts []Ammount) []Ammount {
 			result = append(result, Ammount{commodity, quantity})
 		}
 	}
-	return result
+	return Balance{result}
 }

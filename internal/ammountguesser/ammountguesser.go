@@ -47,13 +47,12 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 		return ammountFromUserInput, true
 	}
 
-	// If we have pending balance, use it
+	// Calculate balance left from postings
 	nonEmptyPostingData := selectNonEmptyPostingData(inputs.PostingsData)
 	postings, _ := userinput.PostingsFromData(nonEmptyPostingData)
 	balance := journal.PostingsBalance(postings)
-	// The if below checks (a) we have a single currency with (b) non-zero balance
-	if len(balance) == 1 && !balance[0].Quantity.IsZero() {
-		return balance[0].InvertSign(), true
+	if balance.SingleCommodity() && !balance.IsZero() {
+		return balance.Ammounts()[0].InvertSign(), true
 	}
 
 	// If we have a statement entry, use it
