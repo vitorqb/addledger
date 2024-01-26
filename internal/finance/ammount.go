@@ -19,6 +19,18 @@ func (a Ammount) InvertSign() Ammount {
 	return Ammount{a.Commodity, a.Quantity.Neg()}
 }
 
+func (a Ammount) Div(d decimal.Decimal) Ammount {
+	return Ammount{a.Commodity, a.Quantity.Div(d)}
+}
+
+func (a Ammount) Mul(d decimal.Decimal) Ammount {
+	return Ammount{a.Commodity, a.Quantity.Mul(d)}
+}
+
+func (a Ammount) Round(i int32) Ammount {
+	return Ammount{a.Commodity, a.Quantity.Round(i)}
+}
+
 // A balance is a list of Ammounts, where each Ammount has a different
 // commodity. It represents the balance of a transaction.
 type Balance struct {

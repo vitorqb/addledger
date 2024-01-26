@@ -52,6 +52,10 @@ func (*AmmountGuesser) Guess(inputs Inputs) (guess finance.Ammount, success bool
 	postings, _ := userinput.PostingsFromData(nonEmptyPostingData)
 	balance := journal.PostingsBalance(postings)
 	if balance.SingleCommodity() && !balance.IsZero() {
+		// If user entered a fraction, use it
+		if fraction, err := userinput.TextToFraction(inputs.UserInput); err == nil {
+			return balance.Ammounts()[0].Mul(fraction).Round(2).InvertSign(), true
+		}
 		return balance.Ammounts()[0].InvertSign(), true
 	}
 

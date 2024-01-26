@@ -17,14 +17,17 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/google/pprof v0.0.0-20211214055906-6f57359322fd // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.1.0 // indirect
+	github.com/pkg/profile v1.7.0 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect

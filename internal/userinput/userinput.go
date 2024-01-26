@@ -219,3 +219,25 @@ func TextToAmmount(x string) (finance.Ammount, error) {
 	}
 	return finance.Ammount{Commodity: commodity, Quantity: quantity}, nil
 }
+
+func TextToFraction(x string) (decimal.Decimal, error) {
+	if !strings.Contains(x, "/") {
+		return decimal.Zero, fmt.Errorf("invalid fraction")
+	}
+	var err error
+	var numerator, denominator decimal.Decimal
+	switch words := strings.Split(x, "/"); len(words) {
+	case 2:
+		numerator, err = decimal.NewFromString(words[0])
+		if err != nil {
+			return decimal.Zero, fmt.Errorf("invalid fraction: %w", err)
+		}
+		denominator, err = decimal.NewFromString(words[1])
+		if err != nil {
+			return decimal.Zero, fmt.Errorf("invalid fraction: %w", err)
+		}
+	default:
+		return decimal.Zero, fmt.Errorf("invalid fraction")
+	}
+	return numerator.Div(denominator), nil
+}
