@@ -11,6 +11,8 @@ import (
 	"github.com/vitorqb/addledger/internal/state"
 )
 
+//go:generate $MOCKGEN --source=layout.go --destination=../../mocks/display/layout_mock.go
+
 type (
 	// MainView represents the main view of the application, which contains
 	// 4 main parts:
@@ -44,6 +46,12 @@ type (
 	// MessageBox is a tview.TextView that displays messages to the user.
 	MessageBox struct {
 		*tview.TextView
+	}
+
+	// tview App abstraction with only the methods we need.
+	TviewApp interface {
+		QueueUpdateDraw(func()) *tview.Application
+		SetFocus(p tview.Primitive) *tview.Application
 	}
 )
 
@@ -111,7 +119,7 @@ func NewLayout(
 	controller controller.IInputController,
 	state *state.State,
 	eventBus eventbus.IEventBus,
-	setFocus func(p tview.Primitive) *tview.Application,
+	app TviewApp,
 ) (*Layout, error) {
 	view := NewView(state)
 	input := NewInput(controller, state, eventBus)
@@ -122,7 +130,7 @@ func NewLayout(
 	if err != nil {
 		return nil, fmt.Errorf("failed to create account list: %w", err)
 	}
-	descriptionPicker, err := contextmod.NewDescriptionPicker(state, eventBus)
+	descriptionPicker, err := contextmod.NewDescriptionPicker(state, eventBus, app)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create description picker: %w", err)
 	}
@@ -172,7 +180,7 @@ func NewLayout(
 		Pages:    pages,
 		mainView: mainView,
 		state:    state,
-		setFocus: setFocus,
+		setFocus: app.SetFocus,
 	}
 	layout.Refresh()
 	state.AddOnChangeHook(layout.Refresh)

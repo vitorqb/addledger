@@ -3,6 +3,7 @@ package context_test
 import (
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	. "github.com/vitorqb/addledger/internal/display/context"
 	"github.com/vitorqb/addledger/internal/display/widgets"
@@ -12,6 +13,7 @@ import (
 	"github.com/vitorqb/addledger/internal/journal"
 	"github.com/vitorqb/addledger/internal/listaction"
 	statemod "github.com/vitorqb/addledger/internal/state"
+	mocks "github.com/vitorqb/addledger/mocks/display/context"
 )
 
 func TestDescriptionPicker(t *testing.T) {
@@ -19,6 +21,7 @@ func TestDescriptionPicker(t *testing.T) {
 		descPicker *widgets.ContextualList
 		state      *statemod.State
 		eventbus   *eventbusmod.EventBus
+		app        *mocks.MockTviewApp
 	}
 	type testcase struct {
 		name string
@@ -54,6 +57,8 @@ func TestDescriptionPicker(t *testing.T) {
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
 			var err error
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 			c := new(testcontext)
 			c.state = statemod.InitialState()
 			c.state.JournalMetadata.SetTransactions([]journal.Transaction{
@@ -61,7 +66,8 @@ func TestDescriptionPicker(t *testing.T) {
 				{Description: "Description Two"},
 			})
 			c.eventbus = eventbusmod.New()
-			c.descPicker, err = NewDescriptionPicker(c.state, c.eventbus)
+			c.app = mocks.NewMockTviewApp(ctrl)
+			c.descPicker, err = NewDescriptionPicker(c.state, c.eventbus, c.app)
 			if err != nil {
 				t.Fatal(err)
 			}

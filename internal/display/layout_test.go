@@ -119,7 +119,7 @@ func TestNewLayout(t *testing.T) {
 			// Some controller methods are called on startup
 			c.controller.EXPECT().OnDateChanged("")
 			c.app = testutils.NewTestApp()
-			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.app.SetFocus)
+			c.layout, err = NewLayout(c.controller, c.state, c.eventbus, c.app)
 			go c.app.SetRoot(c.layout, true).Run() //nolint:errcheck
 			// For some reason calling Stop() here causes the terminal
 			// output to be messed up. So we are commenting it out for now.
