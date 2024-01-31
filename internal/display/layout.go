@@ -85,11 +85,11 @@ func NewMainView(
 		state:            state,
 	}
 	mainView.SetDirection(tview.FlexRow)
-	mainView.AddItem(view, 0, 5, false)
+	mainView.AddItem(view, 0, 3, false)
 	mainView.AddItem(statementDisplay, 0, 0, false)
 	mainView.AddItem(input, 0, 1, false)
-	mainView.AddItem(context, 0, 10, false)
-	mainView.AddItem(messageBox, 0, 2, false)
+	mainView.AddItem(context, 0, 6, false)
+	mainView.AddItem(messageBox, 0, 1, false)
 	state.AddOnChangeHook(mainView.Refresh)
 	return mainView
 }
