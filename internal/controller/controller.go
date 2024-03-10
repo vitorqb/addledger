@@ -353,18 +353,18 @@ func (ic *InputController) OnTagChanged(newText string) {
 func (ic *InputController) OnTagDone(source userinput.DoneSource) {
 	var tag journal.Tag
 
-	// If empty input, move to next phase
-	if ic.state.InputMetadata.TagText() == "" {
-		ic.state.NextPhase()
-		return
-	}
-
 	// Get tag value
 	if source == userinput.Context {
 		tag = ic.state.InputMetadata.SelectedTag()
 	}
 	if tag.Name == "" {
 		tag, _ = userinput.TextToTag(ic.state.InputMetadata.TagText())
+	}
+
+	// No tag and empty input - move to next phase
+	if tag.Name == "" && ic.state.InputMetadata.TagText() == "" {
+		ic.state.NextPhase()
+		return
 	}
 
 	// Skip if no tag - user entered invalid input
@@ -450,9 +450,10 @@ func (ic *InputController) OnUndo() {
 		ic.state.Transaction.Date.Clear()
 		ic.state.PrevPhase()
 	case statemod.InputTags:
-		// Clear description and go back
+		// Clear description, tags and go back
 		ic.state.Transaction.Description.Clear()
 		ic.state.InputMetadata.SetDescriptionText("")
+		ic.state.Transaction.Tags.Clear()
 		ic.state.PrevPhase()
 	case statemod.InputPostingAccount:
 		ic.state.Transaction.Postings.Pop()

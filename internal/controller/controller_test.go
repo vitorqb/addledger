@@ -585,6 +585,21 @@ func TestInputController(t *testing.T) {
 			},
 		},
 		{
+			name: "OnTagDone input with selected tag asks for next tag",
+			opts: defaultOpts,
+			run: func(t *testing.T, c *testcontext) {
+				c.state.SetPhase(statemod.InputTags)
+				c.eventBus.EXPECT().Send(eventbus.Event{
+					Topic: "input.tag.settext",
+					Data:  "",
+				})
+				c.state.InputMetadata.SetSelectedTag(journal.Tag{Name: "FOO", Value: "BAR"})
+				c.controller.OnTagDone(userinput.Context)
+				assert.Equal(t, statemod.InputTags, c.state.CurrentPhase())
+				assert.Equal(t, []journal.Tag{{Name: "FOO", Value: "BAR"}}, c.state.Transaction.Tags.Get())
+			},
+		},
+		{
 			name: "OnTagsDone context with valid tag asks for next tag",
 			opts: defaultOpts,
 			run: func(t *testing.T, c *testcontext) {
@@ -753,15 +768,19 @@ func TestInputController__OnUndo(t *testing.T) {
 			},
 		},
 		{
-			name: "OnUndo cleans up the description",
+			name: "OnUndo cleans up the description and tags",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.Transaction.Date.Set(aTime)
 				c.state.NextPhase()
 				c.state.InputMetadata.SetSelectedDescription("FOO")
 				c.controller.OnDescriptionDone(userinput.Context)
+				c.state.InputMetadata.SetTagText("FOO")
+				c.controller.OnTagDone(userinput.Context)
 				c.controller.OnUndo()
 				_, ok := c.state.Transaction.Description.Get()
 				assert.False(t, ok)
+				tags := c.state.Transaction.Tags.Get()
+				assert.Equal(t, 0, len(tags))
 				metadataDescription := c.state.InputMetadata.DescriptionText()
 				assert.Equal(t, "", metadataDescription)
 			},

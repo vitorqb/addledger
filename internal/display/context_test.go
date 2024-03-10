@@ -170,15 +170,25 @@ func TestTagsPicker(t *testing.T) {
 	}
 	var testcases = []testcase{
 		{
-			name: "Displays no tags when input is empty",
+			name: "Displays suggested tags when input is empty",
 			run: func(c *testcontext, t *testing.T) {
 				transaction := testutils.Transaction_3(t)
 				c.state.JournalMetadata.AppendTransaction(*transaction)
+				matchingTransaction := journal.Transaction{
+					Tags: []journal.Tag{
+						{Name: "trip", Value: "brazil"},
+					},
+				}
+				c.state.InputMetadata.SetMatchingTransactions([]journal.Transaction{matchingTransaction})
 				tagsPicker, err := NewTagsPicker(c.state, c.eventBus)
 				if err != nil {
 					t.Fatal(err)
 				}
-				assert.Equal(t, 0, tagsPicker.GetItemCount())
+				assert.Equal(t, 2, tagsPicker.GetItemCount())
+				firstDisplayedTag, _ := tagsPicker.GetItemText(0)
+				assert.Equal(t, "", firstDisplayedTag)
+				secondDisplayedTag, _ := tagsPicker.GetItemText(1)
+				assert.Equal(t, "trip:brazil", secondDisplayedTag)
 			},
 		},
 		{

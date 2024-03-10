@@ -190,6 +190,25 @@ func TestContextualList(t *testing.T) {
 				assert.Equal(t, 0, c.contextualList.GetItemCount())
 			},
 		},
+		{
+			name: "Should display custom items on empty input if set",
+			setupOptions: func(o *ContextualListOptions) {
+				var getItems = func() []string {
+					return []string{"FOO99", "BAR97"}
+				}
+				o.EmptyInputAction = EmptyInputActionShowCustom(getItems)
+			},
+			run: func(t *testing.T, c *testcontext) {
+				c.contextualList.Refresh()
+				assert.Equal(t, 3, c.contextualList.GetItemCount())
+				firstItem, _ := c.contextualList.GetItemText(0)
+				assert.Equal(t, "", firstItem)
+				secondItem, _ := c.contextualList.GetItemText(1)
+				assert.Equal(t, "FOO99", secondItem)
+				thirdItem, _ := c.contextualList.GetItemText(2)
+				assert.Equal(t, "BAR97", thirdItem)
+			},
+		},
 	}
 	for _, testcase := range testcases {
 		t.Run(testcase.name, func(t *testing.T) {
