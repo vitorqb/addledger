@@ -135,6 +135,14 @@ func TagToText(tag journal.Tag) string {
 	return tag.Name + ":" + tag.Value
 }
 
+func TagsToText(tags []journal.Tag) []string {
+	out := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		out = append(out, TagToText(tag))
+	}
+	return out
+}
+
 // ExtractPostings returns a list of journal.Posting from a list of
 // state.PostingData.
 func ExtractPostings(postings []*state.PostingData) []journal.Posting {

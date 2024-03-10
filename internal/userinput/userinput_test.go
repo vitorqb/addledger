@@ -277,6 +277,16 @@ func TestTagTagToText(t *testing.T) {
 	if actual != expected {
 		t.Errorf("Expected %s, got %s", expected, actual)
 	}
+
+	tags := []journal.Tag{
+		{Name: "foo", Value: "bar"},
+		{Name: "baz", Value: "qux"},
+	}
+	expectedArr := []string{"foo:bar", "baz:qux"}
+	actualArr := TagsToText(tags)
+	if actual != expected {
+		t.Errorf("Expected %s, got %s", expectedArr, actualArr)
+	}
 }
 
 func TestTagTextToTag__Good(t *testing.T) {

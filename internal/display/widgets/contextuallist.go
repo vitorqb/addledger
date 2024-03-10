@@ -45,6 +45,18 @@ var EmptyInputActionShowAll EmptyInputAction = func(cl *ContextualList) {
 	}
 }
 
+// EmptyInputActionShowCustom shows a custom list of items when input is empty.
+func EmptyInputActionShowCustom(getItems func() []string) EmptyInputAction {
+	return func(cl *ContextualList) {
+		cl.Clear()
+		// First row stands for "no selection"
+		cl.AddItem("", "", 0, nil)
+		for _, item := range getItems() {
+			cl.AddItem(item, "", 0, nil)
+		}
+	}
+}
+
 // ContextualList is a List widget for the context that allows the user to
 // select an entry from it for an input.
 type ContextualList struct {

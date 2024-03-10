@@ -151,7 +151,14 @@ func NewTagsPicker(
 		GetInputFunc: func() string {
 			return state.InputMetadata.TagText()
 		},
-		EmptyInputAction: widgets.EmptyInputHideItems,
+		EmptyInputAction: widgets.EmptyInputActionShowCustom(func() []string {
+			matchingTransaction := state.InputMetadata.MatchingTransactions()
+			if len(matchingTransaction) == 0 {
+				return []string{}
+			}
+			tags := userinput.TagsToText(matchingTransaction[0].Tags)
+			return tags
+		}),
 	}
 	contextualList, err := widgets.NewContextualList(contextListOpts)
 	if err != nil {
