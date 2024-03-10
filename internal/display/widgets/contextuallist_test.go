@@ -100,6 +100,24 @@ func TestContextualList(t *testing.T) {
 			},
 		},
 		{
+			name: "Refresh preserves currently selected item",
+			run: func(t *testing.T, c *testcontext) {
+				// Writes something
+				c.input = "T"
+				c.contextualList.Refresh()
+
+				// Scrolls down
+				c.contextualList.HandleAction(listaction.NEXT)
+
+				// Refreshes
+				c.contextualList.Refresh()
+
+				// Asserts that the selected item is the same
+				assert.Equal(t, c.contextualList.GetItemCount(), 2)
+				assert.Equal(t, 1, c.contextualList.GetCurrentItem())
+			},
+		},
+		{
 			name: "Default is printed first.",
 			setupOptions: func(o *ContextualListOptions) {
 				o.GetDefaultFunc = func() (string, bool) {

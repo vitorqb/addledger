@@ -96,6 +96,14 @@ func NewContextualList(options ContextualListOptions) (*ContextualList, error) {
 	return list, nil
 }
 
+// RestoreIndex tries to restore the index of the list to the given index.
+func (cl *ContextualList) RestoreIndex(index int) {
+	if index < 0 || index >= cl.GetItemCount() {
+		return
+	}
+	cl.SetCurrentItem(index)
+}
+
 // HandleAction handles a ListAction (e.g. next, prev, etc).
 func (cl *ContextualList) HandleAction(action listaction.ListAction) {
 	cl.isHandlingListAction = true
@@ -154,7 +162,6 @@ func (cl *ContextualList) Refresh() {
 		}
 	}()
 
-	cl.Clear()
 	input := cl.getInputFunc()
 
 	// If the input is empty, dispatch to the empty input action
@@ -162,6 +169,9 @@ func (cl *ContextualList) Refresh() {
 		cl.emptyInputAction(cl)
 		return
 	}
+
+	defer cl.RestoreIndex(cl.GetCurrentItem())
+	cl.Clear()
 
 	// Input is not empty - match and sort by match
 	matches := fuzzy.RankFindFold(input, cl.getItemsFunc())
