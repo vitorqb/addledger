@@ -99,19 +99,36 @@ do so using a *json preset file*, like this:
 Note that for any index, you can use `-1` for telling AddLedger not to
 read this information.
 
+#### Loading at start time
+
 New let's assume that:
 
 1. Your csv statement file is in `~/statement.csv`
-2. Your json preset file is in `~/presets/default.json`
+2. Your json preset file is in `~/presets/mypreset.json`
 
 You can then tell AddLedger to start using this `.csv` and `.json` like this:
 
 ```
-addledger --csv-statement-file=~/statement.csv --csv-statement-preset=default
+addledger --csv-statement-file=~/statement.csv --csv-statement-preset=mypreset
 ```
 
 **NOTE**: You your statement file is in other folder you can a full or relative
 path to it, like `--csv-statement-preset=~/preset.json`.
+
+#### Loading at runtime
+
+Inside the UI, you can press `CRTL+Q l` to load a statement at runtime:
+
+![](./docs/statement_load_runtime.gif)
+
+#### Specifying Presets
+
+If you specify only the name of a file when prompted for a preset, addledger
+will look for a file with that name into `$HOME/.config/addledger/presets`. If
+the file exists (with or without a `.json` suffix), it will be used.
+
+If you don't specify a preset (both in the CLI as well as in the UI), addledger
+will look for a `default.json` file inside your presets folder.
 
 ### Entering transactions with multiple commodities
 

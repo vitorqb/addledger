@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/sirupsen/logrus"
-	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/dateguesser"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -22,7 +21,7 @@ import (
 
 // StatementLoader represents a component that loads a statement into the app state.
 type StatementLoader interface {
-	Load(config configmod.StatementLoaderConfig) error
+	LoadFromFiles(statementFile, presetFile string) error
 }
 
 // IInputController reacts to the user inputs and interactions.
@@ -429,12 +428,7 @@ func (ic *InputController) OnLoadStatementRequest() {
 
 // OnLoadStatement implements display.LoadStatementModalController.
 func (ic *InputController) OnLoadStatement(csvFile string, presetFile string) {
-	config, err := configmod.LoadStatementLoaderConfig(csvFile, presetFile)
-	if err != nil {
-		ic.userMessenger.Error("Failed to load config", err)
-		return
-	}
-	err = ic.csvStatementLoader.Load(config)
+	err := ic.csvStatementLoader.LoadFromFiles(csvFile, presetFile)
 	if err != nil {
 		ic.userMessenger.Error("Failed to load statement", err)
 		return

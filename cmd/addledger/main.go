@@ -11,7 +11,7 @@ import (
 	"github.com/vitorqb/addledger/internal/display"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/injector"
-	"github.com/vitorqb/addledger/internal/services"
+	"github.com/vitorqb/addledger/internal/services/statementloader"
 )
 
 func main() {
@@ -82,7 +82,7 @@ func main() {
 
 	// Prepares a statement loader
 	statementReader := injector.StatementReader()
-	statementLoaderSvc := services.NewStatementLoaderSvc(state, statementReader)
+	statementLoaderSvc := statementloader.New(state, statementReader)
 
 	// Starts a user messenger
 	userMessenger := injector.UserMessenger(state)
@@ -114,9 +114,11 @@ func main() {
 	app.LinkAccountGuesser(state, accountGuesser)
 
 	// Maybe load a CSV statement
-	err = statementLoaderSvc.Load(config.StatementLoaderConfig)
-	if err != nil {
-		logrus.WithError(err).Fatal("Failed to load csv statement")
+	if config.CSVStatementFile != "" {
+		err = statementLoaderSvc.LoadFromFiles(config.CSVStatementFile, config.CSVStatementPreset)
+		if err != nil {
+			logrus.WithError(err).Fatal("Failed to load csv statement")
+		}
 	}
 
 	// Starts a new tview App

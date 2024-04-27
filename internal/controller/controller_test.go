@@ -2,13 +2,13 @@ package controller_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
-	"github.com/vitorqb/addledger/internal/config"
 	. "github.com/vitorqb/addledger/internal/controller"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -917,9 +917,7 @@ func TestInputController__OnUndo(t *testing.T) {
 				c.state.Display.SetLoadStatementModal(true)
 				csvPath := testutils.TestDataPath(t, "statement.csv")
 				presetPath := testutils.TestDataPath(t, "preset.json")
-				expectedConfig, err := config.LoadStatementLoaderConfig(csvPath, presetPath)
-				assert.NoError(t, err)
-				c.csvStatementLoader.EXPECT().Load(expectedConfig).Times(1)
+				c.csvStatementLoader.EXPECT().LoadFromFiles(csvPath, presetPath).Return(nil)
 				c.controller.OnLoadStatement(csvPath, presetPath)
 				// Ensure modal is closed
 				assert.False(t, c.state.Display.LoadStatementModal())
@@ -928,8 +926,9 @@ func TestInputController__OnUndo(t *testing.T) {
 		{
 			name: "OnLoadStatement loads statement warns user on error",
 			run: func(t *testing.T, c *testcontext) {
+				c.csvStatementLoader.EXPECT().LoadFromFiles("foo", "bar").Return(fmt.Errorf("no such file or directory"))
 				c.userMessenger.EXPECT().Error(gomock.Any(), gomock.Any()).Do(func(msg string, err error) {
-					assert.Contains(t, msg, "Failed to load config")
+					assert.Contains(t, msg, "Failed to load statement")
 					assert.Contains(t, err.Error(), "no such file or directory")
 				})
 				c.controller.OnLoadStatement("foo", "bar")
