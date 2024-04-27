@@ -87,4 +87,22 @@ func TestLoadCsvStatementLoaderConfig(t *testing.T) {
 		}, config)
 
 	})
+
+	t.Run("Expands home dir", func(t *testing.T) {
+		t.Setenv("HOME", testutils.TestDataPath(t, ""))
+		l := ConfigLoader{}
+		config, err := l.Load("~/statement.csv", "~/csv_preset_min.json")
+		assert.NoError(t, err)
+		assert.Equal(t, Config{
+			File:                  csvFile,
+			Separator:             "",
+			Account:               "",
+			Commodity:             "",
+			DateFormat:            "02/01/2006",
+			DateFieldIndex:        -1,
+			DescriptionFieldIndex: -1,
+			AccountFieldIndex:     -1,
+			AmmountFieldIndex:     -1,
+		}, config)
+	})
 }

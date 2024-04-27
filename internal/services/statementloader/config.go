@@ -3,10 +3,19 @@ package statementloader
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/vitorqb/addledger/internal/utils"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/vitorqb/addledger/internal/utils"
 )
+
+func expandUserHome(path string) string {
+	if strings.HasPrefix(path, "~/") {
+		return filepath.Join(os.Getenv("HOME"), path[2:])
+	}
+	return path
+}
 
 type Config struct {
 	// File to load statement from.
@@ -53,6 +62,7 @@ func (cf *ConfigLoader) Load(file, preset string) (Config, error) {
 	if filepath.Ext(preset) == "" {
 		preset += ".json"
 	}
+	preset = expandUserHome(preset)
 	presetBytes, err := os.ReadFile(preset)
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to open preset file %s: %w", preset, err)
@@ -67,7 +77,7 @@ func (cf *ConfigLoader) Load(file, preset string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("failed to unmarshal preset file: %w", err)
 	}
-	config.File = file
+	config.File = expandUserHome(file)
 	return config, nil
 }
 
