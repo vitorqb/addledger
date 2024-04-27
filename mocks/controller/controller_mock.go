@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	config "github.com/vitorqb/addledger/internal/config"
 	listaction "github.com/vitorqb/addledger/internal/listaction"
 	userinput "github.com/vitorqb/addledger/internal/userinput"
 )
@@ -36,18 +35,18 @@ func (m *MockStatementLoader) EXPECT() *MockStatementLoaderMockRecorder {
 	return m.recorder
 }
 
-// Load mocks base method.
-func (m *MockStatementLoader) Load(config config.StatementLoaderConfig) error {
+// LoadFromFiles mocks base method.
+func (m *MockStatementLoader) LoadFromFiles(statementFile, presetFile string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Load", config)
+	ret := m.ctrl.Call(m, "LoadFromFiles", statementFile, presetFile)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Load indicates an expected call of Load.
-func (mr *MockStatementLoaderMockRecorder) Load(config interface{}) *gomock.Call {
+// LoadFromFiles indicates an expected call of LoadFromFiles.
+func (mr *MockStatementLoaderMockRecorder) LoadFromFiles(statementFile, presetFile interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Load", reflect.TypeOf((*MockStatementLoader)(nil).Load), config)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LoadFromFiles", reflect.TypeOf((*MockStatementLoader)(nil).LoadFromFiles), statementFile, presetFile)
 }
 
 // MockIInputController is a mock of IInputController interface.

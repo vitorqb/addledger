@@ -1,27 +1,26 @@
-package services
+package statementloader
 
 import (
 	"fmt"
 	"os"
 	"strings"
 
-	configmod "github.com/vitorqb/addledger/internal/config"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 )
 
-// StatementLoaderSvc can be used to load a statement into the app state.
-type StatementLoaderSvc struct {
+// Service can be used to load a statement into the app state.
+type Service struct {
 	state  *statemod.State
 	reader statementreader.IStatementReader
 }
 
 // Load loads a statement into the app state.
-func (c *StatementLoaderSvc) Load(config configmod.StatementLoaderConfig) error {
+func (c *Service) Load(config Config) error {
 	if config.File == "" {
 		return nil
 	}
-	options, err := ParseStatementLoaderConfig(config)
+	options, err := ParseConfig(config)
 	if err != nil {
 		return fmt.Errorf("failed to load csv statement loader: %w", err)
 	}
@@ -38,13 +37,23 @@ func (c *StatementLoaderSvc) Load(config configmod.StatementLoaderConfig) error 
 	return nil
 }
 
-// NewStatementLoaderSvc creates a new StatementLoaderSvc.
-func NewStatementLoaderSvc(state *statemod.State, reader statementreader.IStatementReader) *StatementLoaderSvc {
-	return &StatementLoaderSvc{state: state, reader: reader}
+// LoadFromFiles do the same as `Load` but reads the config from a json file.
+func (c *Service) LoadFromFiles(statementFile, presetFile string) error {
+	config, err := LoadConfig(statementFile, presetFile)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+	config.File = statementFile
+	return c.Load(config)
 }
 
-// ParseStatementLoaderConfig parses a statement loader config into statemtn reader options.
-func ParseStatementLoaderConfig(config configmod.StatementLoaderConfig) ([]statementreader.Option, error) {
+// New creates a new StatementLoaderSvc.
+func New(state *statemod.State, reader statementreader.IStatementReader) *Service {
+	return &Service{state: state, reader: reader}
+}
+
+// ParseConfig parses a statement loader config into statemtn reader options.
+func ParseConfig(config Config) ([]statementreader.Option, error) {
 	options := []statementreader.Option{}
 	if acc := config.Account; acc != "" {
 		options = append(options, statementreader.WithAccountName(acc))

@@ -1,13 +1,12 @@
-package services_test
+package statementloader_test
 
 import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	configmod "github.com/vitorqb/addledger/internal/config"
 	"github.com/vitorqb/addledger/internal/finance"
-	. "github.com/vitorqb/addledger/internal/services"
+	. "github.com/vitorqb/addledger/internal/services/statementloader"
 	statemod "github.com/vitorqb/addledger/internal/state"
 	"github.com/vitorqb/addledger/internal/statementreader"
 	"github.com/vitorqb/addledger/internal/testutils"
@@ -19,7 +18,7 @@ func TestStatementLoaderSvc(t *testing.T) {
 	type testcontext struct {
 		state   *statemod.State
 		reader  *statementreader_mock.MockIStatementReader
-		service *StatementLoaderSvc
+		service *Service
 	}
 	type testcase struct {
 		name string
@@ -29,7 +28,7 @@ func TestStatementLoaderSvc(t *testing.T) {
 		{
 			name: "Fail to read file",
 			run: func(t *testing.T, c *testcontext) {
-				config := configmod.StatementLoaderConfig{File: "not-a-file"}
+				config := Config{File: "not-a-file"}
 				err := c.service.Load(config)
 				assert.ErrorContains(t, err, "failed to open file")
 			},
@@ -37,7 +36,7 @@ func TestStatementLoaderSvc(t *testing.T) {
 		{
 			name: "Fail to load statement",
 			run: func(t *testing.T, c *testcontext) {
-				config := configmod.StatementLoaderConfig{File: statement}
+				config := Config{File: statement}
 				c.reader.EXPECT().Read(gomock.Any(), gomock.Any()).Return(nil, assert.AnError)
 				err := c.service.Load(config)
 				assert.ErrorContains(t, err, "failed to load statement")
@@ -47,9 +46,20 @@ func TestStatementLoaderSvc(t *testing.T) {
 			name: "Success",
 			run: func(t *testing.T, c *testcontext) {
 				entries := []finance.StatementEntry{{Account: "ACC"}}
-				config := configmod.StatementLoaderConfig{File: statement}
+				config := Config{File: statement}
 				c.reader.EXPECT().Read(gomock.Any(), gomock.Any()).Return(entries, nil)
 				err := c.service.Load(config)
+				assert.Nil(t, err)
+				assert.Equal(t, entries, c.state.GetStatementEntries())
+			},
+		},
+		{
+			name: "LoadFromFiles Success",
+			run: func(t *testing.T, c *testcontext) {
+				entries := []finance.StatementEntry{{Account: "ACC"}}
+				presetFile := testutils.TestDataPath(t, "csv_preset_full.json")
+				c.reader.EXPECT().Read(gomock.Any(), gomock.Any()).Return(entries, nil)
+				err := c.service.LoadFromFiles(statement, presetFile)
 				assert.Nil(t, err)
 				assert.Equal(t, entries, c.state.GetStatementEntries())
 			},
@@ -62,7 +72,7 @@ func TestStatementLoaderSvc(t *testing.T) {
 			c := new(testcontext)
 			c.state = statemod.InitialState()
 			c.reader = statementreader_mock.NewMockIStatementReader(ctrl)
-			c.service = NewStatementLoaderSvc(c.state, c.reader)
+			c.service = New(c.state, c.reader)
 			tc.run(t, c)
 		})
 	}
@@ -71,14 +81,14 @@ func TestStatementLoaderSvc(t *testing.T) {
 func TestParseStatementLoaderConfig(t *testing.T) {
 	type testcase struct {
 		name            string
-		config          configmod.StatementLoaderConfig
+		config          Config
 		expectedOptions []statementreader.Option
 		expectedError   string
 	}
 	testcases := []testcase{
 		{
 			name: "empty",
-			config: configmod.StatementLoaderConfig{
+			config: Config{
 				DateFieldIndex:        -1,
 				DescriptionFieldIndex: -1,
 				AccountFieldIndex:     -1,
@@ -90,7 +100,7 @@ func TestParseStatementLoaderConfig(t *testing.T) {
 		},
 		{
 			name: "full",
-			config: configmod.StatementLoaderConfig{
+			config: Config{
 				Separator:             ";",
 				Account:               "acc",
 				Commodity:             "com",
@@ -116,7 +126,7 @@ func TestParseStatementLoaderConfig(t *testing.T) {
 		},
 		{
 			name: "invalid sortBy",
-			config: configmod.StatementLoaderConfig{
+			config: Config{
 				SortBy: "invalid",
 			},
 			expectedError: "invalid SortBy: invalid",
@@ -126,7 +136,7 @@ func TestParseStatementLoaderConfig(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			actualConfig := statementreader.Config{}
 			expectedConfig := statementreader.Config{}
-			options, err := ParseStatementLoaderConfig(testcase.config)
+			options, err := ParseConfig(testcase.config)
 			if expError := testcase.expectedError; expError != "" {
 				assert.ErrorContains(t, err, expError)
 				return

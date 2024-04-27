@@ -1,46 +1,18 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"github.com/vitorqb/addledger/internal/utils"
 )
 
 // PrinterConfig represents the value for configuring a printer.Printer.
 type PrinterConfig struct {
 	NumLineBreaksBefore int // Number of empty lines to print before a transaction.
 	NumLineBreaksAfter  int // Number of empty lines to print after a transaction.
-}
-
-// StatementLoaderConfig represents the value for configuring a Statement Loader Svc.
-type StatementLoaderConfig struct {
-	// File to load.
-	File string
-	// Separator to use.
-	Separator string `json:"separator"`
-	// Default account to use for all entries.
-	Account string `json:"account"`
-	// Default commodity to use for all entries.
-	Commodity string `json:"commodity"`
-	// SortBy defines a stratgy for sorting. As of now either empty (no sorting)
-	// or date are supported.
-	SortBy string `json:"sortBy"`
-	// Index of the date field in the CSV file.
-	DateFieldIndex int `json:"dateFieldIndex"`
-	// Date format to use for parsing the date field.
-	DateFormat string `json:"dateFormat"`
-	// Index of the account field in the CSV file.
-	AccountFieldIndex int `json:"accountFieldIndex"`
-	// Index of the description field in the CSV file.
-	DescriptionFieldIndex int `json:"descriptionFieldIndex"`
-	// Index of the ammount field in the CSV file.
-	AmmountFieldIndex int `json:"ammountFieldIndex"`
 }
 
 // Config is the root configuration for the entire app.
@@ -57,8 +29,10 @@ type Config struct {
 	LogLevel string
 	// Configures the transaction printer
 	PrinterConfig PrinterConfig
-	// Configures a statement loader svc
-	StatementLoaderConfig StatementLoaderConfig
+	// A initial file to load as a statement.
+	CSVStatementFile string
+	// A preset to use for the CSV statement.
+	CSVStatementPreset string
 }
 
 func SetupFlags(flagSet *pflag.FlagSet) {
@@ -103,15 +77,6 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 		return &Config{}, fmt.Errorf("failed to bind env: %w", err)
 	}
 
-	// Loads the config for the statement loader
-	statementLoaderConfig, err := LoadStatementLoaderConfig(
-		viper.GetString("csv-statement-file"),
-		viper.GetString("csv-statement-preset"),
-	)
-	if err != nil {
-		return &Config{}, fmt.Errorf("failed to load csv statement config: %w", err)
-	}
-
 	// Unpack
 	config := &Config{
 		DestFile:          viper.GetString("destfile"),
@@ -123,7 +88,8 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 			NumLineBreaksBefore: viper.GetInt("printer-line-break-before"),
 			NumLineBreaksAfter:  viper.GetInt("printer-line-break-after"),
 		},
-		StatementLoaderConfig: statementLoaderConfig,
+		CSVStatementFile:   viper.GetString("csv-statement-file"),
+		CSVStatementPreset: viper.GetString("csv-statement-preset"),
 	}
 
 	// Load dynamic values
@@ -146,35 +112,4 @@ func LoadFromCommandLine() (*Config, error) {
 	loader := NewLoader()
 	SetupFlags(pflag.CommandLine)
 	return Load(pflag.CommandLine, os.Args, loader)
-}
-
-func LoadStatementLoaderConfig(file, preset string) (StatementLoaderConfig, error) {
-	if file == "" {
-		return StatementLoaderConfig{}, nil
-	}
-	if preset == "" {
-		return StatementLoaderConfig{}, fmt.Errorf("missing preset")
-	}
-	if !utils.LooksLikePath(preset) {
-		preset = fmt.Sprintf("%s/.config/addledger/presets/%s", os.Getenv("HOME"), preset)
-	}
-	if filepath.Ext(preset) == "" {
-		preset += ".json"
-	}
-	presetBytes, err := os.ReadFile(preset)
-	if err != nil {
-		return StatementLoaderConfig{}, fmt.Errorf("failed to open preset file %s: %w", preset, err)
-	}
-	var config StatementLoaderConfig
-	config.AccountFieldIndex = -1
-	config.AmmountFieldIndex = -1
-	config.DateFieldIndex = -1
-	config.DescriptionFieldIndex = -1
-	config.DateFormat = "02/01/2006"
-	err = json.Unmarshal(presetBytes, &config)
-	if err != nil {
-		return StatementLoaderConfig{}, fmt.Errorf("failed to unmarshal preset file: %w", err)
-	}
-	config.File = file
-	return config, nil
 }
