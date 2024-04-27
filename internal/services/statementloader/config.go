@@ -32,15 +32,23 @@ type Config struct {
 	AmmountFieldIndex int `json:"ammountFieldIndex"`
 }
 
-func LoadConfig(file, preset string) (Config, error) {
+type ConfigLoader struct {
+	PresetsDir string
+}
+
+func (cf *ConfigLoader) Load(file, preset string) (Config, error) {
 	if file == "" {
 		return Config{}, nil
 	}
 	if preset == "" {
-		return Config{}, fmt.Errorf("missing preset")
+		defaultPresetFile := filepath.Join(cf.PresetsDir, "default.json")
+		if _, err := os.Stat(defaultPresetFile); err != nil {
+			return Config{}, fmt.Errorf("missing preset (and no default defined)")
+		}
+		preset = defaultPresetFile
 	}
 	if !utils.LooksLikePath(preset) {
-		preset = fmt.Sprintf("%s/.config/addledger/presets/%s", os.Getenv("HOME"), preset)
+		preset = filepath.Join(cf.PresetsDir, preset)
 	}
 	if filepath.Ext(preset) == "" {
 		preset += ".json"
@@ -61,4 +69,10 @@ func LoadConfig(file, preset string) (Config, error) {
 	}
 	config.File = file
 	return config, nil
+}
+
+func LoadConfig(file, preset string) (Config, error) {
+	presetsDir := filepath.Join(os.Getenv("HOME"), ".config/addledger/presets")
+	loader := ConfigLoader{presetsDir}
+	return loader.Load(file, preset)
 }

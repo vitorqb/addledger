@@ -20,7 +20,8 @@ func TestLoadCsvStatementLoaderConfig(t *testing.T) {
 	})
 
 	t.Run("No preset", func(t *testing.T) {
-		config, err := LoadConfig(csvFile, "")
+		loader := ConfigLoader{PresetsDir: testutils.TestDataPath(t, "empty")}
+		config, err := loader.Load(csvFile, "")
 		assert.Equal(t, Config{}, config)
 		assert.ErrorContains(t, err, "missing preset")
 	})
@@ -67,5 +68,23 @@ func TestLoadCsvStatementLoaderConfig(t *testing.T) {
 			AccountFieldIndex:     2,
 			AmmountFieldIndex:     3,
 		}, config)
+	})
+
+	t.Run("Uses default preset if available", func(t *testing.T) {
+		loader := ConfigLoader{PresetsDir: testutils.TestDataPath(t, "presets")}
+		config, err := loader.Load(csvFile, "")
+		assert.NoError(t, err)
+		assert.Equal(t, Config{
+			File:                  csvFile,
+			Separator:             ";",
+			Account:               "acc",
+			Commodity:             "com",
+			DateFormat:            "01/02/2006",
+			DateFieldIndex:        0,
+			DescriptionFieldIndex: 1,
+			AccountFieldIndex:     2,
+			AmmountFieldIndex:     3,
+		}, config)
+
 	})
 }
