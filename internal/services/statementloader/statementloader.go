@@ -43,7 +43,6 @@ func (c *Service) LoadFromFiles(statementFile, presetFile string) error {
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
-	config.File = statementFile
 	return c.Load(config)
 }
 
