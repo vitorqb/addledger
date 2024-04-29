@@ -7,7 +7,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/golang/mock v1.6.0
 	github.com/lithammer/fuzzysearch v1.1.8
-	github.com/rivo/tview v0.0.0-20240426173458-c766eefb3803
+	github.com/rivo/tview v0.0.0-20240429185930-6e1e54f465d4
 	github.com/shopspring/decimal v1.4.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/pflag v1.0.5
