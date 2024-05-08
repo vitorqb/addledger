@@ -4,9 +4,12 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"strings"
 	"text/template"
+	"time"
 
 	"github.com/vitorqb/addledger/internal/journal"
+	"github.com/vitorqb/addledger/internal/userinput"
 )
 
 //go:embed template.txt
@@ -24,6 +27,15 @@ type Printer struct {
 	NumLineBreaksAfter  int // Number of empty lines to print after.
 }
 
+// TemplateData is the data that will be used to fill the template.
+// It is pretty similar to journal.Transaction but prepares some extra formatting.
+type TemplateData struct {
+	Description string
+	Date        time.Time
+	Posting     []journal.Posting
+	Comment     string
+}
+
 func (p *Printer) Print(writer io.Writer, transaction journal.Transaction) error {
 	// Print the configured number of empty lines before
 	for i := 0; i < p.NumLineBreaksBefore; i++ {
@@ -33,12 +45,27 @@ func (p *Printer) Print(writer io.Writer, transaction journal.Transaction) error
 		}
 	}
 
+	// Prepare the data to be used in the template
+	templateData := TemplateData{
+		Description: transaction.Description,
+		Date:        transaction.Date,
+		Posting:     transaction.Posting,
+		Comment:     transaction.Comment,
+	}
+	tagsStrList := userinput.TagsToText(transaction.Tags)
+	if len(tagsStrList) > 0 {
+		if templateData.Comment != "" {
+			templateData.Comment += " "
+		}
+		templateData.Comment += strings.Join(tagsStrList, " ")
+	}
+
 	tmpl, err := template.ParseFS(templates, "template.txt")
 	if err != nil {
 		return err
 	}
 
-	if err := tmpl.Execute(writer, transaction); err != nil {
+	if err := tmpl.Execute(writer, templateData); err != nil {
 		return err
 	}
 

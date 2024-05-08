@@ -83,4 +83,33 @@ func TestPrinter_Print(t *testing.T) {
 		0,
 		"1993-11-23 Description1  ; trip:brazil\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
 	)
+
+	withTagsTransaction := *tu.Transaction_1(t)
+	withTagsTransaction.Tags = []journal.Tag{
+		{Name: "tag1", Value: "value1"},
+		{Name: "tag2", Value: "value2"},
+	}
+	RunTest(
+		t,
+		"With tags",
+		withTagsTransaction,
+		0,
+		0,
+		"1993-11-23 Description1  ; tag1:value1 tag2:value2\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
+	)
+
+	withCommentAndTagsTransaction := *tu.Transaction_1(t)
+	withCommentAndTagsTransaction.Comment = "Foo!"
+	withCommentAndTagsTransaction.Tags = []journal.Tag{
+		{Name: "tag1", Value: "value1"},
+		{Name: "tag2", Value: "value2"},
+	}
+	RunTest(
+		t,
+		"With comment and tags",
+		withCommentAndTagsTransaction,
+		0,
+		0,
+		"1993-11-23 Description1  ; Foo! tag1:value1 tag2:value2\n    ACC1    EUR 12.2\n    ACC2    EUR -12.2",
+	)
 }

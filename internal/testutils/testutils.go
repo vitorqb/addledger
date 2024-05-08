@@ -98,6 +98,7 @@ func Transaction_1(t *testing.T) *journal.Transaction {
 				},
 			},
 		},
+		Tags: []journal.Tag{},
 	}
 }
 

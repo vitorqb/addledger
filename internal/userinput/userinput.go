@@ -115,18 +115,10 @@ func TransactionFromData(t *state.TransactionData) (journal.Transaction, error) 
 		return journal.Transaction{}, fmt.Errorf("missing date")
 	}
 
-	comment := ""
-	for i, tag := range t.Tags.Get() {
-		if i != 0 {
-			comment += " "
-		}
-		comment += TagToText(tag)
-	}
-
 	return journal.Transaction{
 		Description: description,
 		Date:        date,
-		Comment:     comment,
+		Tags:        t.Tags.Get(),
 		Posting:     postings,
 	}, nil
 }
