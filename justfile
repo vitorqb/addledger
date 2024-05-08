@@ -42,13 +42,8 @@ setup:
 # Runs the app with a specific envfile and arguments
 run envfile="configs/default.env" args="":
     #!/bin/bash
-    if ! [ -z {{envfile}} ] && [ -f {{envfile}} ]
-    then
-        echo "Sourcing env file {{envfile}}"
-        set -a
-        source {{envfile}}
-        set +a
-    fi
+    echo "Running app with envfile: {{envfile}} and args: {{args}}"
+    set -a; source {{envfile}}; set +a
     cmd="{{GO}} run cmd/addledger/main.go {{args}}"
     echo "Running command: ${cmd}"
     eval "${cmd}"
@@ -75,7 +70,10 @@ tidy:
     {{GO}} mod tidy
 
 # Starts delve
-debug-init: install-delve
+debug-init envfile="configs/default.env": install-delve
+    #!/bin/bash
+    echo "Starting delve with envfile: {{envfile}}"
+    set -a; source {{envfile}}; set +a
     echo "Run 'just debug-attach' in another terminal..."
     {{DELVE}} debug --headless --listen localhost:4040 ./cmd/addledger/
 
