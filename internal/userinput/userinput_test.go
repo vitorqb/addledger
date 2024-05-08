@@ -127,7 +127,7 @@ func TestTransactionFromData(t *testing.T) {
 			},
 			expectedTransaction: func(t *testing.T) *journal.Transaction {
 				out := tu.Transaction_1(t)
-				out.Comment = "foo:bar"
+				out.Tags = []journal.Tag{{Name: "foo", Value: "bar"}}
 				return out
 			},
 		},
