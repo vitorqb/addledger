@@ -69,6 +69,8 @@ type IInputController interface {
 	// Controls shortcuts modal
 	OnDisplayShortcutModal()
 	OnHideShortcutModal()
+	OnShowStatementModal()
+	OnHideStatementModal()
 }
 
 // InputController implements IInputController.
@@ -424,6 +426,14 @@ func (ic *InputController) OnDiscardStatement() {
 // OnLoadStatementRequest implements IInputController.
 func (ic *InputController) OnLoadStatementRequest() {
 	ic.state.Display.SetLoadStatementModal(true)
+}
+
+func (ic *InputController) OnShowStatementModal() {
+	ic.state.Display.StatementModal.SetVisible(true)
+}
+
+func (ic *InputController) OnHideStatementModal() {
+	ic.state.Display.StatementModal.SetVisible(false)
 }
 
 // OnLoadStatement implements display.LoadStatementModalController.
