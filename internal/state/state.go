@@ -49,9 +49,18 @@ type (
 		matchingTransactions []journal.Transaction
 	}
 
+	// StatementModal is the state relative to the Statement Modal
+	StatementModal struct {
+		react.IReact
+		visible bool
+	}
+
 	// Display is the state relative to the display.
 	Display struct {
 		react.IReact
+
+		// Control the statement modal
+		StatementModal *StatementModal
 
 		// Controls whether the shortcut modal is displayed or not
 		shortcutModal      bool
@@ -512,12 +521,15 @@ func (s *State) PopStatementEntry() {
 
 // NewDisplay returns a new Display
 func NewDisplay() *Display {
-	return &Display{
+	display := &Display{
 		IReact:             react.New(),
+		StatementModal:     NewStatementModal(),
 		shortcutModal:      false,
 		loadStatementModal: false,
 		userMessage:        "",
 	}
+	display.StatementModal.AddOnChangeHook(display.NotifyChange)
+	return display
 }
 
 // SetShortcutModal sets whether the statement modal is displayed or not
@@ -551,4 +563,16 @@ func (d *Display) SetUserMessage(x string) {
 // UserMessage returns the current user message
 func (d *Display) UserMessage() string {
 	return d.userMessage
+}
+
+func NewStatementModal() *StatementModal {
+	return &StatementModal{
+		IReact:  react.New(),
+		visible: false,
+	}
+}
+func (sm *StatementModal) Visible() bool { return sm.visible }
+func (sm *StatementModal) SetVisible(b bool) {
+	sm.visible = b
+	sm.NotifyChange()
 }

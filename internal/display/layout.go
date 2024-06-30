@@ -7,11 +7,19 @@ import (
 	"github.com/rivo/tview"
 	"github.com/vitorqb/addledger/internal/controller"
 	contextmod "github.com/vitorqb/addledger/internal/display/context"
+	"github.com/vitorqb/addledger/internal/display/statement"
 	"github.com/vitorqb/addledger/internal/eventbus"
 	"github.com/vitorqb/addledger/internal/state"
 )
 
 //go:generate $MOCKGEN --source=layout.go --destination=../../mocks/display/layout_mock.go
+
+type StatementControllerAdapter struct{ controller.IInputController }
+
+var _ statement.Controller = &StatementControllerAdapter{}
+
+func (s *StatementControllerAdapter) HideModal()   { s.OnHideStatementModal() }
+func (s *StatementControllerAdapter) LoadRequest() { s.OnLoadStatementRequest() }
 
 type (
 	// MainView represents the main view of the application, which contains
@@ -60,6 +68,7 @@ type LayoutPage string
 var (
 	MainPage               LayoutPage = "main"
 	ShortcutModalPage      LayoutPage = "shortcutModal"
+	StatementModalPage     LayoutPage = "statementModal"
 	LoadStatementModalPage LayoutPage = "loadStatementModal"
 )
 
@@ -167,11 +176,13 @@ func NewLayout(
 	mainView := NewMainView(view, input, context, statementDisplay, messageBox, state)
 	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
 	loadStatementModal := center(NewLoadStatementModal(controller), modalWith*2, modalHeight*2)
+	statementModal := center(statement.NewModal(&StatementControllerAdapter{controller}, state), modalWith*3, modalHeight*3)
 
 	pages := tview.NewPages()
 	pages.AddAndSwitchToPage(string(MainPage), mainView, true)
 	pages.AddPage(string(ShortcutModalPage), shortcutModal, true, false)
 	pages.AddPage(string(LoadStatementModalPage), loadStatementModal, true, false)
+	pages.AddPage(string(StatementModalPage), statementModal, true, false)
 	pages.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		return HandleGlobalShortcuts(controller, event)
 	})
@@ -204,6 +215,7 @@ func (l *Layout) GetItem(index int) tview.Primitive {
 func (l *Layout) Refresh() {
 	l.refreshShortcutModalDisplay()
 	l.refreshLoadStatementModalDisplay()
+	l.refreshStatementModalDisplay()
 	// Make sure that once the modal is hidden we focus back on the main view.
 	if frontPage, _ := l.GetFrontPage(); frontPage == string(MainPage) {
 		l.setFocus(l.mainView)
@@ -224,6 +236,14 @@ func (l *Layout) refreshLoadStatementModalDisplay() {
 		return
 	}
 	l.HidePage(string(LoadStatementModalPage))
+}
+
+func (l *Layout) refreshStatementModalDisplay() {
+	if l.state.Display.StatementModal.Visible() {
+		l.ShowPage(string(StatementModalPage))
+		return
+	}
+	l.HidePage(string(StatementModalPage))
 }
 
 func HandleGlobalShortcuts(controller controller.IInputController, event *tcell.EventKey) *tcell.EventKey {

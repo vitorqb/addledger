@@ -403,6 +403,13 @@ func TestDisplay(t *testing.T) {
 					assert.Equal(t, 1, c.hookCallCounter)
 				},
 			},
+			{
+				name: "Notifies for updates to StatementModal",
+				run: func(t *testing.T, c *testcontext) {
+					c.display.StatementModal.SetVisible(true)
+					assert.Equal(t, 1, c.hookCallCounter)
+				},
+			},
 		}
 
 		for _, tc := range testcases {
@@ -416,4 +423,14 @@ func TestDisplay(t *testing.T) {
 		}
 
 	}
+}
+
+func TestStatementModal(t *testing.T) {
+	state := NewStatementModal()
+	callCounter := 0
+	state.AddOnChangeHook(func() { callCounter += 1 })
+	assert.False(t, state.Visible())
+	state.SetVisible(true)
+	assert.True(t, state.Visible())
+	assert.Equal(t, 1, callCounter)
 }

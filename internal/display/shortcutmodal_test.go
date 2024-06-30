@@ -58,6 +58,13 @@ func TestShortcutModal(t *testing.T) {
 				c.EXPECT().OnHideShortcutModal().Times(1)
 			}),
 		},
+		{
+			name: "Calls show statement modal",
+			run: testExpectOnKey(tcell.KeyRune, 's', tcell.ModNone, func(c *MockShortcutModalController) {
+				c.EXPECT().OnShowStatementModal().Times(1)
+				c.EXPECT().OnHideShortcutModal().Times(1)
+			}),
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {

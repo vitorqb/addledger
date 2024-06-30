@@ -94,6 +94,24 @@ func TestNewLayout(t *testing.T) {
 			},
 		},
 		{
+			name: "Displays and hides the statement modal",
+			run: func(c *testcontext, t *testing.T) {
+				// Set the statement modal to be displayed
+				c.state.Display.StatementModal.SetVisible(true)
+				c.layout.Refresh()
+				frontPage, _ := c.layout.GetFrontPage()
+				assert.Equal(t, string(StatementModalPage), frontPage)
+				assert.False(t, c.layout.InputHasFocus())
+
+				// Set the statement modal to be hidden
+				c.state.Display.StatementModal.SetVisible(false)
+				c.layout.Refresh()
+				frontPage, _ = c.layout.GetFrontPage()
+				assert.Equal(t, string(MainPage), frontPage)
+				assert.True(t, c.layout.InputHasFocus())
+			},
+		},
+		{
 			name: "Displays a given message",
 			run: func(c *testcontext, t *testing.T) {
 				msg := "Foo!"

@@ -4,6 +4,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -292,4 +293,18 @@ func NewTestApp() *TestApp {
 	screen := tcell.NewSimulationScreen("UTF-8")
 	app.SetScreen(screen)
 	return &TestApp{Application: app, Screen: screen}
+}
+
+// Gets the text from a tcell simulation screen
+func ExtractText(ss tcell.SimulationScreen) string {
+	contents, w, _ := ss.GetContents()
+	var builder strings.Builder
+	for n, c := range contents {
+		builder.WriteRune(c.Runes[0])
+		if n%w == w-1 {
+			builder.WriteString("\n")
+		}
+	}
+	return builder.String()
+
 }

@@ -924,6 +924,16 @@ func TestInputController__OnUndo(t *testing.T) {
 			},
 		},
 		{
+			name: "OnShowStatementModal sets statement modal visible",
+			run: func(t *testing.T, c *testcontext) {
+				assert.False(t, c.state.Display.StatementModal.Visible())
+				c.controller.OnShowStatementModal()
+				assert.True(t, c.state.Display.StatementModal.Visible())
+				c.controller.OnHideStatementModal()
+				assert.False(t, c.state.Display.StatementModal.Visible())
+			},
+		},
+		{
 			name: "OnLoadStatement loads statement warns user on error",
 			run: func(t *testing.T, c *testcontext) {
 				c.csvStatementLoader.EXPECT().LoadFromFiles("foo", "bar").Return(fmt.Errorf("no such file or directory"))
