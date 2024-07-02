@@ -192,6 +192,18 @@ func (mr *MockIInputControllerMockRecorder) OnHideShortcutModal() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnHideShortcutModal", reflect.TypeOf((*MockIInputController)(nil).OnHideShortcutModal))
 }
 
+// OnHideStatementModal mocks base method.
+func (m *MockIInputController) OnHideStatementModal() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnHideStatementModal")
+}
+
+// OnHideStatementModal indicates an expected call of OnHideStatementModal.
+func (mr *MockIInputControllerMockRecorder) OnHideStatementModal() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnHideStatementModal", reflect.TypeOf((*MockIInputController)(nil).OnHideStatementModal))
+}
+
 // OnInputConfirmation mocks base method.
 func (m *MockIInputController) OnInputConfirmation() {
 	m.ctrl.T.Helper()
@@ -310,6 +322,18 @@ func (m *MockIInputController) OnPostingAmmountDone(arg0 userinput.DoneSource) {
 func (mr *MockIInputControllerMockRecorder) OnPostingAmmountDone(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPostingAmmountDone", reflect.TypeOf((*MockIInputController)(nil).OnPostingAmmountDone), arg0)
+}
+
+// OnShowStatementModal mocks base method.
+func (m *MockIInputController) OnShowStatementModal() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnShowStatementModal")
+}
+
+// OnShowStatementModal indicates an expected call of OnShowStatementModal.
+func (mr *MockIInputControllerMockRecorder) OnShowStatementModal() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnShowStatementModal", reflect.TypeOf((*MockIInputController)(nil).OnShowStatementModal))
 }
 
 // OnTagChanged mocks base method.
