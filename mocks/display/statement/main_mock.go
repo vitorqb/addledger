@@ -33,6 +33,18 @@ func (m *MockController) EXPECT() *MockControllerMockRecorder {
 	return m.recorder
 }
 
+// DiscardStatementEntry mocks base method.
+func (m *MockController) DiscardStatementEntry(index int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DiscardStatementEntry", index)
+}
+
+// DiscardStatementEntry indicates an expected call of DiscardStatementEntry.
+func (mr *MockControllerMockRecorder) DiscardStatementEntry(index interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DiscardStatementEntry", reflect.TypeOf((*MockController)(nil).DiscardStatementEntry), index)
+}
+
 // HideModal mocks base method.
 func (m *MockController) HideModal() {
 	m.ctrl.T.Helper()

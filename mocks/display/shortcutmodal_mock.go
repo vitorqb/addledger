@@ -33,18 +33,6 @@ func (m *MockShortcutModalController) EXPECT() *MockShortcutModalControllerMockR
 	return m.recorder
 }
 
-// OnDiscardStatement mocks base method.
-func (m *MockShortcutModalController) OnDiscardStatement() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnDiscardStatement")
-}
-
-// OnDiscardStatement indicates an expected call of OnDiscardStatement.
-func (mr *MockShortcutModalControllerMockRecorder) OnDiscardStatement() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDiscardStatement", reflect.TypeOf((*MockShortcutModalController)(nil).OnDiscardStatement))
-}
-
 // OnHideShortcutModal mocks base method.
 func (m *MockShortcutModalController) OnHideShortcutModal() {
 	m.ctrl.T.Helper()
@@ -67,6 +55,18 @@ func (m *MockShortcutModalController) OnLoadStatementRequest() {
 func (mr *MockShortcutModalControllerMockRecorder) OnLoadStatementRequest() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatementRequest", reflect.TypeOf((*MockShortcutModalController)(nil).OnLoadStatementRequest))
+}
+
+// OnPopStatement mocks base method.
+func (m *MockShortcutModalController) OnPopStatement() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnPopStatement")
+}
+
+// OnPopStatement indicates an expected call of OnPopStatement.
+func (mr *MockShortcutModalControllerMockRecorder) OnPopStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPopStatement", reflect.TypeOf((*MockShortcutModalController)(nil).OnPopStatement))
 }
 
 // OnShowStatementModal mocks base method.

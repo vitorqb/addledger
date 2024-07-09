@@ -63,7 +63,8 @@ type IInputController interface {
 
 	// Controls statement
 	OnLoadStatement(csvFile string, presetFile string)
-	OnDiscardStatement()
+	OnPopStatement()
+	OnDiscardStatementEntry(i int)
 	OnLoadStatementRequest()
 
 	// Controls shortcuts modal
@@ -418,9 +419,14 @@ func (ic *InputController) OnHideShortcutModal() {
 	ic.state.Display.SetShortcutModal(false)
 }
 
-// OnDiscardStatement implements IInputController.
-func (ic *InputController) OnDiscardStatement() {
+// OnPopStatement implements IInputController.
+func (ic *InputController) OnPopStatement() {
 	ic.state.PopStatementEntry()
+}
+
+// OnDiscardStatementEntry implements IInputController.
+func (ic *InputController) OnDiscardStatementEntry(i int) {
+	ic.state.DiscardStatementEntry(i)
 }
 
 // OnLoadStatementRequest implements IInputController.

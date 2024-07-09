@@ -20,6 +20,9 @@ var _ statement.Controller = &StatementControllerAdapter{}
 
 func (s *StatementControllerAdapter) HideModal()   { s.OnHideStatementModal() }
 func (s *StatementControllerAdapter) LoadRequest() { s.OnLoadStatementRequest() }
+func (s *StatementControllerAdapter) DiscardStatementEntry(index int) {
+	s.OnDiscardStatementEntry(index)
+}
 
 type (
 	// MainView represents the main view of the application, which contains
