@@ -144,16 +144,16 @@ func (mr *MockIInputControllerMockRecorder) OnDescriptionListAction(action inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDescriptionListAction", reflect.TypeOf((*MockIInputController)(nil).OnDescriptionListAction), action)
 }
 
-// OnDiscardStatement mocks base method.
-func (m *MockIInputController) OnDiscardStatement() {
+// OnDiscardStatementEntry mocks base method.
+func (m *MockIInputController) OnDiscardStatementEntry(i int) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "OnDiscardStatement")
+	m.ctrl.Call(m, "OnDiscardStatementEntry", i)
 }
 
-// OnDiscardStatement indicates an expected call of OnDiscardStatement.
-func (mr *MockIInputControllerMockRecorder) OnDiscardStatement() *gomock.Call {
+// OnDiscardStatementEntry indicates an expected call of OnDiscardStatementEntry.
+func (mr *MockIInputControllerMockRecorder) OnDiscardStatementEntry(i interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDiscardStatement", reflect.TypeOf((*MockIInputController)(nil).OnDiscardStatement))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnDiscardStatementEntry", reflect.TypeOf((*MockIInputController)(nil).OnDiscardStatementEntry), i)
 }
 
 // OnDisplayShortcutModal mocks base method.
@@ -250,6 +250,18 @@ func (m *MockIInputController) OnLoadStatementRequest() {
 func (mr *MockIInputControllerMockRecorder) OnLoadStatementRequest() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatementRequest", reflect.TypeOf((*MockIInputController)(nil).OnLoadStatementRequest))
+}
+
+// OnPopStatement mocks base method.
+func (m *MockIInputController) OnPopStatement() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "OnPopStatement")
+}
+
+// OnPopStatement indicates an expected call of OnPopStatement.
+func (mr *MockIInputControllerMockRecorder) OnPopStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnPopStatement", reflect.TypeOf((*MockIInputController)(nil).OnPopStatement))
 }
 
 // OnPostingAccountChanged mocks base method.

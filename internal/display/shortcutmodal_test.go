@@ -47,7 +47,7 @@ func TestShortcutModal(t *testing.T) {
 		{
 			name: "Calls discard statement on d",
 			run: testExpectOnKey(tcell.KeyRune, 'd', tcell.ModNone, func(c *MockShortcutModalController) {
-				c.EXPECT().OnDiscardStatement().Times(1)
+				c.EXPECT().OnPopStatement().Times(1)
 				c.EXPECT().OnHideShortcutModal().Times(1)
 			}),
 		},

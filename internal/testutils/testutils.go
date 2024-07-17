@@ -186,6 +186,14 @@ func StatementEntry_1(t *testing.T) finance.StatementEntry {
 	}
 }
 
+func StatementEntry_2(t *testing.T) finance.StatementEntry {
+	return finance.StatementEntry{
+		Date:        Date2(t),
+		Description: "Description2",
+		Ammount:     *Ammount_2(t),
+	}
+}
+
 //
 // Helpers
 

@@ -276,6 +276,26 @@ func TestState(t *testing.T) {
 			},
 		},
 		{
+			name: "Deletes statement entry by index",
+			run: func(t *testing.T, c *testcontext) {
+				stmEntries := []finance.StatementEntry{
+					{Description: "FOO"},
+					{Description: "BAR"},
+				}
+				c.state.SetStatementEntries(stmEntries)
+				assert.Equal(t, 1, c.hookCallCounter)
+				c.state.DiscardStatementEntry(0)
+				assert.Equal(t, 2, c.hookCallCounter)
+				assert.Equal(t, []finance.StatementEntry{{Description: "BAR"}}, c.state.GetStatementEntries())
+				c.state.DiscardStatementEntry(0)
+				assert.Equal(t, 3, c.hookCallCounter)
+				assert.Empty(t, c.state.GetStatementEntries())
+				c.state.DiscardStatementEntry(-1)
+				assert.Equal(t, 3, c.hookCallCounter)
+				assert.Empty(t, c.state.GetStatementEntries())
+			},
+		},
+		{
 			name: "InputMetadata resets properly",
 			run: func(t *testing.T, c *testcontext) {
 				c.state.InputMetadata.SetPostingAccountText("FOO")

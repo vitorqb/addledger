@@ -16,6 +16,7 @@ const DateFormat = "2006-01-02"
 type Controller interface {
 	LoadRequest()
 	HideModal()
+	DiscardStatementEntry(index int)
 }
 
 type Modal struct {
@@ -23,17 +24,19 @@ type Modal struct {
 	controller Controller
 }
 
+// Contextual information about the current state of the statement display.
+type Context struct {
+	// Tracks the index of the selected statement in the state.GetStatementEntries
+	// slice.
+	SelectedStatementIndex int
+}
+
 // RuneAction represents a modal action from a simple rune being presset. The
 // action is ran and the modal is closed afterwards.
 type RuneAction struct {
 	Rune        rune
 	Description string
-	Action      func(Controller)
-}
-
-var actions = []RuneAction{
-	{'l', "Load Statement", func(c Controller) { c.LoadRequest() }},
-	{'q', "Quit", func(c Controller) {}},
+	Action      func(Controller, *Context)
 }
 
 type CommandBar struct{ *tview.TextArea }
@@ -52,6 +55,7 @@ func NewCommandBar(actions []RuneAction) tview.Primitive {
 type Table struct{ *tview.Table }
 
 func (t *Table) Refresh(entries []finance.StatementEntry) {
+	t.Clear()
 	for i, e := range entries {
 		t.SetCell(i, 0, tview.NewTableCell(e.Account))
 		t.SetCell(i, 1, tview.NewTableCell(e.Date.Format(DateFormat)))
@@ -65,11 +69,17 @@ func (t *Table) Refresh(entries []finance.StatementEntry) {
 func NewTable() *Table {
 	o := &Table{tview.NewTable()}
 	o.SetBorder(true)
+	o.SetSelectable(true, false)
 	return o
 }
 
-func NewModal(controller Controller, state *state.State) *Modal {
+func CreateModal(controller Controller, state *state.State, actions []RuneAction) *Modal {
+	context := &Context{}
+
 	table := NewTable()
+	table.SetSelectionChangedFunc(func(row, col int) {
+		context.SelectedStatementIndex = row
+	})
 	table.Refresh(state.GetStatementEntries())
 	state.AddOnChangeHook(func() { table.Refresh(state.GetStatementEntries()) })
 
@@ -82,8 +92,7 @@ func NewModal(controller Controller, state *state.State) *Modal {
 		case tcell.KeyRune:
 			for _, action := range actions {
 				if event.Rune() == action.Rune {
-					action.Action(controller)
-					controller.HideModal()
+					action.Action(controller, context)
 					return nil
 				}
 			}
@@ -94,4 +103,18 @@ func NewModal(controller Controller, state *state.State) *Modal {
 		return event
 	})
 	return modal
+}
+
+// Actions available in the modal.
+var defaultActions = []RuneAction{
+	{'l', "Load Statement", func(c Controller, ctx *Context) {
+		c.LoadRequest()
+		c.HideModal()
+	}},
+	{'d', "Discard Statement Entry", func(c Controller, ctx *Context) { c.DiscardStatementEntry(ctx.SelectedStatementIndex) }},
+	{'q', "Quit", func(c Controller, ctx *Context) { c.HideModal() }},
+}
+
+func NewModal(controller Controller, state *state.State) *Modal {
+	return CreateModal(controller, state, defaultActions)
 }

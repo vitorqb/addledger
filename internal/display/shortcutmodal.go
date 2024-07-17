@@ -13,7 +13,7 @@ type ShortcutModalController interface {
 	OnHideShortcutModal()
 	// !!!! TODO DELETE
 	// Aciton to discard the current loaded statement.
-	OnDiscardStatement()
+	OnPopStatement()
 	// !!!! TODO DELETE
 	// Action to load a new statement.
 	OnLoadStatementRequest()
@@ -53,7 +53,7 @@ func NewShortcutModal(controller ShortcutModalController) *ShortcutModal {
 				modal.controller.OnHideShortcutModal()
 				return nil
 			case 'd':
-				modal.controller.OnDiscardStatement()
+				modal.controller.OnPopStatement()
 				modal.controller.OnHideShortcutModal()
 				return nil
 			case 'q':

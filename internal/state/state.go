@@ -519,6 +519,15 @@ func (s *State) PopStatementEntry() {
 	}
 }
 
+// DiscardStatementEntry discards a statement entry by index
+func (s *State) DiscardStatementEntry(i int) {
+	if i < 0 || i >= len(s.StatementEntries) {
+		return
+	}
+	s.StatementEntries = append(s.StatementEntries[:i], s.StatementEntries[i+1:]...)
+	s.NotifyChange()
+}
+
 // NewDisplay returns a new Display
 func NewDisplay() *Display {
 	display := &Display{

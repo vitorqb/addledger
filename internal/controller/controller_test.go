@@ -893,13 +893,26 @@ func TestInputController__OnUndo(t *testing.T) {
 			},
 		},
 		{
-			name: "OnDiscardStatement",
+			name: "OnPopStatement",
 			run: func(t *testing.T, c *testcontext) {
 				stmEntries := []finance.StatementEntry{testutils.StatementEntry_1(t)}
 				c.state.SetStatementEntries(stmEntries)
 				assert.Len(t, c.state.StatementEntries, 1)
-				c.controller.OnDiscardStatement()
+				c.controller.OnPopStatement()
 				assert.Len(t, c.state.StatementEntries, 0)
+			},
+		},
+		{
+			name: "OnDiscardStatementEntry",
+			run: func(t *testing.T, c *testcontext) {
+				stmEntries := []finance.StatementEntry{
+					testutils.StatementEntry_1(t),
+					testutils.StatementEntry_2(t),
+				}
+				c.state.SetStatementEntries(stmEntries)
+				c.controller.OnDiscardStatementEntry(1)
+				assert.Len(t, c.state.StatementEntries, 1)
+				assert.Equal(t, stmEntries[0], c.state.StatementEntries[0])
 			},
 		},
 		{
