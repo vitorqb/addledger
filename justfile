@@ -37,7 +37,6 @@ setup:
     mkdir -p out bin    
     touch out/destfile
     ./scripts/setup-asdf.sh
-    ./scripts/setup-envfile.sh
 
 # Runs the app with a specific envfile and arguments
 run envfile="configs/default.env" args="":

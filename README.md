@@ -164,6 +164,7 @@ USD 123  # => USD 123
 ### Setup
 
 You will need to install and enabled https://github.com/asdf-vm/asdf.
+You may also want to install https://direnv.net/ to automatically read the `.envrc` file.
 
 Then for setting up development:
 
@@ -171,11 +172,10 @@ Then for setting up development:
 just setup
 ```
 
-**REMEMBER** that you need to source the `.env` file for configuring
-the app during development:
+If you don't have `direnv`, then also source the file:
 
 ```
-source .env
+source .envrc
 ```
 
 ### Testing
