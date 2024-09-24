@@ -51,6 +51,11 @@ run envfile="configs/default.env" args="":
 test target="./...": mocks
     {{GO}} test {{target}}
 
+# Runs delve on tests
+debug-test target="": mocks
+    if [ -z {{target}} ]; then echo "Missing target"; exit 1; fi
+    {{DELVE}} test  {{target}}
+
 # Creates all mocks
 mocks: install-mockgen
     rm -rf ./mocks

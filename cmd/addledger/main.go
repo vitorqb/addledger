@@ -25,14 +25,14 @@ func main() {
 	// Configures logging
 	app.ConfigureLogger(logrus.StandardLogger(), config.LogFile, config.LogLevel)
 
-	// Creates a hledger client
-	hledgerClient := injector.HledgerClient(config)
-
 	// Loads state
-	state, err := injector.State(hledgerClient)
+	state, err := injector.State(*config)
 	if err != nil {
 		logrus.WithError(err).Fatal("Failed to load state")
 	}
+
+	// Creates a hledger client
+	hledgerClient := injector.HledgerClient(config)
 
 	// Loads metadata
 	metaLoader, err := injector.MetaLoader(state, hledgerClient)

@@ -22,8 +22,13 @@ func TestStateAndMetaLoader(t *testing.T) {
 	hledgerClient.EXPECT().Accounts().Return([]journal.Account{"FOO"}, nil)
 	hledgerClient.EXPECT().Transactions().Return(transactions, nil)
 
-	state, err := State(hledgerClient)
+	config := config.Config{
+		DefaultCSVStatementFile: "/foo",
+	}
+
+	state, err := State(config)
 	assert.Nil(t, err)
+	assert.Equal(t, state.Display.StatementModal.DefaultCsvFile(), "/foo")
 
 	metaLoader, err := MetaLoader(state, hledgerClient)
 	assert.Nil(t, err)

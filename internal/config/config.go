@@ -33,6 +33,8 @@ type Config struct {
 	CSVStatementFile string
 	// A preset to use for the CSV statement.
 	CSVStatementPreset string
+	// Default file to load CSV sttatements from (interactively)
+	DefaultCSVStatementFile string
 }
 
 func SetupFlags(flagSet *pflag.FlagSet) {
@@ -49,6 +51,9 @@ func SetupFlags(flagSet *pflag.FlagSet) {
 	// Statement Loader config
 	flagSet.String("csv-statement-file", "", "CSV file to load as a statement.")
 	flagSet.String("csv-statement-preset", "", "Preset to use for CSV statement. If a simple filename is given, it will be searched in ~/.config/addledger/presets (with a .json extension).")
+
+	// Statement Modal config
+	flagSet.String("default-csv-statement-file", "", "Default file to load statements from using the interactive modal.")
 }
 
 func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error) {
@@ -88,8 +93,9 @@ func Load(flagSet *pflag.FlagSet, args []string, loader ILoader) (*Config, error
 			NumLineBreaksBefore: viper.GetInt("printer-line-break-before"),
 			NumLineBreaksAfter:  viper.GetInt("printer-line-break-after"),
 		},
-		CSVStatementFile:   viper.GetString("csv-statement-file"),
-		CSVStatementPreset: viper.GetString("csv-statement-preset"),
+		CSVStatementFile:        viper.GetString("csv-statement-file"),
+		CSVStatementPreset:      viper.GetString("csv-statement-preset"),
+		DefaultCSVStatementFile: viper.GetString("default-csv-statement-file"),
 	}
 
 	// Load dynamic values

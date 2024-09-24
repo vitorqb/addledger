@@ -1,6 +1,8 @@
 package display
 
-import "github.com/rivo/tview"
+import (
+	"github.com/rivo/tview"
+)
 
 //go:generate $MOCKGEN --source=loadstatementmodal.go --destination=../../mocks/display/loadstatementmodal_mock.go
 
@@ -13,16 +15,23 @@ type (
 	LoadStatementModalController interface {
 		OnLoadStatement(csvFile string, presetFile string)
 	}
+
+	State interface {
+		DefaultCsvFile() string
+	}
 )
 
 const csvFileLabel = "CSV File"
 const presetLabel = "Preset"
 
-func NewLoadStatementModal(controller LoadStatementModalController) *LoadStatementModal {
+func NewLoadStatementModal(
+	controller LoadStatementModalController,
+	state State,
+) *LoadStatementModal {
 	form := &LoadStatementModal{tview.NewForm(), controller}
 	form.SetBorder(true)
 	form.SetTitle("Load Statement")
-	form.AddInputField(csvFileLabel, "", 0, nil, nil)
+	form.AddInputField(csvFileLabel, state.DefaultCsvFile(), 0, nil, nil)
 	form.AddInputField(presetLabel, "", 0, nil, nil)
 	form.AddButton("Load", func() {
 		csvFileField := form.GetCsvInput().GetText()
