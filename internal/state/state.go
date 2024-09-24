@@ -52,7 +52,8 @@ type (
 	// StatementModal is the state relative to the Statement Modal
 	StatementModal struct {
 		react.IReact
-		visible bool
+		visible        bool
+		defaultCsvFile string
 	}
 
 	// Display is the state relative to the display.
@@ -583,5 +584,10 @@ func NewStatementModal() *StatementModal {
 func (sm *StatementModal) Visible() bool { return sm.visible }
 func (sm *StatementModal) SetVisible(b bool) {
 	sm.visible = b
+	sm.NotifyChange()
+}
+func (sm *StatementModal) DefaultCsvFile() string { return sm.defaultCsvFile }
+func (sm *StatementModal) SetDefaultCsvFile(x string) {
+	sm.defaultCsvFile = x
 	sm.NotifyChange()
 }

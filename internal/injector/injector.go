@@ -30,8 +30,10 @@ func DateGuesser() (dateguesser.IDateGuesser, error) {
 	return dateguesser.New()
 }
 
-func State(hledgerClient hledger.IClient) (*statemod.State, error) {
-	return statemod.InitialState(), nil
+func State(config configmod.Config) (*statemod.State, error) {
+	state := statemod.InitialState()
+	state.Display.StatementModal.SetDefaultCsvFile(config.DefaultCSVStatementFile)
+	return state, nil
 }
 
 func MetaLoader(state *statemod.State, hledgerClient hledger.IClient) (*metaloader.MetaLoader, error) {

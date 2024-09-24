@@ -44,3 +44,40 @@ func (mr *MockLoadStatementModalControllerMockRecorder) OnLoadStatement(csvFile,
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "OnLoadStatement", reflect.TypeOf((*MockLoadStatementModalController)(nil).OnLoadStatement), csvFile, presetFile)
 }
+
+// MockState is a mock of State interface.
+type MockState struct {
+	ctrl     *gomock.Controller
+	recorder *MockStateMockRecorder
+}
+
+// MockStateMockRecorder is the mock recorder for MockState.
+type MockStateMockRecorder struct {
+	mock *MockState
+}
+
+// NewMockState creates a new mock instance.
+func NewMockState(ctrl *gomock.Controller) *MockState {
+	mock := &MockState{ctrl: ctrl}
+	mock.recorder = &MockStateMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockState) EXPECT() *MockStateMockRecorder {
+	return m.recorder
+}
+
+// DefaultCsvFile mocks base method.
+func (m *MockState) DefaultCsvFile() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DefaultCsvFile")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// DefaultCsvFile indicates an expected call of DefaultCsvFile.
+func (mr *MockStateMockRecorder) DefaultCsvFile() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefaultCsvFile", reflect.TypeOf((*MockState)(nil).DefaultCsvFile))
+}

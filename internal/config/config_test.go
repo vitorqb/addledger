@@ -78,6 +78,7 @@ func TestLoad(t *testing.T) {
 					"ADDLEDGER_DESTFILE", "foo1",
 					"ADDLEDGER_HLEDGER_EXECUTABLE", "foo2",
 					"ADDLEDGER_LEDGER_FILE", "foo3",
+					"ADDLEDGER_DEFAULT_CSV_STATEMENT_FILE", "/foo",
 				)
 				defer cleanup()
 				config, err := Load(c.flagSet, []string{}, c.loader)
@@ -85,6 +86,7 @@ func TestLoad(t *testing.T) {
 				assert.Equal(t, "foo1", config.DestFile)
 				assert.Equal(t, "foo2", config.HLedgerExecutable)
 				assert.Equal(t, "foo3", config.LedgerFile)
+				assert.Equal(t, "/foo", config.DefaultCSVStatementFile)
 			},
 		},
 		{

@@ -178,7 +178,7 @@ func NewLayout(
 
 	mainView := NewMainView(view, input, context, statementDisplay, messageBox, state)
 	shortcutModal := center(NewShortcutModal(controller), modalWith, modalHeight)
-	loadStatementModal := center(NewLoadStatementModal(controller), modalWith*2, modalHeight*2)
+	loadStatementModal := center(NewLoadStatementModal(controller, state.Display.StatementModal), modalWith*2, modalHeight*2)
 	statementModal := center(statement.NewModal(&StatementControllerAdapter{controller}, state), modalWith*3, modalHeight*3)
 
 	pages := tview.NewPages()
