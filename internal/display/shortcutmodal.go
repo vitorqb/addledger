@@ -11,12 +11,6 @@ import (
 
 type ShortcutModalController interface {
 	OnHideShortcutModal()
-	// !!!! TODO DELETE
-	// Aciton to discard the current loaded statement.
-	OnPopStatement()
-	// !!!! TODO DELETE
-	// Action to load a new statement.
-	OnLoadStatementRequest()
 	// Displays the statement modal
 	OnShowStatementModal()
 }
@@ -29,8 +23,6 @@ type ShortcutModal struct {
 func getBodyText() string {
 	return strings.Trim(
 		"s - Statement modal\n"+
-			"d - Discard statement\n"+
-			"l - Load statement\n"+
 			"q - Quit\n",
 		"\n",
 	)
@@ -48,14 +40,6 @@ func NewShortcutModal(controller ShortcutModalController) *ShortcutModal {
 			case 's':
 				modal.controller.OnShowStatementModal()
 				modal.controller.OnHideShortcutModal()
-			case 'l':
-				modal.controller.OnLoadStatementRequest()
-				modal.controller.OnHideShortcutModal()
-				return nil
-			case 'd':
-				modal.controller.OnPopStatement()
-				modal.controller.OnHideShortcutModal()
-				return nil
 			case 'q':
 				modal.controller.OnHideShortcutModal()
 				return nil
