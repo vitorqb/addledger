@@ -4,8 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"fmt"
-
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorqb/addledger/internal/finance"
@@ -347,7 +345,7 @@ func TestTagTextToTag__Bad(t *testing.T) {
 	} {
 		_, err := TextToTag(input)
 		if err == nil {
-			t.Errorf(fmt.Sprintf("Expected error, got none: %s", input))
+			t.Errorf("Expected error, got none: %s", input)
 		}
 
 	}
