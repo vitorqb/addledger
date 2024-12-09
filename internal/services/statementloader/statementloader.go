@@ -71,7 +71,7 @@ func ParseConfig(config Config) ([]statementreader.Option, error) {
 		case "date":
 			options = append(options, statementreader.WithSortStrategy(statementreader.SortByDate{}))
 		default:
-			return nil, fmt.Errorf("invalid SortBy: " + sortByStr)
+			return nil, fmt.Errorf("invalid SortBy: %s", sortByStr)
 		}
 	}
 	mapping := []statementreader.CSVColumnMapping{}
